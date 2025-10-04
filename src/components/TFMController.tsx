@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Zap, TrendingDown, Sparkles, Settings, BarChart3, CheckCircle2, Trophy, StopCircle, Copy, Check } from 'lucide-react';
+import { Loader2, Zap, TrendingDown, Sparkles, Settings, BarChart3, CheckCircle2, Trophy, StopCircle, Copy, Check, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Textarea as TextareaComponent } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -132,9 +132,17 @@ export const TFMController = () => {
       setAbTestNotes('');
 
       // Save results to database for analytics
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.error('User not authenticated');
+        return;
+      }
+
       const { data: insertedData, error: dbError } = await supabase
         .from('optimization_results')
         .insert({
+          user_id: user.id,
           original_prompt: prompt,
           optimized_prompt: data.promptImprovement?.improvedPrompt || data.finalText,
           original_tokens: data.savings.initialTokens,
@@ -245,6 +253,18 @@ export const TFMController = () => {
               >
                 <BarChart3 className="w-4 h-4" />
                 Analytics
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2"
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  navigate('/auth');
+                }}
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
               </Button>
             </div>
           </div>

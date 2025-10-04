@@ -80,9 +80,21 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
     }
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: 'Error',
+          description: 'You must be logged in to save configurations',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('favorite_configs')
         .insert({
+          user_id: user.id,
           name: saveName,
           a_parameter: currentConfig.a,
           b_parameter: currentConfig.b,

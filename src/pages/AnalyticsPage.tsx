@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart3, TrendingUp, Target, Award, ArrowLeft, Loader2, Trophy, Filter, Search, Download, Calendar } from 'lucide-react';
+import { BarChart3, TrendingUp, Target, Award, ArrowLeft, Loader2, Trophy, Filter, Search, Download, Calendar, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -312,6 +312,18 @@ export default function AnalyticsPage() {
                 <Button variant="outline" size="sm" onClick={exportToJSON} className="gap-2">
                   <Download className="w-4 h-4" />
                   JSON
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    navigate('/auth');
+                  }}
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
                 </Button>
               </div>
             </div>
