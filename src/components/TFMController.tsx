@@ -44,8 +44,8 @@ export const TFMController = () => {
   const handleSubmit = async () => {
     if (!prompt.trim()) {
       toast({
-        title: "Ошибка",
-        description: "Введите текст для оптимизации",
+        title: "Error",
+        description: "Please enter text to optimize",
         variant: "destructive",
       });
       return;
@@ -66,14 +66,14 @@ export const TFMController = () => {
       setResult(data);
 
       toast({
-        title: "Оптимизация завершена",
-        description: `Сокращение: ${data.savings.reductionPercent}% за ${data.iterations} итераций`,
+        title: "Optimization Complete",
+        description: `Token efficiency: ${data.savings.reductionPercent}% in ${data.iterations} iterations`,
       });
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Ошибка",
-        description: error.message || "Не удалось выполнить оптимизацию",
+        title: "Error",
+        description: error.message || "Failed to perform optimization",
         variant: "destructive",
       });
     } finally {
@@ -90,17 +90,17 @@ export const TFMController = () => {
             TRI/TFM Controller
           </CardTitle>
           <CardDescription>
-            Оптимизация длины ответов LLM через итеративный контроллер D→S
+            Optimize LLM response length through iterative D→S controller
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Input Section */}
           <div className="space-y-4">
             <div>
-              <Label htmlFor="prompt">Исходный текст</Label>
+              <Label htmlFor="prompt">Original Text</Label>
               <Textarea
                 id="prompt"
-                placeholder="Введите текст для оптимизации..."
+                placeholder="Enter text to optimize..."
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 rows={6}
@@ -112,7 +112,7 @@ export const TFMController = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="a">Параметр a (D расширение)</Label>
+                  <Label htmlFor="a">Parameter a (D expansion)</Label>
                   <Input
                     id="a"
                     type="number"
@@ -123,7 +123,7 @@ export const TFMController = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="b">Параметр b (S сокращение)</Label>
+                  <Label htmlFor="b">Parameter b (S reduction)</Label>
                   <Input
                     id="b"
                     type="number"
@@ -134,7 +134,7 @@ export const TFMController = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="maxIterations">Макс. итераций</Label>
+                  <Label htmlFor="maxIterations">Max Iterations</Label>
                   <Input
                     id="maxIterations"
                     type="number"
@@ -151,9 +151,9 @@ export const TFMController = () => {
               <div className="space-y-4 pt-4 border-t">
                 <div className="flex items-center justify-between space-x-2 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
                   <div className="space-y-1">
-                    <Label htmlFor="autoImprove" className="font-semibold">Авто-улучшение промпта (Proposer-Critic-Verifier)</Label>
+                    <Label htmlFor="autoImprove" className="font-semibold">Auto-Improve Prompt (Proposer-Critic-Verifier)</Label>
                     <p className="text-xs text-muted-foreground">
-                      Автоматически оптимизирует ваш промпт перед обработкой — экономит запросы и улучшает результат
+                      Automatically optimizes your prompt before processing — saves iterations and improves results
                     </p>
                   </div>
                   <Switch
@@ -166,7 +166,7 @@ export const TFMController = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center justify-between space-x-2">
                     <div className="space-y-1">
-                      <Label htmlFor="efmnb">EFMNB Framing (D блок)</Label>
+                      <Label htmlFor="efmnb">EFMNB Framing (D block)</Label>
                       <p className="text-xs text-muted-foreground">
                         Evaluation→Evaluation→Comparison→Conclusion
                       </p>
@@ -179,7 +179,7 @@ export const TFMController = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="erikson">Эриксон фильтр (S блок)</Label>
+                    <Label htmlFor="erikson">Erikson Filter (S block)</Label>
                     <Select
                       value={config.eriksonStage.toString()}
                       onValueChange={(value) => setConfig({ ...config, eriksonStage: parseInt(value) })}
@@ -188,7 +188,7 @@ export const TFMController = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="0">Без фильтра</SelectItem>
+                        <SelectItem value="0">No Filter</SelectItem>
                         <SelectItem value="1">1. Trust vs Mistrust (Hope)</SelectItem>
                         <SelectItem value="2">2. Autonomy vs Shame (Will)</SelectItem>
                         <SelectItem value="3">3. Initiative vs Guilt (Purpose)</SelectItem>
@@ -200,7 +200,7 @@ export const TFMController = () => {
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
-                      Психосоциальная призма для сокращения
+                      Psychosocial lens for reduction
                     </p>
                   </div>
                 </div>
@@ -215,12 +215,12 @@ export const TFMController = () => {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Оптимизация...
+                  Optimizing...
                 </>
               ) : (
                 <>
                   <Zap className="mr-2 h-4 w-4" />
-                  Запустить TFM
+                  Run TFM
                 </>
               )}
             </Button>
@@ -235,19 +235,19 @@ export const TFMController = () => {
                   <div className="flex items-center gap-2">
                     <Zap className="w-5 h-5 text-green-600 dark:text-green-400" />
                     <h3 className="font-semibold text-green-900 dark:text-green-100">
-                      Proposer-Critic-Verifier: Промпт оптимизирован
+                      Proposer-Critic-Verifier: Prompt Optimized
                     </h3>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-xs text-muted-foreground">Исходный промпт</Label>
+                      <Label className="text-xs text-muted-foreground">Original Prompt</Label>
                       <div className="mt-1 p-2 bg-background/50 rounded text-sm max-h-32 overflow-y-auto">
                         {result.promptImprovement.originalPrompt}
                       </div>
                     </div>
                     <div>
-                      <Label className="text-xs text-muted-foreground">Улучшенный промпт</Label>
+                      <Label className="text-xs text-muted-foreground">Improved Prompt</Label>
                       <div className="mt-1 p-2 bg-background/50 rounded text-sm max-h-32 overflow-y-auto">
                         {result.promptImprovement.improvedPrompt}
                       </div>
@@ -255,7 +255,7 @@ export const TFMController = () => {
                   </div>
 
                   <div>
-                    <Label className="text-xs text-muted-foreground">Примененные улучшения</Label>
+                    <Label className="text-xs text-muted-foreground">Applied Improvements</Label>
                     <ul className="mt-1 space-y-1">
                       {result.promptImprovement.improvements.map((imp, i) => (
                         <li key={i} className="text-xs flex items-start gap-2">
@@ -271,26 +271,26 @@ export const TFMController = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium">Итераций</CardTitle>
+                    <CardTitle className="text-sm font-medium">Iterations</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{result.iterations}</div>
                     <p className="text-xs text-muted-foreground">
-                      {result.converged ? '✓ Сошлось' : '⚠ Не сошлось'}
+                      {result.converged ? '✓ Converged' : '⚠ Not converged'}
                     </p>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium">Токены</CardTitle>
+                    <CardTitle className="text-sm font-medium">Tokens</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
                       {result.savings.initialTokens} → {result.savings.finalTokens}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Изначально → Итого
+                      Initial → Final
                     </p>
                   </CardContent>
                 </Card>
@@ -299,7 +299,7 @@ export const TFMController = () => {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium flex items-center gap-2">
                       <TrendingDown className="w-4 h-4" />
-                      Экономия
+                      Token Efficiency
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -307,7 +307,7 @@ export const TFMController = () => {
                       {result.savings.reductionPercent}%
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Сокращение токенов
+                      vs. baseline
                     </p>
                   </CardContent>
                 </Card>
@@ -315,7 +315,7 @@ export const TFMController = () => {
 
               {/* Token History */}
               <div>
-                <Label>История токенов по итерациям</Label>
+                <Label>Token History by Iteration</Label>
                 <div className="flex gap-2 mt-2">
                   {result.tokenHistory.map((tokens, i) => (
                     <div key={i} className="flex-1">
@@ -329,7 +329,7 @@ export const TFMController = () => {
 
               {/* Final Text */}
               <div>
-                <Label htmlFor="result">Оптимизированный текст</Label>
+                <Label htmlFor="result">Optimized Text</Label>
                 <Textarea
                   id="result"
                   value={result.finalText}
@@ -351,13 +351,13 @@ export const TFMController = () => {
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
             <p>
-              <strong>D (Developer):</strong> Блок расширения — добавляет структуру и детали
+              <strong>D (Developer):</strong> Expansion block — adds structure and details
             </p>
             <p>
-              <strong>S (Stabilizer):</strong> Блок стабилизации — сокращает избыточное
+              <strong>S (Stabilizer):</strong> Stabilization block — reduces redundancy
             </p>
             <p>
-              <strong>Критерий сходимости:</strong> |x_k - x_(k-1)| / x_k {'<'} δ
+              <strong>Convergence criterion:</strong> |x_k - x_(k-1)| / x_k {'<'} δ
             </p>
             <p>
               L* = ((1-b)·I + R) / (1 - (1-b)(1+a))
@@ -374,26 +374,26 @@ export const TFMController = () => {
               <strong>Emotional-Factual Matrix Next Build</strong>
             </p>
             <p>
-              1. <strong>Evaluation:</strong> Идентификация элементов
+              1. <strong>Evaluation:</strong> Element identification
             </p>
             <p>
-              2. <strong>Evaluation:</strong> Оценка контекста
+              2. <strong>Evaluation:</strong> Context assessment
             </p>
             <p>
-              3. <strong>Comparison:</strong> Сравнение аспектов
+              3. <strong>Comparison:</strong> Aspect comparison
             </p>
             <p>
-              4. <strong>Conclusion:</strong> Синтез в нарратив
+              4. <strong>Conclusion:</strong> Narrative synthesis
             </p>
             <p className="pt-2 border-t">
-              Структурированный фрейминг для детерминистского контроля рассуждений
+              Structured framing for deterministic reasoning control
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Эриксон (8 стадий)</CardTitle>
+            <CardTitle>Erikson (8 Stages)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1 text-xs text-muted-foreground">
             <p>1. Trust vs Mistrust → Hope</p>
@@ -405,7 +405,7 @@ export const TFMController = () => {
             <p>7. Generativity vs Stagnation → Care</p>
             <p>8. Integrity vs Despair → Wisdom</p>
             <p className="pt-2 border-t">
-              Психосоциальные фильтры для зрелого сокращения текста через призму развития личности
+              Psychosocial filters for mature text reduction through developmental lens
             </p>
           </CardContent>
         </Card>
