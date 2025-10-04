@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Zap, TrendingDown, Sparkles, Settings, BarChart3, CheckCircle2, Trophy } from 'lucide-react';
+import { Loader2, Zap, TrendingDown, Sparkles, Settings, BarChart3, CheckCircle2, Trophy, StopCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Textarea as TextareaComponent } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -41,11 +41,43 @@ export const TFMController = () => {
     maxIterations: 4,
     convergenceThreshold: 0.05,
     useEFMNB: true,
-    useErikson: false,
+    useErikson: true, // Erikson filter enabled by default
     useProposerCriticVerifier: true,
   });
   const { toast } = useToast();
   const navigate = useNavigate();
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Restore state from sessionStorage on mount
+  useEffect(() => {
+    const savedState = sessionStorage.getItem('tfm-controller-state');
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        setPrompt(parsed.prompt || '');
+        setConfig(parsed.config || config);
+        if (parsed.result) setResult(parsed.result);
+        if (parsed.abTestWinner) setAbTestWinner(parsed.abTestWinner);
+        if (parsed.abTestNotes) setAbTestNotes(parsed.abTestNotes);
+        if (parsed.lastResultId) setLastResultId(parsed.lastResultId);
+      } catch (e) {
+        console.error('Failed to restore state:', e);
+      }
+    }
+  }, []);
+
+  // Save state to sessionStorage whenever it changes
+  useEffect(() => {
+    const stateToSave = {
+      prompt,
+      config,
+      result,
+      abTestWinner,
+      abTestNotes,
+      lastResultId,
+    };
+    sessionStorage.setItem('tfm-controller-state', JSON.stringify(stateToSave));
+  }, [prompt, config, result, abTestWinner, abTestNotes, lastResultId]);
 
   const handleSubmit = async () => {
     if (!prompt.trim()) {
@@ -59,6 +91,9 @@ export const TFMController = () => {
 
     setLoading(true);
     setResult(null);
+
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
 
     try {
       toast({
@@ -80,6 +115,11 @@ export const TFMController = () => {
           }
         }
       });
+
+      // Check if stopped
+      if (!abortControllerRef.current) {
+        return; // Request was stopped
+      }
 
       if (error) throw error;
 
@@ -116,13 +156,34 @@ export const TFMController = () => {
       });
     } catch (error) {
       console.error('Error:', error);
-      toast({
-        title: "Ошибка",
-        description: error instanceof Error ? error.message : "Не удалось выполнить оптимизацию",
-        variant: "destructive",
-      });
+      
+      // Check if error was due to abort
+      if (error instanceof Error && error.name === 'AbortError') {
+        toast({
+          title: "Оптимизация остановлена",
+          description: "Процесс был прерван пользователем",
+        });
+      } else {
+        toast({
+          title: "Ошибка",
+          description: error instanceof Error ? error.message : "Не удалось выполнить оптимизацию",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current = null;
+      setLoading(false);
+      toast({
+        title: "Оптимизация остановлена",
+        description: "Процесс был прерван",
+      });
     }
   };
 
@@ -181,23 +242,36 @@ export const TFMController = () => {
               className="resize-none font-mono text-sm"
             />
             
-            <Button 
-              onClick={handleSubmit} 
-              disabled={loading || !prompt.trim()}
-              className="w-full h-12 text-base gradient-primary hover:opacity-90 transition-opacity shadow-glow"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Оптимизируем...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  Оптимизировать промпт
-                </>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleSubmit} 
+                disabled={loading || !prompt.trim()}
+                className="flex-1 h-12 text-base gradient-primary hover:opacity-90 transition-opacity shadow-glow"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Оптимизируем...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-5 w-5" />
+                    Оптимизировать промпт
+                  </>
+                )}
+              </Button>
+              
+              {loading && (
+                <Button
+                  onClick={handleStop}
+                  variant="destructive"
+                  className="h-12 px-6"
+                >
+                  <StopCircle className="mr-2 h-5 w-5" />
+                  Стоп
+                </Button>
               )}
-            </Button>
+            </div>
           </CardContent>
         </Card>
 

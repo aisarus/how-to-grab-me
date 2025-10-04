@@ -3,9 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart3, TrendingUp, Target, Award, ArrowLeft, Loader2, Trophy } from 'lucide-react';
+import { BarChart3, TrendingUp, Target, Award, ArrowLeft, Loader2, Trophy, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface OptimizationResult {
   id: string;
@@ -25,6 +27,7 @@ interface OptimizationResult {
 export default function AnalyticsPage() {
   const [results, setResults] = useState<OptimizationResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showEriksonOnly, setShowEriksonOnly] = useState(true); // Erikson filter enabled by default
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -55,7 +58,12 @@ export default function AnalyticsPage() {
   };
 
   const calculateStats = () => {
-    if (results.length === 0) return {
+    // Filter results based on Erikson filter
+    const filteredResults = showEriksonOnly 
+      ? results.filter(r => r.ab_test_notes?.toLowerCase().includes('erikson') || r.ab_test_winner)
+      : results;
+
+    if (filteredResults.length === 0) return {
       avgQualityGain: 0,
       totalOptimizations: 0,
       avgTokenChange: 0,
@@ -63,19 +71,24 @@ export default function AnalyticsPage() {
     };
 
     // Quality gain - среднее изменение (может быть и рост токенов для качества)
-    const avgChange = results.reduce((sum, r) => sum + r.improvement_percentage, 0) / results.length;
-    const avgTokenChange = results.reduce((sum, r) => sum + (r.optimized_tokens - r.original_tokens), 0) / results.length;
-    const convergedCount = results.filter(r => r.iterations < 4).length; // если сошлось быстро
+    const avgChange = filteredResults.reduce((sum, r) => sum + r.improvement_percentage, 0) / filteredResults.length;
+    const avgTokenChange = filteredResults.reduce((sum, r) => sum + (r.optimized_tokens - r.original_tokens), 0) / filteredResults.length;
+    const convergedCount = filteredResults.filter(r => r.iterations < 4).length; // если сошлось быстро
 
     return {
       avgQualityGain: Math.abs(avgChange).toFixed(1),
-      totalOptimizations: results.length,
+      totalOptimizations: filteredResults.length,
       avgTokenChange: avgTokenChange.toFixed(0),
-      convergenceRate: ((convergedCount / results.length) * 100).toFixed(0),
+      convergenceRate: ((convergedCount / filteredResults.length) * 100).toFixed(0),
     };
   };
 
   const stats = calculateStats();
+  
+  // Get filtered results for display
+  const displayResults = showEriksonOnly 
+    ? results.filter(r => r.ab_test_notes?.toLowerCase().includes('erikson') || r.ab_test_winner)
+    : results;
 
   if (loading) {
     return (
@@ -101,13 +114,24 @@ export default function AnalyticsPage() {
                 <ArrowLeft className="w-4 h-4" />
                 Назад
               </Button>
-              <div>
+              <div className="flex-1">
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                   Analytics Dashboard
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">
                   Метрики эффективности TRI/TFM технологии
                 </p>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+                <Filter className="w-4 h-4 text-muted-foreground" />
+                <Label htmlFor="erikson-filter" className="text-sm cursor-pointer">
+                  Только Erikson
+                </Label>
+                <Switch
+                  id="erikson-filter"
+                  checked={showEriksonOnly}
+                  onCheckedChange={setShowEriksonOnly}
+                />
               </div>
             </div>
           </div>
@@ -182,15 +206,19 @@ export default function AnalyticsPage() {
             <CardDescription>Последние результаты работы TRI/TFM</CardDescription>
           </CardHeader>
           <CardContent>
-            {results.length === 0 ? (
+            {displayResults.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <BarChart3 className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>Пока нет данных для анализа</p>
-                <p className="text-sm mt-2">Выполните оптимизацию промпта, чтобы увидеть статистику</p>
+                <p className="text-sm mt-2">
+                  {showEriksonOnly 
+                    ? 'Нет результатов с Erikson фильтром. Отключите фильтр для просмотра всех результатов.'
+                    : 'Выполните оптимизацию промпта, чтобы увидеть статистику'}
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
-                {results.slice(0, 10).map((result) => (
+                {displayResults.slice(0, 10).map((result) => (
                   <div
                     key={result.id}
                     className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow"
