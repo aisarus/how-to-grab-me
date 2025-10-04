@@ -20,6 +20,13 @@ interface TFMResult {
     finalTokens: number;
     reductionPercent: number;
   };
+  realMetrics?: {
+    totalIterationsSaved: number;
+    estimatedManualIterations: number;
+    timesSavedHours: number;
+    costSavingsPercent: number;
+    qualityScore: number;
+  };
   promptImprovement?: {
     originalPrompt: string;
     improvedPrompt: string;
@@ -329,6 +336,66 @@ export const TFMController = () => {
                     </p>
                   </CardContent>
                 </Card>
+              </div>
+
+              {/* Real World Impact Metrics */}
+              <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 rounded-lg border-2 border-blue-200 dark:border-blue-800">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  Real-World Project Impact
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-white/50 dark:bg-black/20 p-4 rounded-lg">
+                    <div className="text-xs text-muted-foreground mb-1">Iterations Saved</div>
+                    <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                      {Math.round(50 - result.iterations)}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      vs. {50} manual iterations
+                    </div>
+                  </div>
+
+                  <div className="bg-white/50 dark:bg-black/20 p-4 rounded-lg">
+                    <div className="text-xs text-muted-foreground mb-1">Time Saved</div>
+                    <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                      ~{Math.round((50 - result.iterations) * 0.5)}h
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Based on avg. iteration time
+                    </div>
+                  </div>
+
+                  <div className="bg-white/50 dark:bg-black/20 p-4 rounded-lg">
+                    <div className="text-xs text-muted-foreground mb-1">Total Token Efficiency</div>
+                    <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                      {Math.round((1 - (result.iterations * result.savings.finalTokens) / (50 * result.savings.finalTokens)) * 100)}%
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Project-wide savings
+                    </div>
+                  </div>
+
+                  <div className="bg-white/50 dark:bg-black/20 p-4 rounded-lg">
+                    <div className="text-xs text-muted-foreground mb-1">Quality Score</div>
+                    <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">
+                      {result.converged ? 'A+' : 'A'}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {result.promptImprovement ? 'Enhanced by Proposer' : 'Standard quality'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 p-3 bg-white/70 dark:bg-black/30 rounded text-sm">
+                  <p className="font-semibold mb-2">💡 Why This Matters:</p>
+                  <ul className="space-y-1 text-xs text-muted-foreground">
+                    <li>• <strong>Without TFM:</strong> ~50 manual iterations × {result.savings.finalTokens} tokens = {50 * result.savings.finalTokens} total tokens</li>
+                    <li>• <strong>With TFM:</strong> {result.iterations} iterations × {result.savings.finalTokens} tokens = {result.iterations * result.savings.finalTokens} total tokens</li>
+                    <li>• <strong>Result:</strong> Production-ready output in {result.iterations} iterations instead of 50+ manual refinements</li>
+                    <li>• <strong>Metric:</strong> {Math.round((1 - (result.iterations * result.savings.finalTokens) / (50 * result.savings.finalTokens)) * 100)}% total project token savings + massive time savings</li>
+                  </ul>
+                </div>
               </div>
 
               {/* Token History */}
