@@ -5,9 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Zap, TrendingDown, Sparkles, Settings, BarChart3, CheckCircle2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { OllamaClient } from '@/utils/ollamaClient';
 
 interface TFMResult {
   finalText: string;
@@ -28,13 +28,15 @@ interface TFMResult {
 
 export const TFMController = () => {
   const [prompt, setPrompt] = useState('');
-  const [apiKey, setApiKey] = useState('');
+  const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434');
+  const [ollamaModel, setOllamaModel] = useState('llama2');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TFMResult | null>(null);
   const [config, setConfig] = useState({
     a: 0.20,
     b: 0.35,
     maxIterations: 4,
+    convergenceThreshold: 0.05,
     useEFMNB: true,
     useErikson: false,
     autoImprovePrompt: true,
@@ -42,19 +44,19 @@ export const TFMController = () => {
   const { toast } = useToast();
 
   const handleSubmit = async () => {
-    if (!apiKey.trim()) {
+    if (!prompt.trim()) {
       toast({
-        title: "Error",
-        description: "Please enter your OpenAI API key",
+        title: "Ошибка",
+        description: "Введите текст для оптимизации",
         variant: "destructive",
       });
       return;
     }
 
-    if (!prompt.trim()) {
+    if (!ollamaModel.trim()) {
       toast({
-        title: "Error",
-        description: "Please enter text to optimize",
+        title: "Ошибка",
+        description: "Укажите модель Ollama",
         variant: "destructive",
       });
       return;
@@ -64,23 +66,26 @@ export const TFMController = () => {
     setResult(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('tri-tfm-controller', {
-        body: { prompt, config, apiKey },
+      const client = new OllamaClient(ollamaUrl, ollamaModel);
+      
+      toast({
+        title: "Начинаем оптимизацию",
+        description: "Это может занять несколько минут...",
       });
 
-      if (error) throw error;
+      const data = await client.runTFM(prompt, config);
 
       setResult(data);
 
       toast({
-        title: "Optimization Complete",
-        description: `Token efficiency: ${data.savings.reductionPercent}% in ${data.iterations} iterations`,
+        title: "Оптимизация завершена",
+        description: `Эффективность: ${data.savings.reductionPercent}% за ${data.iterations} итераций`,
       });
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to perform optimization",
+        title: "Ошибка",
+        description: error instanceof Error ? error.message : "Не удалось выполнить оптимизацию. Убедитесь, что Ollama запущена.",
         variant: "destructive",
       });
     } finally {
@@ -100,10 +105,10 @@ export const TFMController = () => {
               </div>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                  TRI/TFM Controller
+                  TRI/TFM Controller с Ollama
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Advanced Prompt Optimization Engine
+                  Локальная оптимизация промптов без API ключей
                 </p>
               </div>
             </div>
@@ -118,27 +123,43 @@ export const TFMController = () => {
       </div>
 
       <div className="container mx-auto px-6 py-8 space-y-8">
-        {/* API Key Card */}
-        <Card className="border-2 border-amber-500/20 bg-amber-500/5 shadow-lg">
+        {/* Ollama Configuration Card */}
+        <Card className="border-2 border-primary/20 bg-primary/5 shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-amber-600 dark:text-amber-500">
+            <CardTitle className="flex items-center gap-2">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
               </svg>
-              OpenAI API Key
+              Настройки Ollama
             </CardTitle>
             <CardDescription>
-              Your API key is encrypted and never stored. Get it from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">platform.openai.com</a>
+              Убедитесь, что Ollama запущена локально. <a href="https://ollama.ai" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">Скачать Ollama</a>
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Input
-              type="password"
-              placeholder="sk-..."
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              className="font-mono text-sm"
-            />
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>URL Ollama</Label>
+              <Input
+                type="text"
+                placeholder="http://localhost:11434"
+                value={ollamaUrl}
+                onChange={(e) => setOllamaUrl(e.target.value)}
+                className="font-mono text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Модель</Label>
+              <Input
+                type="text"
+                placeholder="llama2, mistral, codellama..."
+                value={ollamaModel}
+                onChange={(e) => setOllamaModel(e.target.value)}
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Рекомендуем: llama2, mistral, или другие модели, установленные в Ollama
+              </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -164,18 +185,18 @@ export const TFMController = () => {
             
             <Button 
               onClick={handleSubmit} 
-              disabled={loading || !prompt.trim() || !apiKey.trim()}
+              disabled={loading || !prompt.trim() || !ollamaModel.trim()}
               className="w-full h-12 text-base gradient-primary hover:opacity-90 transition-opacity shadow-glow"
             >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Optimizing...
+                  Оптимизируем...
                 </>
               ) : (
                 <>
                   <Sparkles className="mr-2 h-5 w-5" />
-                  Optimize Prompt
+                  Оптимизировать промпт
                 </>
               )}
             </Button>
@@ -187,7 +208,7 @@ export const TFMController = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Settings className="w-5 h-5 text-primary" />
-              Advanced Configuration
+              Расширенные настройки
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
