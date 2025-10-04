@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      favorite_configs: {
+        Row: {
+          a_parameter: number
+          b_parameter: number
+          convergence_threshold: number
+          created_at: string
+          id: string
+          max_iterations: number
+          name: string
+          use_efmnb: boolean
+          use_erikson: boolean
+          use_proposer_critic_verifier: boolean
+        }
+        Insert: {
+          a_parameter: number
+          b_parameter: number
+          convergence_threshold: number
+          created_at?: string
+          id?: string
+          max_iterations: number
+          name: string
+          use_efmnb?: boolean
+          use_erikson?: boolean
+          use_proposer_critic_verifier?: boolean
+        }
+        Update: {
+          a_parameter?: number
+          b_parameter?: number
+          convergence_threshold?: number
+          created_at?: string
+          id?: string
+          max_iterations?: number
+          name?: string
+          use_efmnb?: boolean
+          use_erikson?: boolean
+          use_proposer_critic_verifier?: boolean
+        }
+        Relationships: []
+      }
       optimization_results: {
         Row: {
           a_parameter: number | null

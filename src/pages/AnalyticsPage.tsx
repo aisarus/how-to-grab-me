@@ -1,13 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart3, TrendingUp, Target, Award, ArrowLeft, Loader2, Trophy, Filter } from 'lucide-react';
+import { BarChart3, TrendingUp, Target, Award, ArrowLeft, Loader2, Trophy, Filter, Search, Download, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { AnalyticsCharts } from '@/components/AnalyticsCharts';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface OptimizationResult {
   id: string;
@@ -28,20 +34,30 @@ export default function AnalyticsPage() {
   const [results, setResults] = useState<OptimizationResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [showEriksonOnly, setShowEriksonOnly] = useState(true); // Erikson filter enabled by default
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadResults();
-  }, []);
-
   const loadResults = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('optimization_results')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
+        .order('created_at', { ascending: false });
+
+      // Apply date filters
+      if (dateFrom) {
+        query = query.gte('created_at', dateFrom.toISOString());
+      }
+      if (dateTo) {
+        const endOfDay = new Date(dateTo);
+        endOfDay.setHours(23, 59, 59, 999);
+        query = query.lte('created_at', endOfDay.toISOString());
+      }
+
+      const { data, error } = await query.limit(100);
 
       if (error) throw error;
       setResults(data || []);
@@ -57,11 +73,28 @@ export default function AnalyticsPage() {
     }
   };
 
+  useEffect(() => {
+    loadResults();
+  }, [dateFrom, dateTo]);
+
   const calculateStats = () => {
-    // Filter results based on Erikson filter
-    const filteredResults = showEriksonOnly 
-      ? results.filter(r => r.ab_test_notes?.toLowerCase().includes('erikson') || r.ab_test_winner)
-      : results;
+    // Filter results based on all filters
+    let filteredResults = results;
+
+    // Erikson filter
+    if (showEriksonOnly) {
+      filteredResults = filteredResults.filter(r => r.ab_test_notes?.toLowerCase().includes('erikson') || r.ab_test_winner);
+    }
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filteredResults = filteredResults.filter(r => 
+        r.original_prompt.toLowerCase().includes(query) ||
+        r.optimized_prompt.toLowerCase().includes(query) ||
+        r.ab_test_notes?.toLowerCase().includes(query)
+      );
+    }
 
     if (filteredResults.length === 0) return {
       avgQualityGain: 0,
@@ -83,12 +116,103 @@ export default function AnalyticsPage() {
     };
   };
 
+  const exportToCSV = () => {
+    const displayResults = getDisplayResults();
+    
+    if (displayResults.length === 0) {
+      toast({
+        title: "Нет данных",
+        description: "Нечего экспортировать",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const headers = [
+      'Дата',
+      'Оригинальный промпт',
+      'Оптимизированный промпт',
+      'Токены до',
+      'Токены после',
+      'Улучшение (%)',
+      'Итераций',
+      'A/B Winner',
+      'A/B Notes'
+    ];
+
+    const rows = displayResults.map(r => [
+      new Date(r.created_at).toLocaleString('ru-RU'),
+      `"${r.original_prompt.replace(/"/g, '""')}"`,
+      `"${r.optimized_prompt.replace(/"/g, '""')}"`,
+      r.original_tokens,
+      r.optimized_tokens,
+      r.improvement_percentage.toFixed(2),
+      r.iterations,
+      r.ab_test_winner || '',
+      r.ab_test_notes ? `"${r.ab_test_notes.replace(/"/g, '""')}"` : ''
+    ]);
+
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `tfm-analytics-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+
+    toast({
+      title: "Экспорт завершён",
+      description: `Экспортировано ${displayResults.length} записей`,
+    });
+  };
+
+  const exportToJSON = () => {
+    const displayResults = getDisplayResults();
+    
+    if (displayResults.length === 0) {
+      toast({
+        title: "Нет данных",
+        description: "Нечего экспортировать",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const json = JSON.stringify(displayResults, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `tfm-analytics-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+
+    toast({
+      title: "Экспорт завершён",
+      description: `Экспортировано ${displayResults.length} записей`,
+    });
+  };
+
+  const getDisplayResults = () => {
+    let filteredResults = results;
+
+    // Erikson filter
+    if (showEriksonOnly) {
+      filteredResults = filteredResults.filter(r => r.ab_test_notes?.toLowerCase().includes('erikson') || r.ab_test_winner);
+    }
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filteredResults = filteredResults.filter(r => 
+        r.original_prompt.toLowerCase().includes(query) ||
+        r.optimized_prompt.toLowerCase().includes(query) ||
+        r.ab_test_notes?.toLowerCase().includes(query)
+      );
+    }
+
+    return filteredResults;
+  };
+
   const stats = calculateStats();
-  
-  // Get filtered results for display
-  const displayResults = showEriksonOnly 
-    ? results.filter(r => r.ab_test_notes?.toLowerCase().includes('erikson') || r.ab_test_winner)
-    : results;
+  const displayResults = getDisplayResults();
 
   if (loading) {
     return (
@@ -122,16 +246,73 @@ export default function AnalyticsPage() {
                   Метрики эффективности TRI/TFM технологии
                 </p>
               </div>
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
-                <Filter className="w-4 h-4 text-muted-foreground" />
-                <Label htmlFor="erikson-filter" className="text-sm cursor-pointer">
-                  Только Erikson
-                </Label>
-                <Switch
-                  id="erikson-filter"
-                  checked={showEriksonOnly}
-                  onCheckedChange={setShowEriksonOnly}
-                />
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+                  <Filter className="w-4 h-4 text-muted-foreground" />
+                  <Label htmlFor="erikson-filter" className="text-sm cursor-pointer">
+                    Только Erikson
+                  </Label>
+                  <Switch
+                    id="erikson-filter"
+                    checked={showEriksonOnly}
+                    onCheckedChange={setShowEriksonOnly}
+                  />
+                </div>
+
+                {/* Date Filters */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Calendar className="w-4 h-4" />
+                      {dateFrom || dateTo ? 'Фильтр: активен' : 'Выбрать даты'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end">
+                    <div className="p-4 space-y-4">
+                      <div>
+                        <Label className="text-xs mb-2 block">От</Label>
+                        <CalendarComponent
+                          mode="single"
+                          selected={dateFrom}
+                          onSelect={setDateFrom}
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs mb-2 block">До</Label>
+                        <CalendarComponent
+                          mode="single"
+                          selected={dateTo}
+                          onSelect={setDateTo}
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setDateFrom(undefined);
+                            setDateTo(undefined);
+                          }}
+                          className="flex-1"
+                        >
+                          Сбросить
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                {/* Export Buttons */}
+                <Button variant="outline" size="sm" onClick={exportToCSV} className="gap-2">
+                  <Download className="w-4 h-4" />
+                  CSV
+                </Button>
+                <Button variant="outline" size="sm" onClick={exportToJSON} className="gap-2">
+                  <Download className="w-4 h-4" />
+                  JSON
+                </Button>
               </div>
             </div>
           </div>
@@ -139,6 +320,17 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="container mx-auto px-6 py-8 space-y-8">
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <Input
+            placeholder="Поиск по промптам или заметкам..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 h-12"
+          />
+        </div>
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 shadow-md hover:shadow-lg transition-shadow">
@@ -195,6 +387,9 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Analytics Charts */}
+        <AnalyticsCharts results={displayResults} />
 
         {/* Recent Optimizations */}
         <Card className="border-2 shadow-lg">

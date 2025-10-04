@@ -5,11 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Zap, TrendingDown, Sparkles, Settings, BarChart3, CheckCircle2, Trophy, StopCircle } from 'lucide-react';
+import { Loader2, Zap, TrendingDown, Sparkles, Settings, BarChart3, CheckCircle2, Trophy, StopCircle, Copy, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Textarea as TextareaComponent } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
+import { PromptTemplates } from './PromptTemplates';
+import { FavoriteConfigs } from './FavoriteConfigs';
+import { ComparisonModal } from './ComparisonModal';
 
 interface TFMResult {
   finalText: string;
@@ -35,6 +38,7 @@ export const TFMController = () => {
   const [abTestWinner, setAbTestWinner] = useState<'original' | 'optimized' | 'tie' | null>(null);
   const [abTestNotes, setAbTestNotes] = useState('');
   const [lastResultId, setLastResultId] = useState<string | null>(null);
+  const [copiedResult, setCopiedResult] = useState(false);
   const [config, setConfig] = useState({
     a: 0.20,
     b: 0.35,
@@ -187,6 +191,32 @@ export const TFMController = () => {
     }
   };
 
+  const handleCopyResult = async () => {
+    if (!result) return;
+    
+    try {
+      const textToCopy = result.promptImprovement?.improvedPrompt || result.finalText;
+      await navigator.clipboard.writeText(textToCopy);
+      setCopiedResult(true);
+      setTimeout(() => setCopiedResult(false), 2000);
+      
+      toast({
+        title: "Скопировано",
+        description: "Оптимизированный промпт скопирован в буфер обмена",
+      });
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось скопировать текст",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLoadConfig = (newConfig: Omit<typeof config, 'useEFMNB' | 'useErikson' | 'useProposerCriticVerifier'> & { useEFMNB: boolean; useErikson: boolean; useProposerCriticVerifier: boolean }) => {
+    setConfig(newConfig);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
       {/* Hero Header */}
@@ -274,6 +304,12 @@ export const TFMController = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Prompt Templates */}
+        <PromptTemplates onSelectTemplate={(template) => setPrompt(template)} />
+
+        {/* Favorite Configs */}
+        <FavoriteConfigs currentConfig={config} onLoadConfig={handleLoadConfig} />
 
         {/* Configuration Card */}
         <Card className="border shadow-md">
@@ -407,6 +443,36 @@ export const TFMController = () => {
                 </CardContent>
               </Card>
             )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-2 justify-end">
+              <ComparisonModal
+                originalPrompt={result.promptImprovement?.originalPrompt || prompt}
+                optimizedPrompt={result.promptImprovement?.improvedPrompt || result.finalText}
+                originalTokens={result.savings.initialTokens}
+                optimizedTokens={result.savings.finalTokens}
+                improvementPercentage={result.savings.percentageSaved}
+                iterations={result.iterations}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyResult}
+                className="gap-2"
+              >
+                {copiedResult ? (
+                  <>
+                    <Check className="w-4 h-4 text-green-600" />
+                    Скопировано
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    Копировать результат
+                  </>
+                )}
+              </Button>
+            </div>
 
             {/* Metrics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
