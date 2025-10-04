@@ -72,8 +72,8 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
   const handleSave = async () => {
     if (!saveName.trim()) {
       toast({
-        title: 'Ошибка',
-        description: 'Введите название конфигурации',
+        title: 'Error',
+        description: 'Enter a configuration name',
         variant: 'destructive',
       });
       return;
@@ -96,8 +96,8 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
       if (error) throw error;
 
       toast({
-        title: 'Успешно',
-        description: 'Конфигурация сохранена',
+        title: 'Success',
+        description: 'Configuration saved',
       });
 
       setSaveName('');
@@ -106,8 +106,8 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
     } catch (error) {
       console.error('Error saving favorite:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось сохранить конфигурацию',
+        title: 'Error',
+        description: 'Failed to save configuration',
         variant: 'destructive',
       });
     }
@@ -123,16 +123,16 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
       if (error) throw error;
 
       toast({
-        title: 'Удалено',
-        description: 'Конфигурация удалена',
+        title: 'Deleted',
+        description: 'Configuration deleted',
       });
 
       loadFavorites();
     } catch (error) {
       console.error('Error deleting favorite:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось удалить конфигурацию',
+        title: 'Error',
+        description: 'Failed to delete configuration',
         variant: 'destructive',
       });
     }
@@ -150,8 +150,8 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
     });
 
     toast({
-      title: 'Загружено',
-      description: `Конфигурация "${favorite.name}" применена`,
+      title: 'Loaded',
+      description: `Configuration "${favorite.name}" applied`,
     });
   };
 
@@ -162,40 +162,40 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
           <div>
             <CardTitle className="flex items-center gap-2">
               <Star className="w-5 h-5 text-primary" />
-              Избранные конфигурации
+              Favorite Configurations
             </CardTitle>
             <CardDescription>
-              Сохраняйте и загружайте настройки параметров
+              Save and load parameter settings
             </CardDescription>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="default" size="sm" className="gap-2">
                 <Star className="w-4 h-4" />
-                Сохранить текущую
+                Save Current
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Сохранить конфигурацию</DialogTitle>
+                <DialogTitle>Save Configuration</DialogTitle>
                 <DialogDescription>
-                  Введите название для текущей конфигурации параметров
+                  Enter a name for the current parameter configuration
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <Label>Название</Label>
+                  <Label>Name</Label>
                   <Input
-                    placeholder="Например: Для контент-модерации"
+                    placeholder="e.g., For content moderation"
                     value={saveName}
                     onChange={(e) => setSaveName(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSave()}
                   />
                 </div>
                 <div className="p-3 bg-muted/50 rounded-lg space-y-1 text-sm">
-                  <p className="font-medium">Текущие параметры:</p>
+                  <p className="font-medium">Current parameters:</p>
                   <p className="text-xs text-muted-foreground">
-                    a: {currentConfig.a} | b: {currentConfig.b} | Итерации: {currentConfig.maxIterations}
+                    a: {currentConfig.a} | b: {currentConfig.b} | Iterations: {currentConfig.maxIterations}
                   </p>
                   <div className="flex gap-2 flex-wrap mt-2">
                     {currentConfig.useEFMNB && <Badge variant="secondary" className="text-xs">EFMNB</Badge>}
@@ -205,7 +205,7 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
                 </div>
                 <Button onClick={handleSave} className="w-full">
                   <Check className="w-4 h-4 mr-2" />
-                  Сохранить
+                  Save
                 </Button>
               </div>
             </DialogContent>
@@ -217,8 +217,8 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
           {favorites.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Star className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="text-sm">Нет сохранённых конфигураций</p>
-              <p className="text-xs mt-1">Сохраните текущие параметры</p>
+              <p className="text-sm">No saved configurations</p>
+              <p className="text-xs mt-1">Save your current parameters</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -239,7 +239,7 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
                         {favorite.use_proposer_critic_verifier && <Badge variant="outline" className="text-xs">PCV</Badge>}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(favorite.created_at).toLocaleDateString('ru-RU')}
+                        {new Date(favorite.created_at).toLocaleDateString('en-US')}
                       </p>
                     </div>
                     <div className="flex gap-1">
@@ -248,7 +248,7 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
                         size="sm"
                         onClick={() => handleLoad(favorite)}
                       >
-                        Загрузить
+                        Load
                       </Button>
                       <Button
                         variant="ghost"

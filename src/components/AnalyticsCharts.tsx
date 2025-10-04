@@ -79,7 +79,7 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <TrendingUp className="w-5 h-5 text-primary" />
-            Динамика токенов
+            Token Trend
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -101,7 +101,7 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
                 dataKey="original" 
                 stroke="hsl(var(--muted-foreground))" 
                 strokeWidth={2}
-                name="Оригинал"
+                name="Original"
                 dot={{ fill: 'hsl(var(--muted-foreground))' }}
               />
               <Line 
@@ -109,7 +109,7 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
                 dataKey="optimized" 
                 stroke="hsl(var(--primary))" 
                 strokeWidth={2}
-                name="Оптимизированный"
+                name="Optimized"
                 dot={{ fill: 'hsl(var(--primary))' }}
               />
             </LineChart>
@@ -122,7 +122,7 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <PieIcon className="w-5 h-5 text-primary" />
-            Распределение улучшений
+            Improvement Distribution
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -159,7 +159,7 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <BarChart3 className="w-5 h-5 text-primary" />
-            Эффективность параметров (топ-5)
+            Parameter Effectiveness (Top 5)
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -174,19 +174,19 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '8px'
                 }} 
-                formatter={(value: number) => [`${value.toFixed(1)}%`, 'Среднее улучшение']}
+                formatter={(value: number) => [`${value.toFixed(1)}%`, 'Average Improvement']}
               />
               <Legend />
               <Bar 
                 dataKey="avgImprovement" 
                 fill="hsl(var(--primary))" 
-                name="Среднее улучшение (%)"
+                name="Average Improvement (%)"
                 radius={[8, 8, 0, 0]}
               />
             </BarChart>
           </ResponsiveContainer>
           <p className="text-xs text-muted-foreground mt-4 text-center">
-            Комбинации параметров a и b с наилучшими результатами
+            Best performing a and b parameter combinations
           </p>
         </CardContent>
       </Card>

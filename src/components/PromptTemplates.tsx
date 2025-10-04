@@ -16,59 +16,24 @@ interface Template {
 const templates: Template[] = [
   {
     id: '1',
-    name: 'Контент-модерация',
-    category: 'Безопасность',
-    description: 'Детекция токсичного контента в текстах',
-    prompt: 'Проанализируй следующий текст на наличие токсичного, оскорбительного или неприемлемого контента. Оцени уровень токсичности от 0 до 10 и объясни свою оценку.',
+    name: 'Text Generation',
+    category: 'Text',
+    description: 'Create compelling and well-structured text content',
+    prompt: 'Generate high-quality, engaging text content. Focus on clarity, coherence, and purpose. Ensure the text is well-structured with proper flow and addresses the target audience effectively.',
   },
   {
     id: '2',
-    name: 'Генерация описаний',
-    category: 'Контент',
-    description: 'Создание SEO-оптимизированных описаний',
-    prompt: 'Создай привлекательное и SEO-оптимизированное описание для товара/услуги. Включи ключевые преимущества, уникальные характеристики и призыв к действию.',
+    name: 'Code Generation',
+    category: 'Code',
+    description: 'Generate clean and efficient code',
+    prompt: 'Write clean, efficient, and well-documented code. Follow best practices and design patterns. Include comments explaining complex logic and ensure the code is maintainable and scalable.',
   },
   {
     id: '3',
-    name: 'Анализ тональности',
-    category: 'Аналитика',
-    description: 'Определение эмоциональной окраски текста',
-    prompt: 'Определи тональность следующего текста (положительная, нейтральная, отрицательная). Укажи степень уверенности в процентах и выдели ключевые фразы, которые повлияли на оценку.',
-  },
-  {
-    id: '4',
-    name: 'Извлечение сущностей',
-    category: 'NLP',
-    description: 'Извлечение именованных сущностей из текста',
-    prompt: 'Извлеки из текста все именованные сущности: людей, организации, места, даты, денежные суммы. Представь результат в структурированном виде.',
-  },
-  {
-    id: '5',
-    name: 'Суммаризация',
-    category: 'Контент',
-    description: 'Краткое резюме длинного текста',
-    prompt: 'Создай краткое резюме следующего текста. Выдели 3-5 ключевых пунктов. Сохрани основную идею и важные детали.',
-  },
-  {
-    id: '6',
-    name: 'Классификация',
-    category: 'ML',
-    description: 'Категоризация текста по темам',
-    prompt: 'Классифицируй следующий текст по категориям: технологии, спорт, политика, развлечения, наука, бизнес, здоровье. Укажи степень уверенности для каждой категории.',
-  },
-  {
-    id: '7',
-    name: 'Перефразирование',
-    category: 'Контент',
-    description: 'Альтернативные формулировки текста',
-    prompt: 'Перефразируй следующий текст, сохранив его смысл. Предложи 3 варианта с разной стилистикой: формальный, разговорный, технический.',
-  },
-  {
-    id: '8',
-    name: 'Q&A извлечение',
-    category: 'Аналитика',
-    description: 'Ответы на вопросы по тексту',
-    prompt: 'Прочитай следующий текст и ответь на вопросы к нему. Если ответа нет в тексте, честно укажи это. Цитируй соответствующие части текста в своих ответах.',
+    name: 'Image Description',
+    category: 'Images',
+    description: 'Create detailed and accurate image descriptions',
+    prompt: 'Describe the image in detail, including visual elements, composition, colors, mood, and context. Be precise and objective while capturing all important aspects of the image.',
   },
 ];
 
@@ -89,10 +54,10 @@ export const PromptTemplates = ({ onSelectTemplate }: PromptTemplatesProps) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="w-5 h-5 text-primary" />
-          Шаблоны промптов
+          Prompt Templates
         </CardTitle>
         <CardDescription>
-          Готовые промпты для популярных задач
+          Ready-to-use prompts for common tasks
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -103,7 +68,7 @@ export const PromptTemplates = ({ onSelectTemplate }: PromptTemplatesProps) => {
             size="sm"
             onClick={() => setSelectedCategory(null)}
           >
-            Все
+            All
           </Button>
           {categories.map((category) => (
             <Button

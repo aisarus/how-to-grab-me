@@ -47,13 +47,13 @@ export const ComparisonModal = ({
       }
 
       toast({
-        title: 'Скопировано',
-        description: 'Промпт скопирован в буфер обмена',
+        title: 'Copied',
+        description: 'Prompt copied to clipboard',
       });
     } catch (error) {
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось скопировать текст',
+        title: 'Error',
+        description: 'Failed to copy text',
         variant: 'destructive',
       });
     }
@@ -67,17 +67,17 @@ export const ComparisonModal = ({
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <GitCompare className="w-4 h-4" />
-          Сравнить
+          Compare
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-6xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <GitCompare className="w-5 h-5 text-primary" />
-            Side-by-Side сравнение
+            Side-by-Side Comparison
           </DialogTitle>
           <DialogDescription>
-            Детальное сравнение оригинального и оптимизированного промпта
+            Detailed comparison of original and optimized prompts
           </DialogDescription>
         </DialogHeader>
 
@@ -87,22 +87,22 @@ export const ComparisonModal = ({
             <p className="text-2xl font-bold text-primary">
               +{Math.abs(improvementPercentage)}%
             </p>
-            <p className="text-xs text-muted-foreground mt-1">Улучшение качества</p>
+            <p className="text-xs text-muted-foreground mt-1">Quality Improvement</p>
           </div>
           <div className="text-center">
             <p className="text-xl font-bold">{iterations}</p>
-            <p className="text-xs text-muted-foreground mt-1">Итераций</p>
+            <p className="text-xs text-muted-foreground mt-1">Iterations</p>
           </div>
           <div className="text-center">
             <p className="text-xl font-bold">{originalTokens}</p>
-            <p className="text-xs text-muted-foreground mt-1">Токенов до</p>
+            <p className="text-xs text-muted-foreground mt-1">Tokens Before</p>
           </div>
           <div className="text-center">
             <p className={`text-xl font-bold ${isTokenIncrease ? 'text-blue-600' : 'text-green-600'}`}>
               {optimizedTokens}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Токенов после ({isTokenIncrease ? '+' : ''}{tokenChange})
+              Tokens After ({isTokenIncrease ? '+' : ''}{tokenChange})
             </p>
           </div>
         </div>
@@ -113,8 +113,8 @@ export const ComparisonModal = ({
           <div className="flex flex-col space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold">Оригинальный промпт</h3>
-                <Badge variant="secondary">{originalTokens} токенов</Badge>
+                <h3 className="font-semibold">Original Prompt</h3>
+                <Badge variant="secondary">{originalTokens} tokens</Badge>
               </div>
               <Button
                 variant="ghost"
@@ -139,8 +139,8 @@ export const ComparisonModal = ({
           <div className="flex flex-col space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-primary">Оптимизированный промпт</h3>
-                <Badge variant="default">{optimizedTokens} токенов</Badge>
+                <h3 className="font-semibold text-primary">Optimized Prompt</h3>
+                <Badge variant="default">{optimizedTokens} tokens</Badge>
               </div>
               <Button
                 variant="ghost"
@@ -165,8 +165,8 @@ export const ComparisonModal = ({
         {/* Info */}
         <div className="p-3 bg-muted/50 rounded-lg">
           <p className="text-xs text-muted-foreground">
-            <strong>Важно:</strong> TRI/TFM оптимизирует качество ответов AI, а не количество токенов. 
-            Оптимизированный промпт может содержать больше токенов, но даёт значительно лучшие результаты.
+            <strong>Important:</strong> TRI/TFM optimizes AI response quality, not token count. 
+            The optimized prompt may contain more tokens but delivers significantly better results.
           </p>
         </div>
       </DialogContent>

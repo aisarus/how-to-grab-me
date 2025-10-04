@@ -86,8 +86,8 @@ export const TFMController = () => {
   const handleSubmit = async () => {
     if (!prompt.trim()) {
       toast({
-        title: "Ошибка",
-        description: "Введите текст для оптимизации",
+        title: "Error",
+        description: "Please enter text to optimize",
         variant: "destructive",
       });
       return;
@@ -101,8 +101,8 @@ export const TFMController = () => {
 
     try {
       toast({
-        title: "Начинаем оптимизацию",
-        description: "Это может занять несколько минут...",
+        title: "Starting optimization",
+        description: "This may take a few minutes...",
       });
 
       const { data, error } = await supabase.functions.invoke('tri-tfm-controller', {
@@ -155,8 +155,8 @@ export const TFMController = () => {
       }
 
       toast({
-        title: "Оптимизация завершена",
-        description: `Качество улучшено на ${Math.abs(data.savings.percentageSaved)}% за ${data.iterations} итераций`,
+        title: "Optimization completed",
+        description: `Quality improved by ${Math.abs(data.savings.percentageSaved)}% in ${data.iterations} iterations`,
       });
     } catch (error) {
       console.error('Error:', error);
@@ -164,13 +164,13 @@ export const TFMController = () => {
       // Check if error was due to abort
       if (error instanceof Error && error.name === 'AbortError') {
         toast({
-          title: "Оптимизация остановлена",
-          description: "Процесс был прерван пользователем",
+          title: "Optimization stopped",
+          description: "Process was interrupted by user",
         });
       } else {
         toast({
-          title: "Ошибка",
-          description: error instanceof Error ? error.message : "Не удалось выполнить оптимизацию",
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to perform optimization",
           variant: "destructive",
         });
       }
@@ -185,8 +185,8 @@ export const TFMController = () => {
       abortControllerRef.current = null;
       setLoading(false);
       toast({
-        title: "Оптимизация остановлена",
-        description: "Процесс был прерван",
+        title: "Optimization stopped",
+        description: "Process was interrupted",
       });
     }
   };
@@ -201,13 +201,13 @@ export const TFMController = () => {
       setTimeout(() => setCopiedResult(false), 2000);
       
       toast({
-        title: "Скопировано",
-        description: "Оптимизированный промпт скопирован в буфер обмена",
+        title: "Copied",
+        description: "Optimized prompt copied to clipboard",
       });
     } catch (error) {
       toast({
-        title: "Ошибка",
-        description: "Не удалось скопировать текст",
+        title: "Error",
+        description: "Failed to copy text",
         variant: "destructive",
       });
     }
@@ -232,7 +232,7 @@ export const TFMController = () => {
                   TRI/TFM Controller
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Оптимизация промптов с помощью облачного AI
+                  Cloud AI-powered prompt optimization
                 </p>
               </div>
             </div>
@@ -281,12 +281,12 @@ export const TFMController = () => {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Оптимизируем...
+                    Optimizing...
                   </>
                 ) : (
                   <>
                     <Sparkles className="mr-2 h-5 w-5" />
-                    Оптимизировать промпт
+                    Optimize Prompt
                   </>
                 )}
               </Button>
@@ -298,7 +298,7 @@ export const TFMController = () => {
                   className="h-12 px-6"
                 >
                   <StopCircle className="mr-2 h-5 w-5" />
-                  Стоп
+                  Stop
                 </Button>
               )}
             </div>
@@ -316,7 +316,7 @@ export const TFMController = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Settings className="w-5 h-5 text-primary" />
-              Расширенные настройки
+              Advanced Settings
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -463,12 +463,12 @@ export const TFMController = () => {
                 {copiedResult ? (
                   <>
                     <Check className="w-4 h-4 text-green-600" />
-                    Скопировано
+                    Copied
                   </>
                 ) : (
                   <>
                     <Copy className="w-4 h-4" />
-                    Копировать результат
+                    Copy Result
                   </>
                 )}
               </Button>

@@ -64,8 +64,8 @@ export default function AnalyticsPage() {
     } catch (error) {
       console.error('Error loading results:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось загрузить данные аналитики",
+        title: "Error",
+        description: "Failed to load analytics data",
         variant: "destructive",
       });
     } finally {
@@ -121,27 +121,27 @@ export default function AnalyticsPage() {
     
     if (displayResults.length === 0) {
       toast({
-        title: "Нет данных",
-        description: "Нечего экспортировать",
+        title: "No data",
+        description: "Nothing to export",
         variant: "destructive",
       });
       return;
     }
 
     const headers = [
-      'Дата',
-      'Оригинальный промпт',
-      'Оптимизированный промпт',
-      'Токены до',
-      'Токены после',
-      'Улучшение (%)',
-      'Итераций',
+      'Date',
+      'Original Prompt',
+      'Optimized Prompt',
+      'Tokens Before',
+      'Tokens After',
+      'Improvement (%)',
+      'Iterations',
       'A/B Winner',
       'A/B Notes'
     ];
 
     const rows = displayResults.map(r => [
-      new Date(r.created_at).toLocaleString('ru-RU'),
+      new Date(r.created_at).toLocaleString('en-US'),
       `"${r.original_prompt.replace(/"/g, '""')}"`,
       `"${r.optimized_prompt.replace(/"/g, '""')}"`,
       r.original_tokens,
@@ -160,8 +160,8 @@ export default function AnalyticsPage() {
     link.click();
 
     toast({
-      title: "Экспорт завершён",
-      description: `Экспортировано ${displayResults.length} записей`,
+      title: "Export completed",
+      description: `Exported ${displayResults.length} records`,
     });
   };
 
@@ -170,8 +170,8 @@ export default function AnalyticsPage() {
     
     if (displayResults.length === 0) {
       toast({
-        title: "Нет данных",
-        description: "Нечего экспортировать",
+        title: "No data",
+        description: "Nothing to export",
         variant: "destructive",
       });
       return;
@@ -185,8 +185,8 @@ export default function AnalyticsPage() {
     link.click();
 
     toast({
-      title: "Экспорт завершён",
-      description: `Экспортировано ${displayResults.length} записей`,
+      title: "Export completed",
+      description: `Exported ${displayResults.length} records`,
     });
   };
 
@@ -236,21 +236,21 @@ export default function AnalyticsPage() {
                 className="gap-2"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Назад
+                Back
               </Button>
               <div className="flex-1">
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                   Analytics Dashboard
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Метрики эффективности TRI/TFM технологии
+                  TRI/TFM Technology Performance Metrics
                 </p>
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
                   <Filter className="w-4 h-4 text-muted-foreground" />
                   <Label htmlFor="erikson-filter" className="text-sm cursor-pointer">
-                    Только Erikson
+                    Erikson Only
                   </Label>
                   <Switch
                     id="erikson-filter"
@@ -264,13 +264,13 @@ export default function AnalyticsPage() {
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-2">
                       <Calendar className="w-4 h-4" />
-                      {dateFrom || dateTo ? 'Фильтр: активен' : 'Выбрать даты'}
+                      {dateFrom || dateTo ? 'Filter: active' : 'Select dates'}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="end">
                     <div className="p-4 space-y-4">
                       <div>
-                        <Label className="text-xs mb-2 block">От</Label>
+                        <Label className="text-xs mb-2 block">From</Label>
                         <CalendarComponent
                           mode="single"
                           selected={dateFrom}
@@ -279,7 +279,7 @@ export default function AnalyticsPage() {
                         />
                       </div>
                       <div>
-                        <Label className="text-xs mb-2 block">До</Label>
+                        <Label className="text-xs mb-2 block">To</Label>
                         <CalendarComponent
                           mode="single"
                           selected={dateTo}
@@ -297,7 +297,7 @@ export default function AnalyticsPage() {
                           }}
                           className="flex-1"
                         >
-                          Сбросить
+                          Reset
                         </Button>
                       </div>
                     </div>
@@ -324,7 +324,7 @@ export default function AnalyticsPage() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
-            placeholder="Поиск по промптам или заметкам..."
+            placeholder="Search prompts or notes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 h-12"
@@ -337,12 +337,12 @@ export default function AnalyticsPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-primary flex items-center gap-2">
                 <Award className="w-4 h-4" />
-                Улучшение качества
+                Quality Improvement
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-primary">{stats.avgQualityGain}%</div>
-              <p className="text-xs text-muted-foreground mt-1">Средний прирост качества</p>
+              <p className="text-xs text-muted-foreground mt-1">Average quality gain</p>
             </CardContent>
           </Card>
 
@@ -350,12 +350,12 @@ export default function AnalyticsPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" />
-                Всего оптимизаций
+                Total Optimizations
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{stats.totalOptimizations}</div>
-              <p className="text-xs text-muted-foreground mt-1">За все время</p>
+              <p className="text-xs text-muted-foreground mt-1">All time</p>
             </CardContent>
           </Card>
 
@@ -363,14 +363,14 @@ export default function AnalyticsPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <TrendingUp className="w-4 h-4" />
-                Изменение токенов
+                Token Change
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className={`text-3xl font-bold ${Number(stats.avgTokenChange) > 0 ? 'text-blue-600' : 'text-green-600'}`}>
                 {Number(stats.avgTokenChange) > 0 ? '+' : ''}{stats.avgTokenChange}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">В среднем (качество ≠ экономия)</p>
+              <p className="text-xs text-muted-foreground mt-1">Average (quality ≠ savings)</p>
             </CardContent>
           </Card>
 
@@ -378,12 +378,12 @@ export default function AnalyticsPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Target className="w-4 h-4" />
-                Скорость сходимости
+                Convergence Speed
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{stats.convergenceRate}%</div>
-              <p className="text-xs text-muted-foreground mt-1">Быстрая конвергенция</p>
+              <p className="text-xs text-muted-foreground mt-1">Fast convergence</p>
             </CardContent>
           </Card>
         </div>
@@ -396,19 +396,19 @@ export default function AnalyticsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-primary" />
-              История оптимизаций
+              Optimization History
             </CardTitle>
-            <CardDescription>Последние результаты работы TRI/TFM</CardDescription>
+            <CardDescription>Recent TRI/TFM results</CardDescription>
           </CardHeader>
           <CardContent>
             {displayResults.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <BarChart3 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Пока нет данных для анализа</p>
+                <p>No data available yet</p>
                 <p className="text-sm mt-2">
                   {showEriksonOnly 
-                    ? 'Нет результатов с Erikson фильтром. Отключите фильтр для просмотра всех результатов.'
-                    : 'Выполните оптимизацию промпта, чтобы увидеть статистику'}
+                    ? 'No results with Erikson filter. Disable the filter to view all results.'
+                    : 'Optimize a prompt to see statistics'}
                 </p>
               </div>
             ) : (
@@ -425,29 +425,29 @@ export default function AnalyticsPage() {
                             +{Math.abs(result.improvement_percentage)}%
                           </span>
                           <div className="text-sm text-muted-foreground">
-                            {result.original_tokens} → {result.optimized_tokens} токенов
+                            {result.original_tokens} → {result.optimized_tokens} tokens
                             <span className={result.optimized_tokens > result.original_tokens ? 'text-blue-600' : 'text-green-600'}>
                               {' '}({result.optimized_tokens > result.original_tokens ? '+' : ''}{result.optimized_tokens - result.original_tokens})
                             </span>
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {result.iterations} итераций
+                            {result.iterations} iterations
                           </div>
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {new Date(result.created_at).toLocaleString('ru-RU')}
+                          {new Date(result.created_at).toLocaleString('en-US')}
                         </div>
                         <details className="text-sm">
                           <summary className="cursor-pointer text-primary hover:underline">
-                            Показать промпты
+                            Show prompts
                           </summary>
                           <div className="mt-2 space-y-2">
                             <div className="p-2 bg-muted/50 rounded text-xs">
-                              <div className="font-semibold mb-1">Оригинал:</div>
+                              <div className="font-semibold mb-1">Original:</div>
                               <div className="line-clamp-2">{result.original_prompt}</div>
                             </div>
                             <div className="p-2 bg-primary/5 rounded text-xs">
-                              <div className="font-semibold mb-1">Оптимизированный:</div>
+                              <div className="font-semibold mb-1">Optimized:</div>
                               <div className="line-clamp-2">{result.optimized_prompt}</div>
                             </div>
                             {result.ab_test_winner && (
@@ -460,14 +460,14 @@ export default function AnalyticsPage() {
                                     result.ab_test_winner === 'original' ? 'secondary' : 
                                     'outline'
                                   } className="text-xs">
-                                    {result.ab_test_winner === 'optimized' ? 'Оптимизированный' :
-                                     result.ab_test_winner === 'original' ? 'Оригинальный' :
-                                     'Ничья'}
+                                    {result.ab_test_winner === 'optimized' ? 'Optimized' :
+                                     result.ab_test_winner === 'original' ? 'Original' :
+                                     'Tie'}
                                   </Badge>
                                 </div>
                                 {result.ab_test_notes && (
                                   <div className="text-xs text-muted-foreground mt-1">
-                                    <span className="font-medium">Заметки:</span> {result.ab_test_notes}
+                                    <span className="font-medium">Notes:</span> {result.ab_test_notes}
                                   </div>
                                 )}
                               </div>
@@ -494,7 +494,7 @@ export default function AnalyticsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-primary">
               <Award className="w-5 h-5" />
-              Ценность для бизнеса
+              Business Value
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -502,28 +502,28 @@ export default function AnalyticsPage() {
               <div className="p-4 bg-background/50 rounded-lg border">
                 <div className="text-2xl font-bold mb-2 text-primary">+{stats.avgQualityGain}%</div>
                 <div className="text-sm text-muted-foreground">
-                  Улучшение качества результатов AI
+                  AI results quality improvement
                 </div>
               </div>
               <div className="p-4 bg-background/50 rounded-lg border">
                 <div className="text-2xl font-bold mb-2">{stats.totalOptimizations}</div>
                 <div className="text-sm text-muted-foreground">
-                  Промптов оптимизировано
+                  Prompts optimized
                 </div>
               </div>
             </div>
             <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
               <p className="text-sm">
-                <strong className="text-primary">Для VK/Яндекс:</strong> TRI/TFM улучшает качество ответов AI на {stats.avgQualityGain}%,
-                что критично для продуктовых задач (контент-модерация, поиск, рекомендации). 
-                При масштабе в миллионы запросов это означает значительное улучшение UX и снижение количества ошибок системы.
+                <strong className="text-primary">Business Impact:</strong> TRI/TFM improves AI response quality by {stats.avgQualityGain}%,
+                which is critical for product tasks (content moderation, search, recommendations). 
+                At scale with millions of requests, this means significant UX improvement and reduced system errors.
               </p>
             </div>
             <div className="p-4 bg-background/50 rounded-lg border">
               <p className="text-xs text-muted-foreground">
-                <strong>Важно:</strong> TRI/TFM оптимизирует <em>качество</em>, а не количество токенов. 
-                D-блок расширяет контекст для точности, S-блок сжимает для ясности. 
-                Финальный промпт может быть длиннее, но даёт лучшие результаты.
+                <strong>Important:</strong> TRI/TFM optimizes <em>quality</em>, not token count. 
+                D-block expands context for accuracy, S-block compresses for clarity. 
+                The final prompt may be longer but delivers better results.
               </p>
             </div>
           </CardContent>
