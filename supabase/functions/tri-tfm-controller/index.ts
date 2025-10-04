@@ -40,16 +40,22 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, config } = await req.json();
+    const { prompt, config, apiKey } = await req.json();
     
     if (!prompt) {
       throw new Error('Prompt is required');
     }
 
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY not configured');
+    if (!apiKey || !apiKey.trim()) {
+      throw new Error('OpenAI API key is required');
     }
+
+    // Validate API key format
+    if (!apiKey.startsWith('sk-')) {
+      throw new Error('Invalid OpenAI API key format');
+    }
+
+    const OPENAI_API_KEY = apiKey;
 
     // Default TFM configuration
     const tfmConfig: TFMConfig = {

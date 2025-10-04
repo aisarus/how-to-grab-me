@@ -28,6 +28,7 @@ interface TFMResult {
 
 export const TFMController = () => {
   const [prompt, setPrompt] = useState('');
+  const [apiKey, setApiKey] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TFMResult | null>(null);
   const [config, setConfig] = useState({
@@ -41,6 +42,15 @@ export const TFMController = () => {
   const { toast } = useToast();
 
   const handleSubmit = async () => {
+    if (!apiKey.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter your OpenAI API key",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!prompt.trim()) {
       toast({
         title: "Error",
@@ -55,7 +65,7 @@ export const TFMController = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke('tri-tfm-controller', {
-        body: { prompt, config },
+        body: { prompt, config, apiKey },
       });
 
       if (error) throw error;
@@ -108,6 +118,30 @@ export const TFMController = () => {
       </div>
 
       <div className="container mx-auto px-6 py-8 space-y-8">
+        {/* API Key Card */}
+        <Card className="border-2 border-amber-500/20 bg-amber-500/5 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-amber-600 dark:text-amber-500">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              OpenAI API Key
+            </CardTitle>
+            <CardDescription>
+              Your API key is encrypted and never stored. Get it from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">platform.openai.com</a>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Input
+              type="password"
+              placeholder="sk-..."
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              className="font-mono text-sm"
+            />
+          </CardContent>
+        </Card>
+
         {/* Main Input Card */}
         <Card className="border-2 shadow-lg">
           <CardHeader>
@@ -130,7 +164,7 @@ export const TFMController = () => {
             
             <Button 
               onClick={handleSubmit} 
-              disabled={loading || !prompt.trim()}
+              disabled={loading || !prompt.trim() || !apiKey.trim()}
               className="w-full h-12 text-base gradient-primary hover:opacity-90 transition-opacity shadow-glow"
             >
               {loading ? (
