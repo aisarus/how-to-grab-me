@@ -12,6 +12,8 @@ interface TFMConfig {
   R: number; // Irreducible core
   maxIterations: number;
   convergenceThreshold: number;
+  useEFMNB: boolean; // Enable EFMNB framing in D block
+  eriksonStage?: number; // 1-8, Erikson's psychosocial stage filter for S block
 }
 
 interface TFMResponse {
@@ -51,6 +53,8 @@ serve(async (req) => {
       R: config?.R ?? 100,
       maxIterations: config?.maxIterations ?? 4,
       convergenceThreshold: config?.convergenceThreshold ?? 0.05,
+      useEFMNB: config?.useEFMNB ?? true,
+      eriksonStage: config?.eriksonStage,
     };
 
     console.log('Starting TRI/TFM controller with config:', tfmConfig);
@@ -70,13 +74,13 @@ serve(async (req) => {
 
       // D Block (Developer/Draft) - Expand and structure
       console.log('Running D block (expansion)...');
-      const expandedText = await callDBlock(currentText, LOVABLE_API_KEY);
+      const expandedText = await callDBlock(currentText, LOVABLE_API_KEY, tfmConfig.useEFMNB);
       const expandedTokens = estimateTokens(expandedText);
       console.log(`After D: ${expandedTokens} tokens`);
 
       // S Block (Stabilizer) - Reduce and normalize
       console.log('Running S block (stabilization)...');
-      const stabilizedText = await callSBlock(expandedText, LOVABLE_API_KEY);
+      const stabilizedText = await callSBlock(expandedText, LOVABLE_API_KEY, tfmConfig.eriksonStage);
       const stabilizedTokens = estimateTokens(stabilizedText);
       console.log(`After S: ${stabilizedTokens} tokens`);
 
@@ -138,7 +142,41 @@ serve(async (req) => {
   }
 });
 
-async function callDBlock(text: string, apiKey: string): Promise<string> {
+const ERIKSON_STAGES = {
+  1: { name: 'Trust vs. Mistrust', virtue: 'Hope', focus: 'Basic safety and reliability' },
+  2: { name: 'Autonomy vs. Shame', virtue: 'Will', focus: 'Independence and self-control' },
+  3: { name: 'Initiative vs. Guilt', virtue: 'Purpose', focus: 'Taking initiative and planning' },
+  4: { name: 'Industry vs. Inferiority', virtue: 'Competence', focus: 'Mastery and productivity' },
+  5: { name: 'Identity vs. Role Confusion', virtue: 'Fidelity', focus: 'Identity formation and values' },
+  6: { name: 'Intimacy vs. Isolation', virtue: 'Love', focus: 'Deep relationships and commitment' },
+  7: { name: 'Generativity vs. Stagnation', virtue: 'Care', focus: 'Contribution and legacy' },
+  8: { name: 'Integrity vs. Despair', virtue: 'Wisdom', focus: 'Life reflection and acceptance' },
+};
+
+async function callDBlock(text: string, apiKey: string, useEFMNB: boolean): Promise<string> {
+  const systemPrompt = useEFMNB 
+    ? `You are the D (Developer) block in a TRI/TFM system with EFMNB framing.
+
+EFMNB Structure (Emotional-Factual Matrix Next Build):
+Your expansion must follow this logical frame:
+1. EVALUATION 1: Identify and evaluate the core elements/concepts in the text
+2. EVALUATION 2: Assess the relationships and context around these elements
+3. COMPARISON: Compare different aspects, perspectives, or interpretations
+4. CONCLUSION: Synthesize into a coherent expanded narrative
+
+Key principles:
+- Make each step transparent and explicit
+- Add structure and missing details through the EFMNB lens
+- Expand by 20-30% while maintaining logical consistency
+- Frame the text as a structured reasoning process`
+    : `You are the D (Developer) block in a TRI/TFM system. Your role is to:
+1. Expand and structure the input text
+2. Add missing details and context
+3. Improve clarity and completeness
+4. Maintain the core message and intent
+
+Keep the expansion moderate - aim for 20-30% more content.`;
+
   const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -148,20 +186,8 @@ async function callDBlock(text: string, apiKey: string): Promise<string> {
     body: JSON.stringify({
       model: 'google/gemini-2.5-flash',
       messages: [
-        {
-          role: 'system',
-          content: `You are the D (Developer) block in a TRI/TFM system. Your role is to:
-1. Expand and structure the input text
-2. Add missing details and context
-3. Improve clarity and completeness
-4. Maintain the core message and intent
-
-Keep the expansion moderate - aim for 20-30% more content.`
-        },
-        {
-          role: 'user',
-          content: text
-        }
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: text }
       ],
       temperature: 0.7,
     }),
@@ -176,7 +202,35 @@ Keep the expansion moderate - aim for 20-30% more content.`
   return data.choices[0].message.content;
 }
 
-async function callSBlock(text: string, apiKey: string): Promise<string> {
+async function callSBlock(text: string, apiKey: string, eriksonStage?: number): Promise<string> {
+  let systemPrompt = `You are the S (Stabilizer) block in a TRI/TFM system. Your role is to:
+1. Remove redundancy and excessive details
+2. Normalize and condense the text
+3. Keep only essential information
+4. Maintain clarity and coherence
+
+Aim to reduce the text by 30-40% while preserving all key information.`;
+
+  if (eriksonStage && eriksonStage >= 1 && eriksonStage <= 8) {
+    const stage = ERIKSON_STAGES[eriksonStage as keyof typeof ERIKSON_STAGES];
+    systemPrompt = `You are the S (Stabilizer) block in a TRI/TFM system with Erikson's psychosocial development lens.
+
+Apply STAGE ${eriksonStage}: ${stage.name} (Virtue: ${stage.virtue})
+
+Filter and condense the text through this developmental stage:
+- Focus: ${stage.focus}
+- Virtue to preserve: ${stage.virtue}
+- Remove content that doesn't align with this stage's core conflict and resolution
+
+Key principles:
+1. Identify elements relevant to "${stage.name}" conflict
+2. Preserve insights related to "${stage.virtue}" virtue
+3. Remove redundancy that doesn't contribute to "${stage.focus}"
+4. Condense by 30-40% while keeping stage-relevant essence
+
+This creates mature, focused text filtered through psychosocial development theory.`;
+  }
+
   const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -186,20 +240,8 @@ async function callSBlock(text: string, apiKey: string): Promise<string> {
     body: JSON.stringify({
       model: 'google/gemini-2.5-flash',
       messages: [
-        {
-          role: 'system',
-          content: `You are the S (Stabilizer) block in a TRI/TFM system. Your role is to:
-1. Remove redundancy and excessive details
-2. Normalize and condense the text
-3. Keep only essential information
-4. Maintain clarity and coherence
-
-Aim to reduce the text by 30-40% while preserving all key information.`
-        },
-        {
-          role: 'user',
-          content: text
-        }
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: text }
       ],
       temperature: 0.3,
     }),

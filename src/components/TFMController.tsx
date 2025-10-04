@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, TrendingDown, Zap } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface TFMResult {
   finalText: string;
@@ -28,6 +30,8 @@ export const TFMController = () => {
     a: 0.20,
     b: 0.35,
     maxIterations: 4,
+    useEFMNB: true,
+    eriksonStage: 0,
   });
   const { toast } = useToast();
 
@@ -99,40 +103,85 @@ export const TFMController = () => {
             </div>
 
             {/* Configuration */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="a">Параметр a (D расширение)</Label>
-                <Input
-                  id="a"
-                  type="number"
-                  step="0.01"
-                  value={config.a}
-                  onChange={(e) => setConfig({ ...config, a: parseFloat(e.target.value) })}
-                  className="mt-2"
-                />
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="a">Параметр a (D расширение)</Label>
+                  <Input
+                    id="a"
+                    type="number"
+                    step="0.01"
+                    value={config.a}
+                    onChange={(e) => setConfig({ ...config, a: parseFloat(e.target.value) })}
+                    className="mt-2"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="b">Параметр b (S сокращение)</Label>
+                  <Input
+                    id="b"
+                    type="number"
+                    step="0.01"
+                    value={config.b}
+                    onChange={(e) => setConfig({ ...config, b: parseFloat(e.target.value) })}
+                    className="mt-2"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="maxIterations">Макс. итераций</Label>
+                  <Input
+                    id="maxIterations"
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={config.maxIterations}
+                    onChange={(e) => setConfig({ ...config, maxIterations: parseInt(e.target.value) })}
+                    className="mt-2"
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="b">Параметр b (S сокращение)</Label>
-                <Input
-                  id="b"
-                  type="number"
-                  step="0.01"
-                  value={config.b}
-                  onChange={(e) => setConfig({ ...config, b: parseFloat(e.target.value) })}
-                  className="mt-2"
-                />
-              </div>
-              <div>
-                <Label htmlFor="maxIterations">Макс. итераций</Label>
-                <Input
-                  id="maxIterations"
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={config.maxIterations}
-                  onChange={(e) => setConfig({ ...config, maxIterations: parseInt(e.target.value) })}
-                  className="mt-2"
-                />
+
+              {/* EFMNB and Erikson Settings */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                <div className="flex items-center justify-between space-x-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="efmnb">EFMNB Framing (D блок)</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Evaluation→Evaluation→Comparison→Conclusion
+                    </p>
+                  </div>
+                  <Switch
+                    id="efmnb"
+                    checked={config.useEFMNB}
+                    onCheckedChange={(checked) => setConfig({ ...config, useEFMNB: checked })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="erikson">Эриксон фильтр (S блок)</Label>
+                  <Select
+                    value={config.eriksonStage.toString()}
+                    onValueChange={(value) => setConfig({ ...config, eriksonStage: parseInt(value) })}
+                  >
+                    <SelectTrigger id="erikson">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">Без фильтра</SelectItem>
+                      <SelectItem value="1">1. Trust vs Mistrust (Hope)</SelectItem>
+                      <SelectItem value="2">2. Autonomy vs Shame (Will)</SelectItem>
+                      <SelectItem value="3">3. Initiative vs Guilt (Purpose)</SelectItem>
+                      <SelectItem value="4">4. Industry vs Inferiority (Competence)</SelectItem>
+                      <SelectItem value="5">5. Identity vs Role Confusion (Fidelity)</SelectItem>
+                      <SelectItem value="6">6. Intimacy vs Isolation (Love)</SelectItem>
+                      <SelectItem value="7">7. Generativity vs Stagnation (Care)</SelectItem>
+                      <SelectItem value="8">8. Integrity vs Despair (Wisdom)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Психосоциальная призма для сокращения
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -233,26 +282,73 @@ export const TFMController = () => {
         </CardContent>
       </Card>
 
-      {/* Theory Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>О TRI/TFM</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>
-            <strong>D (Developer):</strong> Блок расширения — добавляет структуру и детали
-          </p>
-          <p>
-            <strong>S (Stabilizer):</strong> Блок стабилизации — сокращает избыточное
-          </p>
-          <p>
-            <strong>Критерий сходимости:</strong> |x_k - x_(k-1)| / x_k {'<'} δ
-          </p>
-          <p>
-            Формула фиксированной точки: L* = ((1-b)·I + R) / (1 - (1-b)(1+a))
-          </p>
-        </CardContent>
-      </Card>
+      {/* Theory Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>TRI/TFM</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <p>
+              <strong>D (Developer):</strong> Блок расширения — добавляет структуру и детали
+            </p>
+            <p>
+              <strong>S (Stabilizer):</strong> Блок стабилизации — сокращает избыточное
+            </p>
+            <p>
+              <strong>Критерий сходимости:</strong> |x_k - x_(k-1)| / x_k {'<'} δ
+            </p>
+            <p>
+              L* = ((1-b)·I + R) / (1 - (1-b)(1+a))
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>EFMNB</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <p>
+              <strong>Emotional-Factual Matrix Next Build</strong>
+            </p>
+            <p>
+              1. <strong>Evaluation:</strong> Идентификация элементов
+            </p>
+            <p>
+              2. <strong>Evaluation:</strong> Оценка контекста
+            </p>
+            <p>
+              3. <strong>Comparison:</strong> Сравнение аспектов
+            </p>
+            <p>
+              4. <strong>Conclusion:</strong> Синтез в нарратив
+            </p>
+            <p className="pt-2 border-t">
+              Структурированный фрейминг для детерминистского контроля рассуждений
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Эриксон (8 стадий)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1 text-xs text-muted-foreground">
+            <p>1. Trust vs Mistrust → Hope</p>
+            <p>2. Autonomy vs Shame → Will</p>
+            <p>3. Initiative vs Guilt → Purpose</p>
+            <p>4. Industry vs Inferiority → Competence</p>
+            <p>5. Identity vs Role Confusion → Fidelity</p>
+            <p>6. Intimacy vs Isolation → Love</p>
+            <p>7. Generativity vs Stagnation → Care</p>
+            <p>8. Integrity vs Despair → Wisdom</p>
+            <p className="pt-2 border-t">
+              Психосоциальные фильтры для зрелого сокращения текста через призму развития личности
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
