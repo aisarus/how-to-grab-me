@@ -14,26 +14,73 @@ interface Template {
 }
 
 const templates: Template[] = [
+  // Text types
   {
     id: '1',
-    name: 'Text Generation',
+    name: 'Creative Text',
     category: 'Text',
-    description: 'Create compelling and well-structured text content',
-    prompt: 'Generate high-quality, engaging text content. Focus on clarity, coherence, and purpose. Ensure the text is well-structured with proper flow and addresses the target audience effectively.',
+    description: 'Generate artistic and engaging creative content',
+    prompt: 'Write creative, artistic text with vivid imagery and emotional depth. Use literary devices, metaphors, and engaging narrative style. Focus on storytelling, character development, and creating an immersive experience for the reader.',
   },
   {
     id: '2',
-    name: 'Code Generation',
-    category: 'Code',
-    description: 'Generate clean and efficient code',
-    prompt: 'Write clean, efficient, and well-documented code. Follow best practices and design patterns. Include comments explaining complex logic and ensure the code is maintainable and scalable.',
+    name: 'Scientific Text',
+    category: 'Text',
+    description: 'Create precise and evidence-based scientific content',
+    prompt: 'Generate scientific text with precise terminology, logical structure, and evidence-based arguments. Use formal academic language, cite relevant concepts, maintain objectivity, and ensure technical accuracy. Structure with clear introduction, methodology, results, and conclusions.',
   },
   {
     id: '3',
-    name: 'Image Description',
+    name: 'Journalistic Text',
+    category: 'Text',
+    description: 'Write informative and engaging news content',
+    prompt: 'Create journalistic content that is factual, balanced, and engaging. Use the inverted pyramid structure, lead with the most important information, maintain objectivity, include relevant context and quotes. Write in clear, accessible language suitable for a general audience.',
+  },
+  
+  // Programming languages
+  {
+    id: '4',
+    name: 'JavaScript Code',
+    category: 'Code',
+    description: 'Generate modern JavaScript/TypeScript code',
+    prompt: 'Write clean, modern JavaScript/TypeScript code following ES6+ standards. Use proper async/await patterns, implement error handling, follow functional programming principles where appropriate. Include JSDoc comments, use meaningful variable names, and ensure code is modular and testable.',
+  },
+  {
+    id: '5',
+    name: 'Python Code',
+    category: 'Code',
+    description: 'Generate Pythonic and efficient Python code',
+    prompt: 'Write Pythonic code following PEP 8 style guidelines. Use type hints, implement proper error handling with try-except blocks, leverage built-in functions and standard library. Include docstrings, use list comprehensions appropriately, and ensure code is readable and maintainable.',
+  },
+  {
+    id: '6',
+    name: 'CSS Styles',
+    category: 'Code',
+    description: 'Create modern and responsive CSS',
+    prompt: 'Generate modern CSS using best practices. Implement responsive design with flexbox/grid, use CSS variables for theming, follow BEM or similar naming conventions. Ensure cross-browser compatibility, optimize for performance, and write maintainable, reusable styles.',
+  },
+  {
+    id: '7',
+    name: 'Java Code',
+    category: 'Code',
+    description: 'Generate enterprise-grade Java code',
+    prompt: 'Write robust Java code following SOLID principles and design patterns. Use proper encapsulation, implement interfaces where appropriate, handle exceptions correctly. Include JavaDoc comments, follow naming conventions, and ensure code is thread-safe when needed.',
+  },
+  {
+    id: '8',
+    name: 'C++ Code',
+    category: 'Code',
+    description: 'Generate efficient and modern C++ code',
+    prompt: 'Write modern C++ code (C++17/20) following best practices. Use RAII principles, smart pointers for memory management, implement proper move semantics. Ensure const-correctness, avoid memory leaks, and optimize for performance while maintaining code clarity.',
+  },
+  
+  // Images
+  {
+    id: '9',
+    name: 'Image Analysis',
     category: 'Images',
     description: 'Create detailed and accurate image descriptions',
-    prompt: 'Describe the image in detail, including visual elements, composition, colors, mood, and context. Be precise and objective while capturing all important aspects of the image.',
+    prompt: 'Analyze and describe the image in comprehensive detail. Cover visual elements, composition, colors, lighting, mood, and context. Identify key subjects, their relationships, and spatial arrangement. Be precise and objective while capturing all important aspects of the image.',
   },
 ];
 
