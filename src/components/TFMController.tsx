@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Zap, TrendingDown, Sparkles, Settings, BarChart3, CheckCircle2 } from 'lucide-react';
+import { Loader2, Zap, TrendingDown, Sparkles, Settings, BarChart3, CheckCircle2, Trophy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Textarea as TextareaComponent } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -31,6 +32,9 @@ export const TFMController = () => {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TFMResult | null>(null);
+  const [abTestWinner, setAbTestWinner] = useState<'original' | 'optimized' | 'tie' | null>(null);
+  const [abTestNotes, setAbTestNotes] = useState('');
+  const [lastResultId, setLastResultId] = useState<string | null>(null);
   const [config, setConfig] = useState({
     a: 0.20,
     b: 0.35,
@@ -80,9 +84,11 @@ export const TFMController = () => {
       if (error) throw error;
 
       setResult(data);
+      setAbTestWinner(null);
+      setAbTestNotes('');
 
       // Save results to database for analytics
-      const { error: dbError } = await supabase
+      const { data: insertedData, error: dbError } = await supabase
         .from('optimization_results')
         .insert({
           original_prompt: prompt,
@@ -94,10 +100,14 @@ export const TFMController = () => {
           b_parameter: config.b,
           iterations: data.iterations,
           convergence_threshold: config.convergenceThreshold,
-        });
+        })
+        .select()
+        .single();
 
       if (dbError) {
         console.error('Failed to save analytics:', dbError);
+      } else if (insertedData) {
+        setLastResultId(insertedData.id);
       }
 
       toast({
@@ -430,6 +440,123 @@ export const TFMController = () => {
                 </CardContent>
               </Card>
             )}
+
+            {/* A/B Testing Card */}
+            <Card className="border-2 border-orange-500/20 bg-gradient-to-br from-orange-500/5 to-orange-500/10 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-orange-600">
+                  <Trophy className="w-5 h-5" />
+                  A/B Test Results
+                </CardTitle>
+                <CardDescription>Compare original vs optimized prompt performance</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Original Prompt */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">Original Prompt</Label>
+                    <div className="p-3 bg-background rounded-lg border max-h-48 overflow-y-auto text-sm">
+                      {result.promptImprovement?.originalPrompt || prompt}
+                    </div>
+                    <Button
+                      variant={abTestWinner === 'original' ? 'default' : 'outline'}
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setAbTestWinner('original')}
+                    >
+                      {abTestWinner === 'original' && <Trophy className="w-3 h-3 mr-1" />}
+                      Mark as Winner
+                    </Button>
+                  </div>
+
+                  {/* Optimized Prompt */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-primary">Optimized Prompt</Label>
+                    <div className="p-3 bg-background rounded-lg border-2 border-primary/20 max-h-48 overflow-y-auto text-sm">
+                      {result.promptImprovement?.improvedPrompt || result.finalText}
+                    </div>
+                    <Button
+                      variant={abTestWinner === 'optimized' ? 'default' : 'outline'}
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setAbTestWinner('optimized')}
+                    >
+                      {abTestWinner === 'optimized' && <Trophy className="w-3 h-3 mr-1" />}
+                      Mark as Winner
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Test Notes */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">Test Notes</Label>
+                  <TextareaComponent
+                    placeholder="Describe your A/B test results: response quality, accuracy, user satisfaction, etc."
+                    value={abTestNotes}
+                    onChange={(e) => setAbTestNotes(e.target.value)}
+                    rows={3}
+                    className="resize-none text-sm"
+                  />
+                </div>
+
+                {/* Tie Option */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={abTestWinner === 'tie' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setAbTestWinner('tie')}
+                  >
+                    {abTestWinner === 'tie' && <CheckCircle2 className="w-3 h-3 mr-1" />}
+                    Both Equal (Tie)
+                  </Button>
+                  
+                  {/* Save Button */}
+                  {abTestWinner && lastResultId && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="ml-auto gradient-primary"
+                      onClick={async () => {
+                        try {
+                          const { error } = await supabase
+                            .from('optimization_results')
+                            .update({
+                              ab_test_winner: abTestWinner,
+                              ab_test_notes: abTestNotes || null,
+                            })
+                            .eq('id', lastResultId);
+
+                          if (error) throw error;
+
+                          toast({
+                            title: "A/B Test Saved",
+                            description: `Winner: ${abTestWinner}`,
+                          });
+                        } catch (error) {
+                          toast({
+                            title: "Error",
+                            description: "Failed to save A/B test results",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                    >
+                      <CheckCircle2 className="w-3 h-3 mr-1" />
+                      Save A/B Results
+                    </Button>
+                  )}
+                </div>
+
+                {abTestWinner && (
+                  <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                    <p className="text-sm text-green-700 dark:text-green-400">
+                      <strong>Winner:</strong> {abTestWinner === 'original' ? 'Original' : abTestWinner === 'optimized' ? 'Optimized' : 'Tie'} prompt
+                      {lastResultId && ' — Click "Save A/B Results" to record this in analytics'}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Final Output Card */}
             <Card className="border-2 border-primary/20 shadow-xl">
