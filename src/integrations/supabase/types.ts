@@ -14,7 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      optimization_results: {
+        Row: {
+          a_parameter: number | null
+          ab_test_notes: string | null
+          ab_test_winner: string | null
+          b_parameter: number | null
+          convergence_threshold: number | null
+          created_at: string
+          id: string
+          improvement_percentage: number | null
+          iterations: number | null
+          optimized_prompt: string
+          optimized_tokens: number | null
+          original_prompt: string
+          original_tokens: number | null
+        }
+        Insert: {
+          a_parameter?: number | null
+          ab_test_notes?: string | null
+          ab_test_winner?: string | null
+          b_parameter?: number | null
+          convergence_threshold?: number | null
+          created_at?: string
+          id?: string
+          improvement_percentage?: number | null
+          iterations?: number | null
+          optimized_prompt: string
+          optimized_tokens?: number | null
+          original_prompt: string
+          original_tokens?: number | null
+        }
+        Update: {
+          a_parameter?: number | null
+          ab_test_notes?: string | null
+          ab_test_winner?: string | null
+          b_parameter?: number | null
+          convergence_threshold?: number | null
+          created_at?: string
+          id?: string
+          improvement_percentage?: number | null
+          iterations?: number | null
+          optimized_prompt?: string
+          optimized_tokens?: number | null
+          original_prompt?: string
+          original_tokens?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

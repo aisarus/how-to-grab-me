@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Zap, TrendingDown, Sparkles, Settings, BarChart3, CheckCircle2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -40,6 +41,7 @@ export const TFMController = () => {
     useProposerCriticVerifier: true,
   });
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async () => {
     if (!prompt.trim()) {
@@ -79,6 +81,25 @@ export const TFMController = () => {
 
       setResult(data);
 
+      // Save results to database for analytics
+      const { error: dbError } = await supabase
+        .from('optimization_results')
+        .insert({
+          original_prompt: prompt,
+          optimized_prompt: data.promptImprovement?.improvedPrompt || data.finalText,
+          original_tokens: data.savings.initialTokens,
+          optimized_tokens: data.savings.finalTokens,
+          improvement_percentage: data.savings.percentageSaved,
+          a_parameter: config.a,
+          b_parameter: config.b,
+          iterations: data.iterations,
+          convergence_threshold: config.convergenceThreshold,
+        });
+
+      if (dbError) {
+        console.error('Failed to save analytics:', dbError);
+      }
+
       toast({
         title: "Оптимизация завершена",
         description: `Эффективность: ${data.savings.percentageSaved}% за ${data.iterations} итераций`,
@@ -115,7 +136,12 @@ export const TFMController = () => {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2"
+                onClick={() => navigate('/analytics')}
+              >
                 <BarChart3 className="w-4 h-4" />
                 Analytics
               </Button>
