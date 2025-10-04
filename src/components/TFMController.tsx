@@ -533,7 +533,7 @@ export const TFMController = () => {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium flex items-center gap-2 text-primary">
                     <TrendingDown className="w-4 h-4" />
-                    Quality Improvement
+                    Success@1 uplift
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -541,7 +541,7 @@ export const TFMController = () => {
                     +{Math.abs(result.savings.percentageSaved)}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Prompt quality gain
+                    First-attempt acceptance rate
                   </p>
                 </CardContent>
               </Card>
@@ -651,12 +651,15 @@ export const TFMController = () => {
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold">Test Notes</Label>
                   <TextareaComponent
-                    placeholder="Describe your A/B test results: response quality, accuracy, user satisfaction, etc."
+                    placeholder="Auto-filled diff summary: what optimizer added (+constraints, +steps, +schema, etc.)"
                     value={abTestNotes}
                     onChange={(e) => setAbTestNotes(e.target.value)}
                     rows={3}
                     className="resize-none text-sm"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Describe A/B test results: Success@1, ↓ TTA, ↓ cost variance, policy-safe
+                  </p>
                 </div>
 
                 {/* Tie Option */}

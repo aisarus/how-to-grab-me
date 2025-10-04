@@ -10,6 +10,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { GitCompare, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -32,6 +34,12 @@ export const ComparisonModal = ({
 }: ComparisonModalProps) => {
   const [copiedOriginal, setCopiedOriginal] = useState(false);
   const [copiedOptimized, setCopiedOptimized] = useState(false);
+  const [improvements, setImprovements] = useState({
+    successAtOne: false,
+    reducedTTA: false,
+    reducedCostVariance: false,
+    policySafe: false,
+  });
   const { toast } = useToast();
 
   const handleCopy = async (text: string, type: 'original' | 'optimized') => {
@@ -162,11 +170,67 @@ export const ComparisonModal = ({
           </div>
         </div>
 
+        {/* Improvement Reasons */}
+        <div className="space-y-3 p-4 bg-muted/50 rounded-lg border">
+          <Label className="text-sm font-semibold">Mark reasons for improvement:</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="success-at-one" 
+                checked={improvements.successAtOne}
+                onCheckedChange={(checked) => 
+                  setImprovements({ ...improvements, successAtOne: checked as boolean })
+                }
+              />
+              <label htmlFor="success-at-one" className="text-sm cursor-pointer">
+                ✔ Success@1
+              </label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="reduced-tta" 
+                checked={improvements.reducedTTA}
+                onCheckedChange={(checked) => 
+                  setImprovements({ ...improvements, reducedTTA: checked as boolean })
+                }
+              />
+              <label htmlFor="reduced-tta" className="text-sm cursor-pointer">
+                ↓ TTA
+              </label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="reduced-cost-variance" 
+                checked={improvements.reducedCostVariance}
+                onCheckedChange={(checked) => 
+                  setImprovements({ ...improvements, reducedCostVariance: checked as boolean })
+                }
+              />
+              <label htmlFor="reduced-cost-variance" className="text-sm cursor-pointer">
+                ↓ cost variance
+              </label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="policy-safe" 
+                checked={improvements.policySafe}
+                onCheckedChange={(checked) => 
+                  setImprovements({ ...improvements, policySafe: checked as boolean })
+                }
+              />
+              <label htmlFor="policy-safe" className="text-sm cursor-pointer">
+                policy-safe
+              </label>
+            </div>
+          </div>
+        </div>
+
         {/* Info */}
-        <div className="p-3 bg-muted/50 rounded-lg">
+        <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
           <p className="text-xs text-muted-foreground">
-            <strong>Important:</strong> TRI/TFM optimizes AI response quality, not token count. 
-            The optimized prompt may contain more tokens but delivers significantly better results.
+            <strong>Important:</strong> Мы осознанно покупаем +{tokenChange > 0 ? tokenChange : 0} refine-токенов, 
+            чтобы сэкономить 1–2 итерации и сократить разброс стоимости. 
+            В проде это даёт <em>предсказуемый бюджет</em> и выше Success@1.
           </p>
         </div>
       </DialogContent>
