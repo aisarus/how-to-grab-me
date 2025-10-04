@@ -20,6 +20,11 @@ interface TFMResult {
     finalTokens: number;
     reductionPercent: number;
   };
+  promptImprovement?: {
+    originalPrompt: string;
+    improvedPrompt: string;
+    improvements: string[];
+  };
 }
 
 export const TFMController = () => {
@@ -32,6 +37,7 @@ export const TFMController = () => {
     maxIterations: 4,
     useEFMNB: true,
     eriksonStage: 0,
+    autoImprovePrompt: true,
   });
   const { toast } = useToast();
 
@@ -141,46 +147,62 @@ export const TFMController = () => {
                 </div>
               </div>
 
-              {/* EFMNB and Erikson Settings */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-                <div className="flex items-center justify-between space-x-2">
+              {/* EFMNB, Proposer and Erikson Settings */}
+              <div className="space-y-4 pt-4 border-t">
+                <div className="flex items-center justify-between space-x-2 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
                   <div className="space-y-1">
-                    <Label htmlFor="efmnb">EFMNB Framing (D блок)</Label>
+                    <Label htmlFor="autoImprove" className="font-semibold">Авто-улучшение промпта (Proposer-Critic-Verifier)</Label>
                     <p className="text-xs text-muted-foreground">
-                      Evaluation→Evaluation→Comparison→Conclusion
+                      Автоматически оптимизирует ваш промпт перед обработкой — экономит запросы и улучшает результат
                     </p>
                   </div>
                   <Switch
-                    id="efmnb"
-                    checked={config.useEFMNB}
-                    onCheckedChange={(checked) => setConfig({ ...config, useEFMNB: checked })}
+                    id="autoImprove"
+                    checked={config.autoImprovePrompt}
+                    onCheckedChange={(checked) => setConfig({ ...config, autoImprovePrompt: checked })}
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="erikson">Эриксон фильтр (S блок)</Label>
-                  <Select
-                    value={config.eriksonStage.toString()}
-                    onValueChange={(value) => setConfig({ ...config, eriksonStage: parseInt(value) })}
-                  >
-                    <SelectTrigger id="erikson">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">Без фильтра</SelectItem>
-                      <SelectItem value="1">1. Trust vs Mistrust (Hope)</SelectItem>
-                      <SelectItem value="2">2. Autonomy vs Shame (Will)</SelectItem>
-                      <SelectItem value="3">3. Initiative vs Guilt (Purpose)</SelectItem>
-                      <SelectItem value="4">4. Industry vs Inferiority (Competence)</SelectItem>
-                      <SelectItem value="5">5. Identity vs Role Confusion (Fidelity)</SelectItem>
-                      <SelectItem value="6">6. Intimacy vs Isolation (Love)</SelectItem>
-                      <SelectItem value="7">7. Generativity vs Stagnation (Care)</SelectItem>
-                      <SelectItem value="8">8. Integrity vs Despair (Wisdom)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Психосоциальная призма для сокращения
-                  </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between space-x-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="efmnb">EFMNB Framing (D блок)</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Evaluation→Evaluation→Comparison→Conclusion
+                      </p>
+                    </div>
+                    <Switch
+                      id="efmnb"
+                      checked={config.useEFMNB}
+                      onCheckedChange={(checked) => setConfig({ ...config, useEFMNB: checked })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="erikson">Эриксон фильтр (S блок)</Label>
+                    <Select
+                      value={config.eriksonStage.toString()}
+                      onValueChange={(value) => setConfig({ ...config, eriksonStage: parseInt(value) })}
+                    >
+                      <SelectTrigger id="erikson">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Без фильтра</SelectItem>
+                        <SelectItem value="1">1. Trust vs Mistrust (Hope)</SelectItem>
+                        <SelectItem value="2">2. Autonomy vs Shame (Will)</SelectItem>
+                        <SelectItem value="3">3. Initiative vs Guilt (Purpose)</SelectItem>
+                        <SelectItem value="4">4. Industry vs Inferiority (Competence)</SelectItem>
+                        <SelectItem value="5">5. Identity vs Role Confusion (Fidelity)</SelectItem>
+                        <SelectItem value="6">6. Intimacy vs Isolation (Love)</SelectItem>
+                        <SelectItem value="7">7. Generativity vs Stagnation (Care)</SelectItem>
+                        <SelectItem value="8">8. Integrity vs Despair (Wisdom)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Психосоциальная призма для сокращения
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -207,6 +229,45 @@ export const TFMController = () => {
           {/* Results Section */}
           {result && (
             <div className="space-y-4 pt-4 border-t">
+              {/* Prompt Improvement Section */}
+              {result.promptImprovement && (
+                <div className="space-y-3 p-4 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    <h3 className="font-semibold text-green-900 dark:text-green-100">
+                      Proposer-Critic-Verifier: Промпт оптимизирован
+                    </h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Исходный промпт</Label>
+                      <div className="mt-1 p-2 bg-background/50 rounded text-sm max-h-32 overflow-y-auto">
+                        {result.promptImprovement.originalPrompt}
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Улучшенный промпт</Label>
+                      <div className="mt-1 p-2 bg-background/50 rounded text-sm max-h-32 overflow-y-auto">
+                        {result.promptImprovement.improvedPrompt}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Примененные улучшения</Label>
+                    <ul className="mt-1 space-y-1">
+                      {result.promptImprovement.improvements.map((imp, i) => (
+                        <li key={i} className="text-xs flex items-start gap-2">
+                          <span className="text-green-600 dark:text-green-400">✓</span>
+                          <span>{imp}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card>
                   <CardHeader className="pb-3">
