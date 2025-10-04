@@ -26,7 +26,7 @@ export type Database = {
           use_efmnb: boolean
           use_erikson: boolean
           use_proposer_critic_verifier: boolean
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           a_parameter: number
@@ -39,7 +39,7 @@ export type Database = {
           use_efmnb?: boolean
           use_erikson?: boolean
           use_proposer_critic_verifier?: boolean
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           a_parameter?: number
@@ -52,7 +52,7 @@ export type Database = {
           use_efmnb?: boolean
           use_erikson?: boolean
           use_proposer_critic_verifier?: boolean
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -71,7 +71,7 @@ export type Database = {
           optimized_tokens: number | null
           original_prompt: string
           original_tokens: number | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           a_parameter?: number | null
@@ -87,7 +87,7 @@ export type Database = {
           optimized_tokens?: number | null
           original_prompt: string
           original_tokens?: number | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           a_parameter?: number | null
@@ -103,7 +103,7 @@ export type Database = {
           optimized_tokens?: number | null
           original_prompt?: string
           original_tokens?: number | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
