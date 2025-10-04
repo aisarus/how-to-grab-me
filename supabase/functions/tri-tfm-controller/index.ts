@@ -46,9 +46,9 @@ serve(async (req) => {
       throw new Error('Prompt is required');
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    if (!OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY not configured');
     }
 
     // Default TFM configuration
@@ -72,7 +72,7 @@ serve(async (req) => {
     
     if (tfmConfig.autoImprovePrompt) {
       console.log('\n=== Proposer-Critic-Verifier: Improving prompt ===');
-      const improved = await improvePrompt(prompt, LOVABLE_API_KEY);
+      const improved = await improvePrompt(prompt, OPENAI_API_KEY);
       promptImprovement = improved;
       workingPrompt = improved.improvedPrompt;
       console.log('Original prompt length:', estimateTokens(prompt));
@@ -95,13 +95,13 @@ serve(async (req) => {
 
       // D Block (Developer/Draft) - Expand and structure
       console.log('Running D block (expansion)...');
-      const expandedText = await callDBlock(currentText, LOVABLE_API_KEY, tfmConfig.useEFMNB);
+      const expandedText = await callDBlock(currentText, OPENAI_API_KEY, tfmConfig.useEFMNB);
       const expandedTokens = estimateTokens(expandedText);
       console.log(`After D: ${expandedTokens} tokens`);
 
       // S Block (Stabilizer) - Reduce and normalize
       console.log('Running S block (stabilization)...');
-      const stabilizedText = await callSBlock(expandedText, LOVABLE_API_KEY, tfmConfig.eriksonStage);
+      const stabilizedText = await callSBlock(expandedText, OPENAI_API_KEY, tfmConfig.eriksonStage);
       const stabilizedTokens = estimateTokens(stabilizedText);
       console.log(`After S: ${stabilizedTokens} tokens`);
 
@@ -199,14 +199,14 @@ Key principles:
 
 Keep the expansion moderate - aim for 20-30% more content.`;
 
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: text }
@@ -253,14 +253,14 @@ Key principles:
 This creates mature, focused text filtered through psychosocial development theory.`;
   }
 
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: text }
@@ -284,14 +284,14 @@ async function improvePrompt(
 ): Promise<{ originalPrompt: string; improvedPrompt: string; improvements: string[] }> {
   
   // Step 1: Proposer - Generate improved versions
-  const proposerResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const proposerResponse = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
@@ -344,14 +344,14 @@ Return JSON:
   }
 
   // Step 2: Critic - Evaluate the improvement
-  const criticResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const criticResponse = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
