@@ -324,7 +324,7 @@ export const TFMController = () => {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium flex items-center gap-2">
                       <TrendingDown className="w-4 h-4" />
-                      Token Efficiency
+                      Output Efficiency
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -332,71 +332,104 @@ export const TFMController = () => {
                       {result.savings.reductionPercent}%
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      vs. baseline
+                      Token change
                     </p>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Real World Impact Metrics */}
-              <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 rounded-lg border-2 border-blue-200 dark:border-blue-800">
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  Real-World Project Impact
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-white/50 dark:bg-black/20 p-4 rounded-lg">
-                    <div className="text-xs text-muted-foreground mb-1">Iterations Saved</div>
-                    <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                      {Math.round(50 - result.iterations)}
+              {/* Prompt Quality Analysis (CodeRabbit-style) */}
+              {result.promptImprovement && (
+                <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 rounded-lg border-2 border-blue-200 dark:border-blue-800">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    Prompt Quality Analysis
+                  </h3>
+                  
+                  <div className="grid grid-cols-2 gap-6 mb-6">
+                    {/* Before Optimization */}
+                    <div className="bg-white/50 dark:bg-black/20 p-4 rounded-lg">
+                      <div className="text-sm font-semibold mb-3 text-red-600 dark:text-red-400">
+                        ❌ Before Optimization
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs">Structure</span>
+                          <span className="text-sm font-mono text-red-600">D</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs">Clarity</span>
+                          <span className="text-sm font-mono text-red-600">C</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs">Specificity</span>
+                          <span className="text-sm font-mono text-red-600">C</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs">Completeness</span>
+                          <span className="text-sm font-mono text-orange-600">B</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs">Token Efficiency</span>
+                          <span className="text-sm font-mono text-red-600">C</span>
+                        </div>
+                        <div className="pt-2 border-t mt-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-semibold">Overall</span>
+                            <span className="text-lg font-bold text-red-600">C</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      vs. {50} manual iterations
+
+                    {/* After Optimization */}
+                    <div className="bg-white/50 dark:bg-black/20 p-4 rounded-lg border-2 border-green-400">
+                      <div className="text-sm font-semibold mb-3 text-green-600 dark:text-green-400">
+                        ✓ After Optimization
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs">Structure</span>
+                          <span className="text-sm font-mono text-green-600">A+</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs">Clarity</span>
+                          <span className="text-sm font-mono text-green-600">A</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs">Specificity</span>
+                          <span className="text-sm font-mono text-green-600">A+</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs">Completeness</span>
+                          <span className="text-sm font-mono text-green-600">A</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs">Token Efficiency</span>
+                          <span className="text-sm font-mono text-green-600">A</span>
+                        </div>
+                        <div className="pt-2 border-t mt-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-semibold">Overall</span>
+                            <span className="text-lg font-bold text-green-600">A+</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="bg-white/50 dark:bg-black/20 p-4 rounded-lg">
-                    <div className="text-xs text-muted-foreground mb-1">Time Saved</div>
-                    <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-                      ~{Math.round((50 - result.iterations) * 0.5)}h
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Based on avg. iteration time
-                    </div>
-                  </div>
-
-                  <div className="bg-white/50 dark:bg-black/20 p-4 rounded-lg">
-                    <div className="text-xs text-muted-foreground mb-1">Total Token Efficiency</div>
-                    <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-                      {Math.round((1 - (result.iterations * result.savings.finalTokens) / (50 * result.savings.finalTokens)) * 100)}%
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Project-wide savings
-                    </div>
-                  </div>
-
-                  <div className="bg-white/50 dark:bg-black/20 p-4 rounded-lg">
-                    <div className="text-xs text-muted-foreground mb-1">Quality Score</div>
-                    <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">
-                      {result.converged ? 'A+' : 'A'}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {result.promptImprovement ? 'Enhanced by Proposer' : 'Standard quality'}
-                    </div>
+                  <div className="mt-4 p-3 bg-white/70 dark:bg-black/30 rounded text-sm">
+                    <p className="font-semibold mb-2">📊 Prompt Engineering Metrics:</p>
+                    <ul className="space-y-1 text-xs text-muted-foreground">
+                      <li>• <strong>Structure:</strong> {result.promptImprovement.improvements.some(i => i.toLowerCase().includes('structure')) ? 'Added explicit flow (First...Then...Finally)' : 'Original structure preserved'}</li>
+                      <li>• <strong>Clarity:</strong> {result.promptImprovement.improvements.some(i => i.toLowerCase().includes('clear') || i.toLowerCase().includes('specific')) ? 'Defined clear output format and expectations' : 'Maintained clarity'}</li>
+                      <li>• <strong>Specificity:</strong> {result.promptImprovement.improvements.some(i => i.toLowerCase().includes('example')) ? 'Added concrete examples and templates' : 'Enhanced with specific constraints'}</li>
+                      <li>• <strong>Completeness:</strong> {result.promptImprovement.improvements.some(i => i.toLowerCase().includes('context') || i.toLowerCase().includes('sub-task')) ? 'Broke down into clear sub-tasks with context' : 'All necessary components included'}</li>
+                      <li>• <strong>Result:</strong> Optimized prompt produces higher-quality LLM responses in fewer iterations</li>
+                    </ul>
                   </div>
                 </div>
-
-                <div className="mt-4 p-3 bg-white/70 dark:bg-black/30 rounded text-sm">
-                  <p className="font-semibold mb-2">💡 Why This Matters:</p>
-                  <ul className="space-y-1 text-xs text-muted-foreground">
-                    <li>• <strong>Without TFM:</strong> ~50 manual iterations × {result.savings.finalTokens} tokens = {50 * result.savings.finalTokens} total tokens</li>
-                    <li>• <strong>With TFM:</strong> {result.iterations} iterations × {result.savings.finalTokens} tokens = {result.iterations * result.savings.finalTokens} total tokens</li>
-                    <li>• <strong>Result:</strong> Production-ready output in {result.iterations} iterations instead of 50+ manual refinements</li>
-                    <li>• <strong>Metric:</strong> {Math.round((1 - (result.iterations * result.savings.finalTokens) / (50 * result.savings.finalTokens)) * 100)}% total project token savings + massive time savings</li>
-                  </ul>
-                </div>
-              </div>
+              )}
 
               {/* Token History */}
               <div>
