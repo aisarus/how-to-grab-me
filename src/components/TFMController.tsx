@@ -8,7 +8,6 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Zap, TrendingDown, Sparkles, Settings, BarChart3, CheckCircle2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface TFMResult {
   finalText: string;
@@ -36,7 +35,7 @@ export const TFMController = () => {
     b: 0.35,
     maxIterations: 4,
     useEFMNB: true,
-    eriksonStage: 0,
+    useErikson: false,
     autoImprovePrompt: true,
   });
   const { toast } = useToast();
@@ -121,24 +120,6 @@ export const TFMController = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="secondary"
-                className="text-xs"
-                onClick={() => setPrompt("Create a comprehensive marketing strategy for a new eco-friendly product line. Include target audience analysis, competitive positioning, pricing strategy, distribution channels, promotional tactics, and success metrics. Make sure to address sustainability messaging and how to communicate our environmental impact effectively.")}
-              >
-                Example 1
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                className="text-xs"
-                onClick={() => setPrompt("Explain quantum computing to a general audience. Cover what quantum computers are, how they differ from classical computers, what problems they can solve, current limitations, and future potential applications.")}
-              >
-                Example 2
-              </Button>
-            </div>
             <Textarea
               placeholder="Enter your prompt here..."
               value={prompt}
@@ -243,27 +224,15 @@ export const TFMController = () => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-sm">Erikson Filter</Label>
-                <Select
-                  value={config.eriksonStage.toString()}
-                  onValueChange={(value) => setConfig({ ...config, eriksonStage: parseInt(value) })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">No Filter</SelectItem>
-                    <SelectItem value="1">1. Trust vs Mistrust</SelectItem>
-                    <SelectItem value="2">2. Autonomy vs Shame</SelectItem>
-                    <SelectItem value="3">3. Initiative vs Guilt</SelectItem>
-                    <SelectItem value="4">4. Industry vs Inferiority</SelectItem>
-                    <SelectItem value="5">5. Identity vs Confusion</SelectItem>
-                    <SelectItem value="6">6. Intimacy vs Isolation</SelectItem>
-                    <SelectItem value="7">7. Generativity vs Stagnation</SelectItem>
-                    <SelectItem value="8">8. Integrity vs Despair</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <div className="space-y-1">
+                  <Label className="text-sm">Erikson Filter</Label>
+                  <p className="text-xs text-muted-foreground">S-block psychosocial lens</p>
+                </div>
+                <Switch
+                  checked={config.useErikson}
+                  onCheckedChange={(checked) => setConfig({ ...config, useErikson: checked })}
+                />
               </div>
             </div>
           </CardContent>
