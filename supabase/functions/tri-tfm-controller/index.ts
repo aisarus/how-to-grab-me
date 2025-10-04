@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -5,16 +6,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
+
 interface TFMConfig {
-  a: number; // D expansion rate
-  b: number; // S reduction rate
-  I: number; // Injection term
-  R: number; // Irreducible core
+  a: number;
+  b: number;
+  I: number;
+  R: number;
   maxIterations: number;
   convergenceThreshold: number;
-  useEFMNB: boolean; // Enable EFMNB framing in D block
-  eriksonStage?: number; // 1-8, Erikson's psychosocial stage filter for S block
-  autoImprovePrompt: boolean; // Enable Proposer-Critic-Verifier for prompt improvement
+  useEFMNB: boolean;
+  eriksonStage?: number;
+  useProposerCriticVerifier: boolean;
 }
 
 interface TFMResponse {
@@ -25,7 +29,7 @@ interface TFMResponse {
   savings: {
     initialTokens: number;
     finalTokens: number;
-    reductionPercent: number;
+    percentageSaved: number;
   };
   promptImprovement?: {
     originalPrompt: string;
@@ -40,24 +44,20 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, config, apiKey } = await req.json();
+    const { prompt, config } = await req.json();
     
     if (!prompt) {
       throw new Error('Prompt is required');
     }
 
-    if (!apiKey || !apiKey.trim()) {
-      throw new Error('OpenAI API key is required');
+    if (!LOVABLE_API_KEY) {
+      console.error('LOVABLE_API_KEY not configured');
+      return new Response(
+        JSON.stringify({ error: 'AI service not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Validate API key format
-    if (!apiKey.startsWith('sk-')) {
-      throw new Error('Invalid OpenAI API key format');
-    }
-
-    const OPENAI_API_KEY = apiKey;
-
-    // Default TFM configuration
     const tfmConfig: TFMConfig = {
       a: config?.a ?? 0.20,
       b: config?.b ?? 0.35,
@@ -67,18 +67,17 @@ serve(async (req) => {
       convergenceThreshold: config?.convergenceThreshold ?? 0.05,
       useEFMNB: config?.useEFMNB ?? true,
       eriksonStage: config?.eriksonStage,
-      autoImprovePrompt: config?.autoImprovePrompt ?? true,
+      useProposerCriticVerifier: config?.useProposerCriticVerifier ?? true,
     };
 
     console.log('Starting TRI/TFM controller with config:', tfmConfig);
 
-    // Proposer-Critic-Verifier: Auto-improve prompt before main loop
     let promptImprovement = undefined;
     let workingPrompt = prompt;
     
-    if (tfmConfig.autoImprovePrompt) {
+    if (tfmConfig.useProposerCriticVerifier) {
       console.log('\n=== Proposer-Critic-Verifier: Improving prompt ===');
-      const improved = await improvePrompt(prompt, OPENAI_API_KEY);
+      const improved = await improvePrompt(prompt);
       promptImprovement = improved;
       workingPrompt = improved.improvedPrompt;
       console.log('Original prompt length:', estimateTokens(prompt));
@@ -99,21 +98,18 @@ serve(async (req) => {
       console.log(`\n=== Iteration ${iteration} ===`);
       console.log(`Current tokens: ${currentTokens}`);
 
-      // D Block (Developer/Draft) - Expand and structure
       console.log('Running D block (expansion)...');
-      const expandedText = await callDBlock(currentText, OPENAI_API_KEY, tfmConfig.useEFMNB);
+      const expandedText = await callDBlock(currentText, tfmConfig.useEFMNB);
       const expandedTokens = estimateTokens(expandedText);
       console.log(`After D: ${expandedTokens} tokens`);
 
-      // S Block (Stabilizer) - Reduce and normalize
       console.log('Running S block (stabilization)...');
-      const stabilizedText = await callSBlock(expandedText, OPENAI_API_KEY, tfmConfig.eriksonStage);
+      const stabilizedText = await callSBlock(expandedText, tfmConfig.eriksonStage);
       const stabilizedTokens = estimateTokens(stabilizedText);
       console.log(`After S: ${stabilizedTokens} tokens`);
 
       tokenHistory.push(stabilizedTokens);
 
-      // Check convergence
       const delta = Math.abs(stabilizedTokens - currentTokens);
       const relativeDelta = delta / currentTokens;
       
@@ -132,7 +128,7 @@ serve(async (req) => {
     }
 
     const finalTokens = currentTokens;
-    const reductionPercent = ((initialTokens - finalTokens) / initialTokens) * 100;
+    const percentageSaved = ((initialTokens - finalTokens) / initialTokens) * 100;
 
     const response: TFMResponse = {
       finalText: currentText,
@@ -142,7 +138,7 @@ serve(async (req) => {
       savings: {
         initialTokens,
         finalTokens,
-        reductionPercent: Math.round(reductionPercent * 100) / 100,
+        percentageSaved: Math.round(percentageSaved * 100) / 100,
       },
       promptImprovement,
     };
@@ -151,7 +147,7 @@ serve(async (req) => {
     console.log(`Iterations: ${iteration}`);
     console.log(`Initial tokens: ${initialTokens}`);
     console.log(`Final tokens: ${finalTokens}`);
-    console.log(`Reduction: ${reductionPercent.toFixed(2)}%`);
+    console.log(`Savings: ${percentageSaved.toFixed(2)}%`);
 
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -181,7 +177,7 @@ const ERIKSON_STAGES = {
   8: { name: 'Integrity vs. Despair', virtue: 'Wisdom', focus: 'Life reflection and acceptance' },
 };
 
-async function callDBlock(text: string, apiKey: string, useEFMNB: boolean): Promise<string> {
+async function callDBlock(text: string, useEFMNB: boolean): Promise<string> {
   const systemPrompt = useEFMNB 
     ? `You are the D (Developer) block in a TRI/TFM system with EFMNB framing.
 
@@ -205,19 +201,18 @@ Key principles:
 
 Keep the expansion moderate - aim for 20-30% more content.`;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch(AI_GATEWAY_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'google/gemini-2.5-flash',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: text }
       ],
-      temperature: 0.7,
     }),
   });
 
@@ -230,7 +225,7 @@ Keep the expansion moderate - aim for 20-30% more content.`;
   return data.choices[0].message.content;
 }
 
-async function callSBlock(text: string, apiKey: string, eriksonStage?: number): Promise<string> {
+async function callSBlock(text: string, eriksonStage?: number): Promise<string> {
   let systemPrompt = `You are the S (Stabilizer) block in a TRI/TFM system. Your role is to:
 1. Remove redundancy and excessive details
 2. Normalize and condense the text
@@ -259,19 +254,18 @@ Key principles:
 This creates mature, focused text filtered through psychosocial development theory.`;
   }
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch(AI_GATEWAY_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'google/gemini-2.5-flash',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: text }
       ],
-      temperature: 0.3,
     }),
   });
 
@@ -284,20 +278,20 @@ This creates mature, focused text filtered through psychosocial development theo
   return data.choices[0].message.content;
 }
 
-async function improvePrompt(
-  prompt: string, 
-  apiKey: string
-): Promise<{ originalPrompt: string; improvedPrompt: string; improvements: string[] }> {
+async function improvePrompt(prompt: string): Promise<{
+  originalPrompt: string;
+  improvedPrompt: string;
+  improvements: string[];
+}> {
   
-  // Step 1: Proposer - Generate improved versions
-  const proposerResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+  const proposerResponse = await fetch(AI_GATEWAY_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'google/gemini-2.5-flash',
       messages: [
         {
           role: 'system',
@@ -324,7 +318,6 @@ Return JSON:
           content: `Original prompt:\n${prompt}`
         }
       ],
-      temperature: 0.6,
     }),
   });
 
@@ -335,13 +328,11 @@ Return JSON:
   const proposerData = await proposerResponse.json();
   const proposerOutput = proposerData.choices[0].message.content;
   
-  // Parse JSON from proposer
   let parsed;
   try {
     const jsonMatch = proposerOutput.match(/\{[\s\S]*\}/);
     parsed = JSON.parse(jsonMatch ? jsonMatch[0] : proposerOutput);
   } catch {
-    // Fallback if JSON parsing fails
     return {
       originalPrompt: prompt,
       improvedPrompt: prompt,
@@ -349,15 +340,14 @@ Return JSON:
     };
   }
 
-  // Step 2: Critic - Evaluate the improvement
-  const criticResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+  const criticResponse = await fetch(AI_GATEWAY_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'google/gemini-2.5-flash',
       messages: [
         {
           role: 'system',
@@ -381,7 +371,6 @@ Return JSON:
           content: `Original: ${prompt}\n\nImproved: ${parsed.improvedPrompt}`
         }
       ],
-      temperature: 0.3,
     }),
   });
 
@@ -393,12 +382,11 @@ Return JSON:
     const jsonMatch = criticOutput.match(/\{[\s\S]*\}/);
     criticResult = JSON.parse(jsonMatch ? jsonMatch[0] : criticOutput);
   } catch {
-    criticResult = { approved: true, score: 70 }; // Default approve if parsing fails
+    criticResult = { approved: true, score: 70 };
   }
 
   console.log('Critic evaluation:', criticResult);
 
-  // If approved or score >= 60, use improved prompt
   if (criticResult.approved || criticResult.score >= 60) {
     return {
       originalPrompt: prompt,
@@ -407,7 +395,6 @@ Return JSON:
     };
   }
 
-  // Otherwise return original
   return {
     originalPrompt: prompt,
     improvedPrompt: prompt,
@@ -416,6 +403,5 @@ Return JSON:
 }
 
 function estimateTokens(text: string): number {
-  // Rough estimation: ~4 chars per token
   return Math.ceil(text.length / 4);
 }

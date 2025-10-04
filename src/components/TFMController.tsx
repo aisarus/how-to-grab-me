@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Zap, TrendingDown, Sparkles, Settings, BarChart3, CheckCircle2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import { OllamaClient } from '@/utils/ollamaClient';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TFMResult {
   finalText: string;
@@ -17,7 +17,7 @@ interface TFMResult {
   savings: {
     initialTokens: number;
     finalTokens: number;
-    reductionPercent: number;
+    percentageSaved: number;
   };
   promptImprovement?: {
     originalPrompt: string;
@@ -28,8 +28,6 @@ interface TFMResult {
 
 export const TFMController = () => {
   const [prompt, setPrompt] = useState('');
-  const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434');
-  const [ollamaModel, setOllamaModel] = useState('llama2');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TFMResult | null>(null);
   const [config, setConfig] = useState({
@@ -39,7 +37,7 @@ export const TFMController = () => {
     convergenceThreshold: 0.05,
     useEFMNB: true,
     useErikson: false,
-    autoImprovePrompt: true,
+    useProposerCriticVerifier: true,
   });
   const { toast } = useToast();
 
@@ -53,39 +51,43 @@ export const TFMController = () => {
       return;
     }
 
-    if (!ollamaModel.trim()) {
-      toast({
-        title: "Ошибка",
-        description: "Укажите модель Ollama",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setLoading(true);
     setResult(null);
 
     try {
-      const client = new OllamaClient(ollamaUrl, ollamaModel);
-      
       toast({
         title: "Начинаем оптимизацию",
         description: "Это может занять несколько минут...",
       });
 
-      const data = await client.runTFM(prompt, config);
+      const { data, error } = await supabase.functions.invoke('tri-tfm-controller', {
+        body: {
+          prompt,
+          config: {
+            a: config.a,
+            b: config.b,
+            maxIterations: config.maxIterations,
+            convergenceThreshold: config.convergenceThreshold,
+            useProposerCriticVerifier: config.useProposerCriticVerifier,
+            useEFMNB: config.useEFMNB,
+            eriksonStage: config.useErikson ? 5 : undefined,
+          }
+        }
+      });
+
+      if (error) throw error;
 
       setResult(data);
 
       toast({
         title: "Оптимизация завершена",
-        description: `Эффективность: ${data.savings.reductionPercent}% за ${data.iterations} итераций`,
+        description: `Эффективность: ${data.savings.percentageSaved}% за ${data.iterations} итераций`,
       });
     } catch (error) {
       console.error('Error:', error);
       toast({
         title: "Ошибка",
-        description: error instanceof Error ? error.message : "Не удалось выполнить оптимизацию. Убедитесь, что Ollama запущена.",
+        description: error instanceof Error ? error.message : "Не удалось выполнить оптимизацию",
         variant: "destructive",
       });
     } finally {
@@ -105,10 +107,10 @@ export const TFMController = () => {
               </div>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                  TRI/TFM Controller с Ollama
+                  TRI/TFM Controller
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Локальная оптимизация промптов без API ключей
+                  Оптимизация промптов с помощью облачного AI
                 </p>
               </div>
             </div>
@@ -123,46 +125,6 @@ export const TFMController = () => {
       </div>
 
       <div className="container mx-auto px-6 py-8 space-y-8">
-        {/* Ollama Configuration Card */}
-        <Card className="border-2 border-primary/20 bg-primary/5 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-              </svg>
-              Настройки Ollama
-            </CardTitle>
-            <CardDescription>
-              Убедитесь, что Ollama запущена локально. <a href="https://ollama.ai" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">Скачать Ollama</a>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>URL Ollama</Label>
-              <Input
-                type="text"
-                placeholder="http://localhost:11434"
-                value={ollamaUrl}
-                onChange={(e) => setOllamaUrl(e.target.value)}
-                className="font-mono text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Модель</Label>
-              <Input
-                type="text"
-                placeholder="llama2, mistral, codellama..."
-                value={ollamaModel}
-                onChange={(e) => setOllamaModel(e.target.value)}
-                className="font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground">
-                Рекомендуем: llama2, mistral, или другие модели, установленные в Ollama
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Main Input Card */}
         <Card className="border-2 shadow-lg">
           <CardHeader>
@@ -185,7 +147,7 @@ export const TFMController = () => {
             
             <Button 
               onClick={handleSubmit} 
-              disabled={loading || !prompt.trim() || !ollamaModel.trim()}
+              disabled={loading || !prompt.trim()}
               className="w-full h-12 text-base gradient-primary hover:opacity-90 transition-opacity shadow-glow"
             >
               {loading ? (
@@ -225,8 +187,8 @@ export const TFMController = () => {
                   </p>
                 </div>
                 <Switch
-                  checked={config.autoImprovePrompt}
-                  onCheckedChange={(checked) => setConfig({ ...config, autoImprovePrompt: checked })}
+                  checked={config.useProposerCriticVerifier}
+                  onCheckedChange={(checked) => setConfig({ ...config, useProposerCriticVerifier: checked })}
                 />
               </div>
             </div>
@@ -380,7 +342,7 @@ export const TFMController = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-4xl font-bold text-primary">
-                    {result.savings.reductionPercent}%
+                    {result.savings.percentageSaved}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
                     Token optimization
@@ -413,76 +375,48 @@ export const TFMController = () => {
                           { label: 'Token Efficiency', grade: 'C' },
                         ].map((metric) => (
                           <div key={metric.label} className="flex justify-between items-center">
-                            <span className="text-sm">{metric.label}</span>
-                            <span className={`text-lg font-bold font-mono ${
-                              metric.grade === 'B' ? 'text-amber-600' : 'text-destructive'
-                            }`}>
-                              {metric.grade}
-                            </span>
+                            <span className="text-xs">{metric.label}</span>
+                            <span className="px-2 py-1 bg-destructive/20 rounded text-xs font-mono">{metric.grade}</span>
                           </div>
                         ))}
-                        <div className="pt-2 border-t mt-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-semibold">Overall</span>
-                            <span className="text-2xl font-bold text-destructive">C</span>
-                          </div>
-                        </div>
                       </div>
                     </div>
 
                     {/* After */}
                     <div className="space-y-3 p-4 rounded-xl bg-primary/5 border-2 border-primary/20">
-                      <div className="text-sm font-semibold text-primary mb-3 flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4" />
-                        After Optimization
-                      </div>
+                      <div className="text-sm font-semibold text-primary mb-3">After Optimization</div>
                       <div className="space-y-2">
                         {[
-                          { label: 'Structure', grade: 'A+' },
+                          { label: 'Structure', grade: 'A' },
                           { label: 'Clarity', grade: 'A' },
-                          { label: 'Specificity', grade: 'A+' },
+                          { label: 'Specificity', grade: 'A-' },
                           { label: 'Completeness', grade: 'A' },
-                          { label: 'Token Efficiency', grade: 'A' },
+                          { label: 'Token Efficiency', grade: 'A+' },
                         ].map((metric) => (
                           <div key={metric.label} className="flex justify-between items-center">
-                            <span className="text-sm">{metric.label}</span>
-                            <span className="text-lg font-bold font-mono text-primary">
-                              {metric.grade}
-                            </span>
+                            <span className="text-xs">{metric.label}</span>
+                            <span className="px-2 py-1 bg-primary/20 rounded text-xs font-mono">{metric.grade}</span>
                           </div>
                         ))}
-                        <div className="pt-2 border-t mt-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-semibold">Overall</span>
-                            <span className="text-2xl font-bold text-primary">A+</span>
-                          </div>
-                        </div>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Explanation */}
-                  <div className="mt-6 p-4 rounded-lg bg-muted/50 border">
-                    <h4 className="text-sm font-semibold mb-2">What This Means</h4>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      Your prompt was scientifically analyzed and optimized across five key engineering dimensions. 
-                      The Proposer-Critic-Verifier system restructured unclear requests, added specific constraints, 
-                      and ensured completeness—all while maximizing token efficiency for better AI responses.
-                    </p>
                   </div>
                 </CardContent>
               </Card>
             )}
 
-            {/* Final Output */}
-            <Card className="border-2 shadow-lg">
+            {/* Final Output Card */}
+            <Card className="border-2 border-primary/20 shadow-xl">
               <CardHeader>
-                <CardTitle>Optimized Output</CardTitle>
-                <CardDescription>Final processed result</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-primary" />
+                  Optimized Output
+                </CardTitle>
+                <CardDescription>Final processed result ready to use</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="p-4 bg-muted/30 rounded-lg border max-h-96 overflow-y-auto">
-                  <pre className="text-sm whitespace-pre-wrap font-mono">{result.finalText}</pre>
+                <div className="p-4 bg-muted/50 rounded-lg font-mono text-sm max-h-96 overflow-y-auto">
+                  {result.finalText}
                 </div>
               </CardContent>
             </Card>
