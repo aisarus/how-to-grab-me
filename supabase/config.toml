@@ -1,5 +1,1 @@
 project_id = "lsgxrurkwnlxowedlmti"
-
-[functions.send-otp-email]
-verify_jwt = false
-import_map = "./functions/send-otp-email/deno.json"

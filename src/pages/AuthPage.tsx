@@ -6,13 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Sparkles, Loader2, Mail } from 'lucide-react';
+import { Sparkles, Loader2 } from 'lucide-react';
 import { z } from 'zod';
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
 
 const authSchema = z.object({
   email: z.string().email('Invalid email address').max(255, 'Email too long'),
@@ -23,8 +18,6 @@ export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [otp, setOtp] = useState('');
-  const [showOtpInput, setShowOtpInput] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -85,7 +78,7 @@ export default function AuthPage() {
         });
       } else {
         // Sign up with email verification
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
@@ -100,29 +93,10 @@ export default function AuthPage() {
           throw error;
         }
 
-        if (data?.user) {
-          // Send OTP email via our edge function
-          try {
-            const { error: emailError } = await supabase.functions.invoke('send-otp-email', {
-              body: {
-                email: email.trim(),
-                token: '######', // Placeholder - actual OTP will be sent by Supabase
-              },
-            });
-
-            if (emailError) {
-              console.error('Email sending error:', emailError);
-            }
-          } catch (emailError) {
-            console.error('Failed to send email:', emailError);
-          }
-
-          setShowOtpInput(true);
-          toast({
-            title: 'Check your email!',
-            description: 'We sent you a 6-digit verification code',
-          });
-        }
+        toast({
+          title: 'Check your email!',
+          description: 'We sent you a confirmation link. Please check your inbox.',
+        });
       }
     } catch (error) {
       toast({
@@ -134,164 +108,6 @@ export default function AuthPage() {
       setLoading(false);
     }
   };
-
-  const handleVerifyOtp = async () => {
-    if (otp.length !== 6) {
-      toast({
-        title: 'Invalid code',
-        description: 'Please enter the 6-digit code',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email: email.trim(),
-        token: otp,
-        type: 'signup',
-      });
-
-      if (error) {
-        if (error.message.includes('expired')) {
-          throw new Error('Verification code expired. Please sign up again.');
-        }
-        throw error;
-      }
-
-      toast({
-        title: 'Account verified!',
-        description: 'You can now use the app',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Verification failed',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendCode = async () => {
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email.trim(),
-      });
-
-      if (error) throw error;
-
-      // Send email via our edge function
-      try {
-        await supabase.functions.invoke('send-otp-email', {
-          body: {
-            email: email.trim(),
-            token: '######',
-          },
-        });
-      } catch (emailError) {
-        console.error('Failed to send email:', emailError);
-      }
-
-      toast({
-        title: 'Code resent',
-        description: 'Check your email for the new code',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to resend code',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (showOtpInput) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center p-6">
-        <Card className="w-full max-w-md border-2 shadow-lg">
-          <CardHeader className="space-y-1">
-            <div className="flex items-center justify-center mb-4">
-              <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-                <Mail className="w-6 h-6 text-white" />
-              </div>
-            </div>
-            <CardTitle className="text-2xl text-center">
-              Verify Your Email
-            </CardTitle>
-            <CardDescription className="text-center">
-              Enter the 6-digit code we sent to<br />
-              <strong>{email}</strong>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col items-center space-y-4">
-              <InputOTP
-                maxLength={6}
-                value={otp}
-                onChange={setOtp}
-                disabled={loading}
-              >
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
-                </InputOTPGroup>
-              </InputOTP>
-            </div>
-
-            <Button
-              onClick={handleVerifyOtp}
-              className="w-full gradient-primary"
-              disabled={loading || otp.length !== 6}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Verifying...
-                </>
-              ) : (
-                'Verify Code'
-              )}
-            </Button>
-
-            <div className="text-center space-y-2">
-              <button
-                type="button"
-                onClick={handleResendCode}
-                className="text-sm text-primary hover:underline"
-                disabled={loading}
-              >
-                Resend code
-              </button>
-              <br />
-              <button
-                type="button"
-                onClick={() => {
-                  setShowOtpInput(false);
-                  setOtp('');
-                }}
-                className="text-sm text-muted-foreground hover:text-foreground"
-                disabled={loading}
-              >
-                Back to signup
-              </button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center p-6">
