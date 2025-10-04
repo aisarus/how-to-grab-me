@@ -97,7 +97,25 @@ export const TFMController = () => {
           {/* Input Section */}
           <div className="space-y-4">
             <div>
-              <Label htmlFor="prompt">Original Text</Label>
+              <div className="flex items-center justify-between mb-2">
+                <Label htmlFor="prompt">Original Text</Label>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPrompt("Create a comprehensive marketing strategy for a new eco-friendly product line. Include target audience analysis, competitive positioning, pricing strategy, distribution channels, promotional tactics, and success metrics. Make sure to address sustainability messaging and how to communicate our environmental impact effectively.")}
+                  >
+                    Test Example 1
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPrompt("Explain quantum computing to a general audience. Cover what quantum computers are, how they differ from classical computers, what problems they can solve, current limitations, and future potential applications.")}
+                  >
+                    Test Example 2
+                  </Button>
+                </div>
+              </div>
               <Textarea
                 id="prompt"
                 placeholder="Enter text to optimize..."
