@@ -3,8 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart3, TrendingUp, Target, Award, ArrowLeft, Loader2 } from 'lucide-react';
+import { BarChart3, TrendingUp, Target, Award, ArrowLeft, Loader2, Trophy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
 
 interface OptimizationResult {
   id: string;
@@ -226,6 +227,28 @@ export default function AnalyticsPage() {
                               <div className="font-semibold mb-1">Оптимизированный:</div>
                               <div className="line-clamp-2">{result.optimized_prompt}</div>
                             </div>
+                            {result.ab_test_winner && (
+                              <div className="p-2 bg-background rounded border border-primary/20">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Trophy className="w-3 h-3 text-yellow-500" />
+                                  <span className="font-semibold text-xs">A/B Test Result:</span>
+                                  <Badge variant={
+                                    result.ab_test_winner === 'optimized' ? 'default' : 
+                                    result.ab_test_winner === 'original' ? 'secondary' : 
+                                    'outline'
+                                  } className="text-xs">
+                                    {result.ab_test_winner === 'optimized' ? 'Оптимизированный' :
+                                     result.ab_test_winner === 'original' ? 'Оригинальный' :
+                                     'Ничья'}
+                                  </Badge>
+                                </div>
+                                {result.ab_test_notes && (
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    <span className="font-medium">Заметки:</span> {result.ab_test_notes}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </details>
                       </div>
