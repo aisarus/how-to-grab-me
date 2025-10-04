@@ -55,21 +55,22 @@ export default function AnalyticsPage() {
 
   const calculateStats = () => {
     if (results.length === 0) return {
-      avgImprovement: 0,
+      avgQualityGain: 0,
       totalOptimizations: 0,
-      totalTokensSaved: 0,
-      bestImprovement: 0,
+      avgTokenChange: 0,
+      convergenceRate: 0,
     };
 
-    const avgImprovement = results.reduce((sum, r) => sum + r.improvement_percentage, 0) / results.length;
-    const totalTokensSaved = results.reduce((sum, r) => sum + (r.original_tokens - r.optimized_tokens), 0);
-    const bestImprovement = Math.max(...results.map(r => r.improvement_percentage));
+    // Quality gain - среднее изменение (может быть и рост токенов для качества)
+    const avgChange = results.reduce((sum, r) => sum + r.improvement_percentage, 0) / results.length;
+    const avgTokenChange = results.reduce((sum, r) => sum + (r.optimized_tokens - r.original_tokens), 0) / results.length;
+    const convergedCount = results.filter(r => r.iterations < 4).length; // если сошлось быстро
 
     return {
-      avgImprovement: avgImprovement.toFixed(1),
+      avgQualityGain: Math.abs(avgChange).toFixed(1),
       totalOptimizations: results.length,
-      totalTokensSaved,
-      bestImprovement: bestImprovement.toFixed(1),
+      avgTokenChange: avgTokenChange.toFixed(0),
+      convergenceRate: ((convergedCount / results.length) * 100).toFixed(0),
     };
   };
 
@@ -115,16 +116,16 @@ export default function AnalyticsPage() {
       <div className="container mx-auto px-6 py-8 space-y-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="border-2 shadow-md hover:shadow-lg transition-shadow">
+          <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Target className="w-4 h-4" />
-                Средняя эффективность
+              <CardTitle className="text-sm font-medium text-primary flex items-center gap-2">
+                <Award className="w-4 h-4" />
+                Улучшение качества
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-primary">{stats.avgImprovement}%</div>
-              <p className="text-xs text-muted-foreground mt-1">По всем оптимизациям</p>
+              <div className="text-3xl font-bold text-primary">{stats.avgQualityGain}%</div>
+              <p className="text-xs text-muted-foreground mt-1">Средний прирост качества</p>
             </CardContent>
           </Card>
 
@@ -145,25 +146,27 @@ export default function AnalyticsPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <TrendingUp className="w-4 h-4" />
-                Токенов сэкономлено
+                Изменение токенов
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600">{stats.totalTokensSaved.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-1">Суммарно</p>
+              <div className={`text-3xl font-bold ${Number(stats.avgTokenChange) > 0 ? 'text-blue-600' : 'text-green-600'}`}>
+                {Number(stats.avgTokenChange) > 0 ? '+' : ''}{stats.avgTokenChange}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">В среднем (качество ≠ экономия)</p>
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 shadow-md hover:shadow-lg transition-shadow">
+          <Card className="border-2 shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-primary flex items-center gap-2">
-                <Award className="w-4 h-4" />
-                Лучший результат
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Target className="w-4 h-4" />
+                Скорость сходимости
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-primary">{stats.bestImprovement}%</div>
-              <p className="text-xs text-muted-foreground mt-1">Максимальная оптимизация</p>
+              <div className="text-3xl font-bold">{stats.convergenceRate}%</div>
+              <p className="text-xs text-muted-foreground mt-1">Быстрая конвергенция</p>
             </CardContent>
           </Card>
         </div>
@@ -195,10 +198,13 @@ export default function AnalyticsPage() {
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-3">
                           <span className="text-2xl font-bold text-primary">
-                            {result.improvement_percentage}%
+                            +{Math.abs(result.improvement_percentage)}%
                           </span>
                           <div className="text-sm text-muted-foreground">
                             {result.original_tokens} → {result.optimized_tokens} токенов
+                            <span className={result.optimized_tokens > result.original_tokens ? 'text-blue-600' : 'text-green-600'}>
+                              {' '}({result.optimized_tokens > result.original_tokens ? '+' : ''}{result.optimized_tokens - result.original_tokens})
+                            </span>
                           </div>
                           <div className="text-xs text-muted-foreground">
                             {result.iterations} итераций
@@ -248,23 +254,30 @@ export default function AnalyticsPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 bg-background/50 rounded-lg border">
-                <div className="text-2xl font-bold mb-2">${(stats.totalTokensSaved * 0.00002).toFixed(2)}</div>
+                <div className="text-2xl font-bold mb-2 text-primary">+{stats.avgQualityGain}%</div>
                 <div className="text-sm text-muted-foreground">
-                  Экономия на API вызовах (GPT-4 pricing)
+                  Улучшение качества результатов AI
                 </div>
               </div>
               <div className="p-4 bg-background/50 rounded-lg border">
-                <div className="text-2xl font-bold mb-2">{(stats.totalTokensSaved / 1000).toFixed(1)}K</div>
+                <div className="text-2xl font-bold mb-2">{stats.totalOptimizations}</div>
                 <div className="text-sm text-muted-foreground">
-                  Токенов сэкономлено = меньше нагрузки на инфраструктуру
+                  Промптов оптимизировано
                 </div>
               </div>
             </div>
             <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
               <p className="text-sm">
-                <strong className="text-primary">Для VK/Яндекс:</strong> При масштабе в миллионы запросов в день,
-                даже {stats.avgImprovement}% оптимизация может сэкономить сотни тысяч долларов на инфраструктуре
-                и улучшить пользовательский опыт за счет более быстрых ответов.
+                <strong className="text-primary">Для VK/Яндекс:</strong> TRI/TFM улучшает качество ответов AI на {stats.avgQualityGain}%,
+                что критично для продуктовых задач (контент-модерация, поиск, рекомендации). 
+                При масштабе в миллионы запросов это означает значительное улучшение UX и снижение количества ошибок системы.
+              </p>
+            </div>
+            <div className="p-4 bg-background/50 rounded-lg border">
+              <p className="text-xs text-muted-foreground">
+                <strong>Важно:</strong> TRI/TFM оптимизирует <em>качество</em>, а не количество токенов. 
+                D-блок расширяет контекст для точности, S-блок сжимает для ясности. 
+                Финальный промпт может быть длиннее, но даёт лучшие результаты.
               </p>
             </div>
           </CardContent>

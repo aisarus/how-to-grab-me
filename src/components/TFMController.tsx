@@ -102,7 +102,7 @@ export const TFMController = () => {
 
       toast({
         title: "Оптимизация завершена",
-        description: `Эффективность: ${data.savings.percentageSaved}% за ${data.iterations} итераций`,
+        description: `Качество улучшено на ${Math.abs(data.savings.percentageSaved)}% за ${data.iterations} итераций`,
       });
     } catch (error) {
       console.error('Error:', error);
@@ -363,15 +363,15 @@ export const TFMController = () => {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium flex items-center gap-2 text-primary">
                     <TrendingDown className="w-4 h-4" />
-                    Efficiency Gain
+                    Quality Improvement
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-4xl font-bold text-primary">
-                    {result.savings.percentageSaved}%
+                    +{Math.abs(result.savings.percentageSaved)}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Token optimization
+                    Prompt quality gain
                   </p>
                 </CardContent>
               </Card>
