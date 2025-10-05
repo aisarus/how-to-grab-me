@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { UserMenu } from '@/components/UserMenu';
 
 interface OptimizationResult {
   id: string;
@@ -266,132 +267,127 @@ export default function AnalyticsPage() {
                   TRI/TFM Technology Performance Metrics
                 </p>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
-                  <Filter className="w-4 h-4 text-muted-foreground" />
-                  <Label htmlFor="erikson-filter" className="text-sm cursor-pointer">
-                    Erikson Only
-                  </Label>
-                  <Switch
-                    id="erikson-filter"
-                    checked={showEriksonOnly}
-                    onCheckedChange={setShowEriksonOnly}
-                  />
-                </div>
-
-                {/* Date Filters */}
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <Calendar className="w-4 h-4" />
-                      {dateFrom || dateTo ? 'Filter: active' : 'Select dates'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="end">
-                    <div className="p-4 space-y-4">
-                      <div>
-                        <Label className="text-xs mb-2 block">From</Label>
-                        <CalendarComponent
-                          mode="single"
-                          selected={dateFrom}
-                          onSelect={setDateFrom}
-                          className={cn("p-3 pointer-events-auto")}
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs mb-2 block">To</Label>
-                        <CalendarComponent
-                          mode="single"
-                          selected={dateTo}
-                          onSelect={setDateTo}
-                          className={cn("p-3 pointer-events-auto")}
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setDateFrom(undefined);
-                            setDateTo(undefined);
-                          }}
-                          className="flex-1"
-                        >
-                          Reset
-                        </Button>
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-
-                {/* Export Buttons */}
-                <Button variant="outline" size="sm" onClick={exportToCSV} className="gap-2">
-                  <Download className="w-4 h-4" />
-                  CSV
-                </Button>
-                <Button variant="outline" size="sm" onClick={exportToJSON} className="gap-2">
-                  <Download className="w-4 h-4" />
-                  JSON
-                </Button>
-                <Button 
-                  variant="default" 
-                  size="sm" 
-                  onClick={() => {
-                    const reportData = {
-                      title: "TRI/TFM Pilot Report",
-                      date: new Date().toLocaleDateString('en-US'),
-                      kpis: {
-                        before: {
-                          successRate: "45%",
-                          avgIterations: "3.2",
-                          costVariance: "±0.15¢",
-                          tta: "8.0s"
-                        },
-                        after: {
-                          successRate: `${stats.successAtOne}%`,
-                          avgIterations: `${stats.avgIterations}`,
-                          costVariance: `±${stats.costVariance}¢`,
-                          tta: `${stats.avgTTA}s`
-                        }
-                      },
-                      formula: "Savings = (Iterations_before – Iterations_after) × Avg_tokens_per_iter × $/token + (TTA_before – TTA_after) × $/min_agent",
-                      conclusion: `Ready for production. Success@1 uplift: +${stats.successAtOne}%, Cost predictability improved by ${((0.15 - parseFloat(String(stats.costVariance))) / 0.15 * 100).toFixed(1)}%`,
-                      totalOptimizations: stats.totalOptimizations,
-                      refineOverhead: `+${stats.refineOverhead} tokens`,
-                      recommendation: "Approved for production deployment with expected ROI of 2-3x within first quarter"
-                    };
-                    
-                    const json = JSON.stringify(reportData, null, 2);
-                    const blob = new Blob([json], { type: 'application/json' });
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = `pilot-report-${new Date().toISOString().split('T')[0]}.json`;
-                    link.click();
-
-                    toast({
-                      title: "Pilot Report Exported",
-                      description: "1-page summary ready for management review",
-                    });
-                  }}
-                  className="gap-2 gradient-primary"
-                >
-                  <Download className="w-4 h-4" />
-                  Pilot Report
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="gap-2"
-                  onClick={async () => {
-                    await supabase.auth.signOut();
-                    navigate('/auth');
-                  }}
-                >
-                  <LogOut className="w-4 h-4" />
-                  Logout
-                </Button>
-              </div>
             </div>
+            <UserMenu />
+          </div>
+        </div>
+      </div>
+
+      {/* Filters Bar */}
+      <div className="border-b bg-card/30 backdrop-blur-sm">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <Label htmlFor="erikson-filter" className="text-sm cursor-pointer">
+                Erikson Only
+              </Label>
+              <Switch
+                id="erikson-filter"
+                checked={showEriksonOnly}
+                onCheckedChange={setShowEriksonOnly}
+              />
+            </div>
+
+            {/* Date Filters */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Calendar className="w-4 h-4" />
+                  {dateFrom || dateTo ? 'Filter: active' : 'Select dates'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <div className="p-4 space-y-4">
+                  <div>
+                    <Label className="text-xs mb-2 block">From</Label>
+                    <CalendarComponent
+                      mode="single"
+                      selected={dateFrom}
+                      onSelect={setDateFrom}
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs mb-2 block">To</Label>
+                    <CalendarComponent
+                      mode="single"
+                      selected={dateTo}
+                      onSelect={setDateTo}
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setDateFrom(undefined);
+                        setDateTo(undefined);
+                      }}
+                      className="flex-1"
+                    >
+                      Reset
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Export Buttons */}
+            <Button variant="outline" size="sm" onClick={exportToCSV} className="gap-2">
+              <Download className="w-4 h-4" />
+              CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={exportToJSON} className="gap-2">
+              <Download className="w-4 h-4" />
+              JSON
+            </Button>
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={() => {
+                const reportData = {
+                  title: "TRI/TFM Pilot Report",
+                  date: new Date().toLocaleDateString('en-US'),
+                  kpis: {
+                    before: {
+                      successRate: "45%",
+                      avgIterations: "3.2",
+                      costVariance: "±0.15¢",
+                      tta: "8.0s"
+                    },
+                    after: {
+                      successRate: `${stats.successAtOne}%`,
+                      avgIterations: `${stats.avgIterations}`,
+                      costVariance: `±${stats.costVariance}¢`,
+                      tta: `${stats.avgTTA}s`
+                    }
+                  },
+                  formula: "Savings = (Iterations_before – Iterations_after) × Avg_tokens_per_iter × $/token + (TTA_before – TTA_after) × $/min_agent",
+                  conclusion: `Ready for production. Success@1 uplift: +${stats.successAtOne}%, Cost predictability improved by ${((0.15 - parseFloat(String(stats.costVariance))) / 0.15 * 100).toFixed(1)}%`,
+                  totalOptimizations: stats.totalOptimizations,
+                  refineOverhead: `+${stats.refineOverhead} tokens`,
+                  recommendation: "Approved for production deployment with expected ROI of 2-3x within first quarter"
+                };
+                
+                const json = JSON.stringify(reportData, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `pilot-report-${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+
+                toast({
+                  title: "Pilot Report Exported",
+                  description: "1-page summary ready for management review",
+                });
+              }}
+              className="gap-2 gradient-primary"
+            >
+              <Download className="w-4 h-4" />
+              Pilot Report
+            </Button>
           </div>
         </div>
       </div>
