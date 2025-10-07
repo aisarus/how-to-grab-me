@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { UserMenu } from '@/components/UserMenu';
 import { PromptCarouselModal } from '@/components/PromptCarouselModal';
+import { ComparisonModal } from '@/components/ComparisonModal';
 
 interface OptimizationResult {
   id: string;
@@ -501,14 +502,16 @@ export default function AnalyticsPage() {
                 {displayResults.slice(0, 10).map((result, index) => (
                   <div
                     key={result.id}
-                    className="p-4 rounded-lg border bg-card hover:shadow-md transition-all cursor-pointer hover:border-primary/50"
-                    onClick={() => {
-                      setSelectedIndex(index);
-                      setCarouselOpen(true);
-                    }}
+                    className="p-4 rounded-lg border bg-card hover:shadow-md transition-all hover:border-primary/50"
                   >
                     <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 space-y-2">
+                      <div 
+                        className="flex-1 space-y-2 cursor-pointer"
+                        onClick={() => {
+                          setSelectedIndex(index);
+                          setCarouselOpen(true);
+                        }}
+                      >
                         <div className="flex items-center gap-3">
                           <span className="text-2xl font-bold text-primary">
                             +{Math.abs(result.improvement_percentage)}%
@@ -564,12 +567,22 @@ export default function AnalyticsPage() {
                           </div>
                         </details>
                       </div>
-                      {result.ab_test_winner && (
-                        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 text-green-600 text-xs font-semibold">
-                          <Award className="w-3 h-3" />
-                          A/B: {result.ab_test_winner}
-                        </div>
-                      )}
+                      <div className="flex flex-col items-end gap-2">
+                        {result.ab_test_winner && (
+                          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 text-green-600 text-xs font-semibold">
+                            <Award className="w-3 h-3" />
+                            A/B: {result.ab_test_winner}
+                          </div>
+                        )}
+                        <ComparisonModal
+                          originalPrompt={result.original_prompt}
+                          optimizedPrompt={result.optimized_prompt}
+                          originalTokens={result.original_tokens}
+                          optimizedTokens={result.optimized_tokens}
+                          improvementPercentage={result.improvement_percentage}
+                          iterations={result.iterations}
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
