@@ -64,6 +64,7 @@ export type Database = {
           b_parameter: number | null
           convergence_threshold: number | null
           created_at: string
+          erikson_stage: number | null
           id: string
           improvement_percentage: number | null
           iterations: number | null
@@ -80,6 +81,7 @@ export type Database = {
           b_parameter?: number | null
           convergence_threshold?: number | null
           created_at?: string
+          erikson_stage?: number | null
           id?: string
           improvement_percentage?: number | null
           iterations?: number | null
@@ -96,6 +98,7 @@ export type Database = {
           b_parameter?: number | null
           convergence_threshold?: number | null
           created_at?: string
+          erikson_stage?: number | null
           id?: string
           improvement_percentage?: number | null
           iterations?: number | null

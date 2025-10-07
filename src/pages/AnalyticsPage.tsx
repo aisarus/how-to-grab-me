@@ -29,6 +29,7 @@ interface OptimizationResult {
   iterations: number;
   ab_test_winner: string | null;
   ab_test_notes: string | null;
+  erikson_stage: number | null;
 }
 
 export default function AnalyticsPage() {
@@ -82,9 +83,9 @@ export default function AnalyticsPage() {
     // Filter results based on all filters
     let filteredResults = results;
 
-    // Erikson filter
+    // Erikson filter - show only results where Erikson stage was actually used
     if (showEriksonOnly) {
-      filteredResults = filteredResults.filter(r => r.ab_test_notes?.toLowerCase().includes('erikson') || r.ab_test_winner);
+      filteredResults = filteredResults.filter(r => r.erikson_stage !== null && r.erikson_stage >= 1 && r.erikson_stage <= 8);
     }
 
     // Search filter
@@ -214,9 +215,9 @@ export default function AnalyticsPage() {
   const getDisplayResults = () => {
     let filteredResults = results;
 
-    // Erikson filter
+    // Erikson filter - show only results where Erikson stage was actually used
     if (showEriksonOnly) {
-      filteredResults = filteredResults.filter(r => r.ab_test_notes?.toLowerCase().includes('erikson') || r.ab_test_winner);
+      filteredResults = filteredResults.filter(r => r.erikson_stage !== null && r.erikson_stage >= 1 && r.erikson_stage <= 8);
     }
 
     // Search filter

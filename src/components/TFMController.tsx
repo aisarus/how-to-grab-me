@@ -164,6 +164,7 @@ export const TFMController = () => {
           b_parameter: config.b,
           iterations: data.iterations,
           convergence_threshold: config.convergenceThreshold,
+          erikson_stage: config.useErikson ? 5 : null,
         })
         .select()
         .single();
@@ -331,8 +332,9 @@ export const TFMController = () => {
             b_parameter: config.b,
             iterations: withEFMNB.iterations,
             convergence_threshold: config.convergenceThreshold,
+            erikson_stage: config.useErikson ? 5 : null,
             ab_test_winner: winner === 'withEFMNB' ? 'With EFMNB' : winner === 'tie' ? 'Tie' : 'Without EFMNB',
-            ab_test_notes: `A/B Test: With EFMNB`
+            ab_test_notes: `A/B Test: With EFMNB${config.useErikson ? ', Erikson Stage 5' : ''}`
           },
           {
             user_id: user.id,
@@ -345,8 +347,9 @@ export const TFMController = () => {
             b_parameter: config.b,
             iterations: withoutEFMNB.iterations,
             convergence_threshold: config.convergenceThreshold,
+            erikson_stage: config.useErikson ? 5 : null,
             ab_test_winner: winner === 'withoutEFMNB' ? 'Without EFMNB' : winner === 'tie' ? 'Tie' : 'With EFMNB',
-            ab_test_notes: `A/B Test: Without EFMNB`
+            ab_test_notes: `A/B Test: Without EFMNB${config.useErikson ? ', Erikson Stage 5' : ''}`
           }
         ]);
       }
