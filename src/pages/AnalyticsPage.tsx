@@ -245,9 +245,9 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+    <div className="min-h-screen relative">
       {/* Header */}
-      <div className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b glass-effect sticky top-0 z-10">
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -407,7 +407,7 @@ export default function AnalyticsPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 shadow-md hover:shadow-lg transition-shadow">
+          <Card className="floating-card border-2 border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5" style={{ animationDelay: '0s' }}>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-primary flex items-center gap-2">
                 <Award className="w-4 h-4" />
@@ -420,7 +420,7 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-2 shadow-md hover:shadow-lg transition-shadow">
+          <Card className="floating-card border-2" style={{ animationDelay: '0.2s' }}>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Target className="w-4 h-4" />
@@ -433,7 +433,7 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-2 shadow-md hover:shadow-lg transition-shadow">
+          <Card className="floating-card border-2" style={{ animationDelay: '0.4s' }}>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <TrendingUp className="w-4 h-4" />
@@ -499,7 +499,7 @@ export default function AnalyticsPage() {
         <AnalyticsCharts results={displayResults} />
 
         {/* Recent Optimizations */}
-        <Card className="border-2 shadow-lg">
+        <Card className="floating-card border-2 shadow-lg" style={{ animationDelay: '0.6s' }}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-primary" />
@@ -597,7 +597,7 @@ export default function AnalyticsPage() {
         </Card>
 
         {/* Value Proposition */}
-        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 shadow-lg">
+        <Card className="floating-card border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 shadow-lg" style={{ animationDelay: '0.8s' }}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-primary">
               <Award className="w-5 h-5" />

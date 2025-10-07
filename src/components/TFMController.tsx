@@ -372,9 +372,9 @@ export const TFMController = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+    <div className="min-h-screen relative">
       {/* Hero Header */}
-      <div className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b glass-effect sticky top-0 z-10">
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -382,7 +382,7 @@ export const TFMController = () => {
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                   TRI/TFM Controller
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -419,7 +419,7 @@ export const TFMController = () => {
 
       <div className="container mx-auto px-6 py-8 space-y-8">
         {/* Main Input Card */}
-        <Card className="border-2 shadow-lg">
+        <Card className="floating-card border-2 shadow-lg" style={{ animationDelay: '0s' }}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Zap className="w-5 h-5 text-primary" />
@@ -497,7 +497,7 @@ export const TFMController = () => {
         <FavoriteConfigs currentConfig={config} onLoadConfig={handleLoadConfig} />
 
         {/* Configuration Card */}
-        <Card className="border shadow-md">
+        <Card className="floating-card border shadow-md" style={{ animationDelay: '0.3s' }}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Settings className="w-5 h-5 text-primary" />
@@ -756,7 +756,7 @@ export const TFMController = () => {
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Prompt Improvement Banner */}
             {result.promptImprovement && (
-              <Card className="border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 shadow-lg">
+              <Card className="floating-card border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 shadow-lg" style={{ animationDelay: '0.1s' }}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-primary">
                     <Sparkles className="w-5 h-5" />
@@ -826,7 +826,7 @@ export const TFMController = () => {
 
             {/* Metrics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="border-2 shadow-md hover:shadow-lg transition-shadow">
+              <Card className="floating-card border-2" style={{ animationDelay: '0.2s' }}>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Iterations</CardTitle>
                 </CardHeader>
@@ -845,7 +845,7 @@ export const TFMController = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-2 shadow-md hover:shadow-lg transition-shadow">
+              <Card className="floating-card border-2" style={{ animationDelay: '0.4s' }}>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Token Flow</CardTitle>
                 </CardHeader>
@@ -859,7 +859,7 @@ export const TFMController = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 shadow-lg hover:shadow-xl transition-shadow">
+              <Card className="floating-card border-2 border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5" style={{ animationDelay: '0.6s' }}>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium flex items-center gap-2 text-primary">
                     <TrendingDown className="w-4 h-4" />
@@ -879,7 +879,7 @@ export const TFMController = () => {
 
             {/* Quality Analysis */}
             {result.promptImprovement && (
-              <Card className="border-2 shadow-lg bg-gradient-to-br from-background to-accent/5">
+              <Card className="floating-card border-2 shadow-lg bg-gradient-to-br from-background to-accent/5" style={{ animationDelay: '0.8s' }}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="w-5 h-5 text-primary" />

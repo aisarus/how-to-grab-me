@@ -8,12 +8,14 @@ import TFMControllerPage from "./pages/TFMControllerPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import AuthPage from "./pages/AuthPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { Starfield } from "./components/Starfield";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <Starfield />
       <Toaster />
       <Sonner />
       <BrowserRouter>

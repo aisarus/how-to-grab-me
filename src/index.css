@@ -136,9 +136,23 @@
   }
   
   .glass-effect {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(16px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  }
+
+  .floating-card {
+    @apply glass-effect;
+    animation: float 6s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
+  }
+
+  .floating-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 48px 0 rgba(122, 162, 247, 0.25);
+    transition: all 0.3s ease;
   }
 
   .cosmic-bg {
@@ -153,7 +167,7 @@
     height: 100%;
     z-index: 0;
     pointer-events: none;
-    opacity: 0.6;
+    opacity: 0.8;
   }
 }
 
@@ -164,6 +178,19 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
+  0%, 100% { 
+    transform: translateY(0px);
+  }
+  50% { 
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes float-delayed {
+  0%, 100% { 
+    transform: translateY(0px);
+  }
+  50% { 
+    transform: translateY(-16px);
+  }
 }
