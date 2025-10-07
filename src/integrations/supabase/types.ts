@@ -131,12 +131,62 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_results: {
+        Row: {
+          created_at: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_public: boolean
+          optimization_result_id: string
+          share_token: string
+          title: string | null
+          user_id: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_public?: boolean
+          optimization_result_id: string
+          share_token: string
+          title?: string | null
+          user_id: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_public?: boolean
+          optimization_result_id?: string
+          share_token?: string
+          title?: string | null
+          user_id?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_optimization_result"
+            columns: ["optimization_result_id"]
+            isOneToOne: false
+            referencedRelation: "optimization_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_share_view_count: {
+        Args: { share_token_param: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
