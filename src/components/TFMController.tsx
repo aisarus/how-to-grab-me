@@ -442,21 +442,21 @@ export const TFMController = () => {
               <Button 
                 onClick={() => {
                   const randomPrompts = [
-                    "write about cats",
-                    "make a todo list",
-                    "explain AI",
-                    "tell me a story",
-                    "summarize this",
-                    "what is blockchain",
-                    "how to cook pasta",
-                    "best programming language",
-                    "fix my code",
-                    "help me with math",
-                    "translate to english",
-                    "make it better",
-                    "give me ideas",
-                    "write a poem",
-                    "explain quantum physics"
+                    "Create a comprehensive business plan for a sustainable coffee shop that focuses on locally sourced ingredients, zero-waste practices, and community engagement programs for the next 3 years",
+                    "Write a detailed technical documentation for a REST API that handles user authentication, including OAuth2 implementation, JWT tokens, refresh mechanisms, and security best practices",
+                    "Develop a marketing strategy for launching a new fitness app targeting millennials, including social media campaigns, influencer partnerships, pricing models, and user acquisition tactics",
+                    "Explain the architecture and implementation of a microservices-based e-commerce platform, covering service communication, database strategies, deployment patterns, and scalability considerations",
+                    "Design a curriculum for teaching programming to complete beginners, including learning objectives, weekly modules, practical projects, assessment methods, and recommended resources",
+                    "Analyze the environmental impact of cryptocurrency mining operations and propose sustainable alternatives, considering energy consumption, carbon footprint, and regulatory frameworks",
+                    "Create a step-by-step guide for migrating a legacy monolithic application to a cloud-native architecture using containers, orchestration tools, and continuous deployment pipelines",
+                    "Write a research proposal investigating the effects of remote work on employee productivity, mental health, and work-life balance, including methodology, data collection, and expected outcomes",
+                    "Develop a customer retention strategy for a SaaS company, covering onboarding processes, feature adoption metrics, engagement campaigns, and churn prevention techniques with specific KPIs",
+                    "Explain quantum computing principles and their practical applications in cryptography, drug discovery, and optimization problems, making it accessible for business decision-makers",
+                    "Design a data analytics dashboard for an online retail platform that tracks user behavior, conversion rates, inventory levels, and provides actionable insights for business growth",
+                    "Create a comprehensive content strategy for a B2B tech company, including blog topics, SEO optimization, lead generation tactics, content calendar, and performance measurement frameworks",
+                    "Develop a machine learning model pipeline for predicting customer churn, covering data preprocessing, feature engineering, model selection, hyperparameter tuning, and deployment strategies",
+                    "Write a detailed project plan for implementing agile methodologies in a traditional waterfall organization, addressing change management, team training, tools selection, and success metrics",
+                    "Analyze the competitive landscape of the electric vehicle market, including market share analysis, technology trends, regulatory challenges, and strategic recommendations for new entrants"
                   ];
                   const randomPrompt = randomPrompts[Math.floor(Math.random() * randomPrompts.length)];
                   setPrompt(randomPrompt);
