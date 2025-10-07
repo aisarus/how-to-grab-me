@@ -440,6 +440,41 @@ export const TFMController = () => {
             
             <div className="flex gap-2">
               <Button 
+                onClick={() => {
+                  const randomPrompts = [
+                    "write about cats",
+                    "make a todo list",
+                    "explain AI",
+                    "tell me a story",
+                    "summarize this",
+                    "what is blockchain",
+                    "how to cook pasta",
+                    "best programming language",
+                    "fix my code",
+                    "help me with math",
+                    "translate to english",
+                    "make it better",
+                    "give me ideas",
+                    "write a poem",
+                    "explain quantum physics"
+                  ];
+                  const randomPrompt = randomPrompts[Math.floor(Math.random() * randomPrompts.length)];
+                  setPrompt(randomPrompt);
+                  toast({
+                    title: "Random prompt generated",
+                    description: "A simple prompt has been generated for optimization testing",
+                  });
+                }}
+                variant="outline"
+                className="gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                Random Test Prompt
+              </Button>
+            </div>
+
+            <div className="flex gap-2">
+              <Button 
                 onClick={handleSubmit} 
                 disabled={loading || !prompt.trim()}
                 className="flex-1 h-12 text-base gradient-primary hover:opacity-90 transition-opacity shadow-glow"
