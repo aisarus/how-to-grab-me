@@ -31,10 +31,22 @@ interface TFMResult {
   };
 }
 
+interface ABTestResults {
+  withEFMNB: TFMResult;
+  withoutEFMNB: TFMResult;
+  winner: 'withEFMNB' | 'withoutEFMNB' | 'tie';
+  comparison: {
+    tokenSavingsDiff: number;
+    iterationsDiff: number;
+    convergenceDiff: boolean;
+  };
+}
+
 export const TFMController = () => {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TFMResult | null>(null);
+  const [abTestResults, setAbTestResults] = useState<ABTestResults | null>(null);
   const [abTestWinner, setAbTestWinner] = useState<'original' | 'optimized' | 'tie' | null>(null);
   const [abTestNotes, setAbTestNotes] = useState('');
   const [lastResultId, setLastResultId] = useState<string | null>(null);
@@ -45,7 +57,7 @@ export const TFMController = () => {
     maxIterations: 4,
     convergenceThreshold: 0.05,
     useEFMNB: true,
-    useErikson: true, // Erikson filter enabled by default
+    useErikson: true,
     useProposerCriticVerifier: true,
   });
   const { toast } = useToast();
@@ -225,6 +237,137 @@ export const TFMController = () => {
     setConfig(newConfig);
   };
 
+  const runABTest = async () => {
+    if (!prompt.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter text to optimize",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    setResult(null);
+    setAbTestResults(null);
+    abortControllerRef.current = new AbortController();
+
+    try {
+      toast({
+        title: "Starting A/B Test",
+        description: "Running optimization with and without EFMNB framing...",
+      });
+
+      // Run with EFMNB
+      const { data: withEFMNB, error: error1 } = await supabase.functions.invoke('tri-tfm-controller', {
+        body: {
+          prompt,
+          config: {
+            ...config,
+            useEFMNB: true,
+          }
+        }
+      });
+
+      if (!abortControllerRef.current) return;
+      if (error1) throw error1;
+
+      toast({
+        title: "Phase 1 Complete",
+        description: "Testing without EFMNB framing...",
+      });
+
+      // Run without EFMNB
+      const { data: withoutEFMNB, error: error2 } = await supabase.functions.invoke('tri-tfm-controller', {
+        body: {
+          prompt,
+          config: {
+            ...config,
+            useEFMNB: false,
+          }
+        }
+      });
+
+      if (!abortControllerRef.current) return;
+      if (error2) throw error2;
+
+      // Determine winner
+      const tokenSavingsDiff = withEFMNB.savings.percentageSaved - withoutEFMNB.savings.percentageSaved;
+      const iterationsDiff = withoutEFMNB.iterations - withEFMNB.iterations;
+      const convergenceDiff = withEFMNB.converged !== withoutEFMNB.converged;
+
+      let winner: 'withEFMNB' | 'withoutEFMNB' | 'tie' = 'tie';
+      if (Math.abs(tokenSavingsDiff) > 2) {
+        winner = tokenSavingsDiff > 0 ? 'withEFMNB' : 'withoutEFMNB';
+      } else if (iterationsDiff !== 0) {
+        winner = iterationsDiff > 0 ? 'withEFMNB' : 'withoutEFMNB';
+      }
+
+      const abResults: ABTestResults = {
+        withEFMNB,
+        withoutEFMNB,
+        winner,
+        comparison: {
+          tokenSavingsDiff,
+          iterationsDiff,
+          convergenceDiff,
+        }
+      };
+
+      setAbTestResults(abResults);
+
+      // Save both results to database
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('optimization_results').insert([
+          {
+            user_id: user.id,
+            original_prompt: prompt,
+            optimized_prompt: withEFMNB.promptImprovement?.improvedPrompt || withEFMNB.finalText,
+            original_tokens: withEFMNB.savings.initialTokens,
+            optimized_tokens: withEFMNB.savings.finalTokens,
+            improvement_percentage: withEFMNB.savings.percentageSaved,
+            a_parameter: config.a,
+            b_parameter: config.b,
+            iterations: withEFMNB.iterations,
+            convergence_threshold: config.convergenceThreshold,
+            ab_test_winner: winner === 'withEFMNB' ? 'With EFMNB' : winner === 'tie' ? 'Tie' : 'Without EFMNB',
+            ab_test_notes: `A/B Test: With EFMNB`
+          },
+          {
+            user_id: user.id,
+            original_prompt: prompt,
+            optimized_prompt: withoutEFMNB.promptImprovement?.improvedPrompt || withoutEFMNB.finalText,
+            original_tokens: withoutEFMNB.savings.initialTokens,
+            optimized_tokens: withoutEFMNB.savings.finalTokens,
+            improvement_percentage: withoutEFMNB.savings.percentageSaved,
+            a_parameter: config.a,
+            b_parameter: config.b,
+            iterations: withoutEFMNB.iterations,
+            convergence_threshold: config.convergenceThreshold,
+            ab_test_winner: winner === 'withoutEFMNB' ? 'Without EFMNB' : winner === 'tie' ? 'Tie' : 'With EFMNB',
+            ab_test_notes: `A/B Test: Without EFMNB`
+          }
+        ]);
+      }
+
+      toast({
+        title: "A/B Test Complete",
+        description: `Winner: ${winner === 'withEFMNB' ? 'With EFMNB' : winner === 'withoutEFMNB' ? 'Without EFMNB' : 'Tie'}`,
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to perform A/B test",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+      abortControllerRef.current = null;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
       {/* Hero Header */}
@@ -307,6 +450,25 @@ export const TFMController = () => {
                   <>
                     <Sparkles className="mr-2 h-5 w-5" />
                     Optimize Prompt
+                  </>
+                )}
+              </Button>
+              
+              <Button 
+                onClick={runABTest} 
+                disabled={loading || !prompt.trim()}
+                variant="outline"
+                className="h-12 px-6 border-2 border-primary/30 hover:bg-primary/10"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Testing...
+                  </>
+                ) : (
+                  <>
+                    <Trophy className="mr-2 h-5 w-5" />
+                    A/B Test
                   </>
                 )}
               </Button>
@@ -421,8 +583,173 @@ export const TFMController = () => {
           </CardContent>
         </Card>
 
+        {/* A/B Test Results Section */}
+        {abTestResults && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <Card className="border-2 border-primary shadow-xl">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Trophy className="w-6 h-6 text-primary" />
+                    A/B Test Results: EFMNB Framing Comparison
+                  </CardTitle>
+                  <div className={`px-4 py-2 rounded-full font-bold ${
+                    abTestResults.winner === 'withEFMNB' ? 'bg-green-100 text-green-700' :
+                    abTestResults.winner === 'withoutEFMNB' ? 'bg-blue-100 text-blue-700' :
+                    'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    Winner: {abTestResults.winner === 'withEFMNB' ? 'With EFMNB' : 
+                             abTestResults.winner === 'withoutEFMNB' ? 'Without EFMNB' : 'Tie'}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Comparison Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card className="bg-gradient-to-br from-primary/5 to-primary/10">
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground mb-1">Token Savings Difference</p>
+                        <p className={`text-2xl font-bold ${
+                          abTestResults.comparison.tokenSavingsDiff > 0 ? 'text-green-600' : 
+                          abTestResults.comparison.tokenSavingsDiff < 0 ? 'text-red-600' : 'text-yellow-600'
+                        }`}>
+                          {abTestResults.comparison.tokenSavingsDiff > 0 ? '+' : ''}
+                          {abTestResults.comparison.tokenSavingsDiff.toFixed(2)}%
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {abTestResults.comparison.tokenSavingsDiff > 0 ? 'EFMNB saves more' : 
+                           abTestResults.comparison.tokenSavingsDiff < 0 ? 'No EFMNB saves more' : 'Equal savings'}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gradient-to-br from-primary/5 to-primary/10">
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground mb-1">Iterations Difference</p>
+                        <p className={`text-2xl font-bold ${
+                          abTestResults.comparison.iterationsDiff > 0 ? 'text-green-600' : 
+                          abTestResults.comparison.iterationsDiff < 0 ? 'text-red-600' : 'text-yellow-600'
+                        }`}>
+                          {abTestResults.comparison.iterationsDiff > 0 ? '+' : ''}
+                          {abTestResults.comparison.iterationsDiff}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {abTestResults.comparison.iterationsDiff > 0 ? 'EFMNB faster' : 
+                           abTestResults.comparison.iterationsDiff < 0 ? 'No EFMNB faster' : 'Same speed'}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gradient-to-br from-primary/5 to-primary/10">
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground mb-1">Convergence</p>
+                        <p className="text-2xl font-bold text-primary">
+                          {abTestResults.withEFMNB.converged && abTestResults.withoutEFMNB.converged ? 'Both' :
+                           abTestResults.withEFMNB.converged ? 'EFMNB Only' :
+                           abTestResults.withoutEFMNB.converged ? 'No EFMNB Only' : 'Neither'}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">Converged</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Side by Side Results */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* With EFMNB */}
+                  <Card className={`border-2 ${abTestResults.winner === 'withEFMNB' ? 'border-green-500 shadow-lg' : 'border-gray-300'}`}>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5" />
+                        With EFMNB Framing
+                        {abTestResults.winner === 'withEFMNB' && (
+                          <Trophy className="w-5 h-5 text-green-600 ml-auto" />
+                        )}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Quality Improvement</p>
+                          <p className="text-xl font-bold text-green-600">
+                            {Math.abs(abTestResults.withEFMNB.savings.percentageSaved).toFixed(2)}%
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Iterations</p>
+                          <p className="text-xl font-bold">{abTestResults.withEFMNB.iterations}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Initial Tokens</p>
+                          <p className="text-sm font-semibold">{abTestResults.withEFMNB.savings.initialTokens}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Final Tokens</p>
+                          <p className="text-sm font-semibold">{abTestResults.withEFMNB.savings.finalTokens}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Optimized Output</Label>
+                        <div className="mt-2 p-3 bg-muted rounded-lg text-sm max-h-40 overflow-y-auto">
+                          {abTestResults.withEFMNB.promptImprovement?.improvedPrompt || abTestResults.withEFMNB.finalText}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Without EFMNB */}
+                  <Card className={`border-2 ${abTestResults.winner === 'withoutEFMNB' ? 'border-blue-500 shadow-lg' : 'border-gray-300'}`}>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5" />
+                        Without EFMNB Framing
+                        {abTestResults.winner === 'withoutEFMNB' && (
+                          <Trophy className="w-5 h-5 text-blue-600 ml-auto" />
+                        )}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Quality Improvement</p>
+                          <p className="text-xl font-bold text-green-600">
+                            {Math.abs(abTestResults.withoutEFMNB.savings.percentageSaved).toFixed(2)}%
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Iterations</p>
+                          <p className="text-xl font-bold">{abTestResults.withoutEFMNB.iterations}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Initial Tokens</p>
+                          <p className="text-sm font-semibold">{abTestResults.withoutEFMNB.savings.initialTokens}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Final Tokens</p>
+                          <p className="text-sm font-semibold">{abTestResults.withoutEFMNB.savings.finalTokens}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Optimized Output</Label>
+                        <div className="mt-2 p-3 bg-muted rounded-lg text-sm max-h-40 overflow-y-auto">
+                          {abTestResults.withoutEFMNB.promptImprovement?.improvedPrompt || abTestResults.withoutEFMNB.finalText}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Results Section */}
-        {result && (
+        {result && !abTestResults && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Prompt Improvement Banner */}
             {result.promptImprovement && (
