@@ -36,7 +36,6 @@ interface OptimizationResult {
 export default function AnalyticsPage() {
   const [results, setResults] = useState<OptimizationResult[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showEriksonOnly, setShowEriksonOnly] = useState(true); // Erikson filter enabled by default
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
@@ -85,11 +84,6 @@ export default function AnalyticsPage() {
   const calculateStats = () => {
     // Filter results based on all filters
     let filteredResults = results;
-
-    // Erikson filter - show only results where Erikson stage was actually used
-    if (showEriksonOnly) {
-      filteredResults = filteredResults.filter(r => r.erikson_stage !== null && r.erikson_stage >= 1 && r.erikson_stage <= 8);
-    }
 
     // Search filter
     if (searchQuery.trim()) {
@@ -218,11 +212,6 @@ export default function AnalyticsPage() {
   const getDisplayResults = () => {
     let filteredResults = results;
 
-    // Erikson filter - show only results where Erikson stage was actually used
-    if (showEriksonOnly) {
-      filteredResults = filteredResults.filter(r => r.erikson_stage !== null && r.erikson_stage >= 1 && r.erikson_stage <= 8);
-    }
-
     // Search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
@@ -281,18 +270,6 @@ export default function AnalyticsPage() {
       <div className="border-b bg-card/30 backdrop-blur-sm">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
-              <Filter className="w-4 h-4 text-muted-foreground" />
-              <Label htmlFor="erikson-filter" className="text-sm cursor-pointer">
-                Erikson Only
-              </Label>
-              <Switch
-                id="erikson-filter"
-                checked={showEriksonOnly}
-                onCheckedChange={setShowEriksonOnly}
-              />
-            </div>
-
             {/* Date Filters */}
             <Popover>
               <PopoverTrigger asChild>
@@ -516,9 +493,7 @@ export default function AnalyticsPage() {
                 <BarChart3 className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>No data available yet</p>
                 <p className="text-sm mt-2">
-                  {showEriksonOnly 
-                    ? 'No results with Erikson filter. Disable the filter to view all results.'
-                    : 'Optimize a prompt to see statistics'}
+                  Optimize a prompt to see statistics
                 </p>
               </div>
             ) : (
