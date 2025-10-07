@@ -15,6 +15,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { UserMenu } from '@/components/UserMenu';
+import { PromptCarouselModal } from '@/components/PromptCarouselModal';
 
 interface OptimizationResult {
   id: string;
@@ -39,6 +40,8 @@ export default function AnalyticsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
+  const [carouselOpen, setCarouselOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -520,10 +523,14 @@ export default function AnalyticsPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {displayResults.slice(0, 10).map((result) => (
+                {displayResults.slice(0, 10).map((result, index) => (
                   <div
                     key={result.id}
-                    className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow"
+                    className="p-4 rounded-lg border bg-card hover:shadow-md transition-all cursor-pointer hover:border-primary/50"
+                    onClick={() => {
+                      setSelectedIndex(index);
+                      setCarouselOpen(true);
+                    }}
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 space-y-2">
@@ -657,6 +664,13 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <PromptCarouselModal
+        results={displayResults.slice(0, 10)}
+        initialIndex={selectedIndex}
+        open={carouselOpen}
+        onOpenChange={setCarouselOpen}
+      />
     </div>
   );
 }
