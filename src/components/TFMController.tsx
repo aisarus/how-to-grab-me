@@ -527,35 +527,82 @@ export const TFMController = () => {
             {/* Parameters Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-medium">Parameter a</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold">Expansion Target (α)</Label>
+                  <span className="text-xs font-mono bg-primary/10 px-2 py-1 rounded text-primary">
+                    +{(config.a * 100).toFixed(0)}%
+                  </span>
+                </div>
                 <Input
                   type="number"
-                  step="0.01"
+                  step="0.05"
+                  min="0.10"
+                  max="0.50"
                   value={config.a}
                   onChange={(e) => setConfig({ ...config, a: parseFloat(e.target.value) })}
+                  className="font-mono"
                 />
-                <p className="text-xs text-muted-foreground">D expansion rate</p>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-semibold text-primary">D-block expansion rate:</span> How much detail to add
+                  </p>
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-primary to-secondary transition-all" 
+                        style={{ width: `${(config.a / 0.5) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-muted-foreground w-12">{(config.a * 100).toFixed(0)}%</span>
+                  </div>
+                </div>
               </div>
+              
               <div className="space-y-2">
-                <Label className="text-xs font-medium">Parameter b</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold">Compression Target (β)</Label>
+                  <span className="text-xs font-mono bg-secondary/10 px-2 py-1 rounded text-secondary">
+                    -{(config.b * 100).toFixed(0)}%
+                  </span>
+                </div>
                 <Input
                   type="number"
-                  step="0.01"
+                  step="0.05"
+                  min="0.20"
+                  max="0.60"
                   value={config.b}
                   onChange={(e) => setConfig({ ...config, b: parseFloat(e.target.value) })}
+                  className="font-mono"
                 />
-                <p className="text-xs text-muted-foreground">S reduction rate</p>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-semibold text-secondary">S-block compression rate:</span> How much to condense
+                  </p>
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-secondary to-primary transition-all" 
+                        style={{ width: `${(config.b / 0.6) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-muted-foreground w-12">{(config.b * 100).toFixed(0)}%</span>
+                  </div>
+                </div>
               </div>
+              
               <div className="space-y-2">
-                <Label className="text-xs font-medium">Max Iterations</Label>
+                <Label className="text-sm font-semibold">Max Iterations</Label>
                 <Input
                   type="number"
                   min="1"
                   max="10"
                   value={config.maxIterations}
                   onChange={(e) => setConfig({ ...config, maxIterations: parseInt(e.target.value) })}
+                  className="font-mono"
                 />
-                <p className="text-xs text-muted-foreground">Convergence limit</p>
+                <p className="text-xs text-muted-foreground">
+                  Maximum D→S cycles before stopping (1-10)
+                </p>
               </div>
             </div>
 
