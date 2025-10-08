@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import TFMControllerPage from "./pages/TFMControllerPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import AuthPage from "./pages/AuthPage";
+import PromptAssistantPage from "./pages/PromptAssistantPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Starfield } from "./components/Starfield";
 
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/" element={<ProtectedRoute><TFMControllerPage /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
+            <Route path="/assistant" element={<ProtectedRoute><PromptAssistantPage /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

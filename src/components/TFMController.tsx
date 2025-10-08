@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Zap, TrendingDown, Sparkles, Settings, BarChart3, CheckCircle2, Trophy, StopCircle, Copy, Check, LogOut } from 'lucide-react';
+import { Loader2, Zap, TrendingDown, Sparkles, Settings, BarChart3, CheckCircle2, Trophy, StopCircle, Copy, Check, LogOut, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Textarea as TextareaComponent } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -391,6 +391,15 @@ export const TFMController = () => {
               </div>
             </div>
             <div className="flex gap-1 sm:gap-2 flex-shrink-0">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-1 sm:gap-2"
+                onClick={() => navigate('/assistant')}
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span className="hidden sm:inline">Ассистент</span>
+              </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
