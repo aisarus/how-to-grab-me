@@ -192,42 +192,26 @@ export type Database = {
           title: string | null
           view_count: number | null
         }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          expires_at?: string | null
-          id?: string | null
-          is_public?: boolean | null
-          optimization_result_id?: string | null
-          share_token?: string | null
-          title?: string | null
-          view_count?: number | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          expires_at?: string | null
-          id?: string | null
-          is_public?: boolean | null
-          optimization_result_id?: string | null
-          share_token?: string | null
-          title?: string | null
-          view_count?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_optimization_result"
-            columns: ["optimization_result_id"]
-            isOneToOne: false
-            referencedRelation: "optimization_results"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
       get_public_share: {
         Args: { share_token_param: string }
+        Returns: {
+          created_at: string
+          description: string
+          expires_at: string
+          id: string
+          is_public: boolean
+          optimization_result_id: string
+          share_token: string
+          title: string
+          view_count: number
+        }[]
+      }
+      get_shared_results_public: {
+        Args: Record<PropertyKey, never>
         Returns: {
           created_at: string
           description: string
