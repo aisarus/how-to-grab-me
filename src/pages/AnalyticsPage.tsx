@@ -240,9 +240,9 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col pt-4 sm:pt-0">
       {/* Header */}
-      <div className="border-b glass-effect sticky top-0 z-10 flex-shrink-0">
+      <div className="border-b glass-effect sticky top-0 z-10 flex-shrink-0 pt-4 sm:pt-0">
         <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
