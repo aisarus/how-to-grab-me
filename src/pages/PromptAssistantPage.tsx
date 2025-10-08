@@ -7,6 +7,8 @@ import { Loader2, Send, Sparkles, Home, BarChart3, LogOut, Bot, User } from 'luc
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -22,6 +24,8 @@ const PromptAssistantPage = () => {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [useEfmnb, setUseEfmnb] = useState(true);
+  const [useErikson, setUseErikson] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -43,7 +47,9 @@ const PromptAssistantPage = () => {
     try {
       const { data, error } = await supabase.functions.invoke('prompt-assistant', {
         body: { 
-          messages: [...messages, userMessage]
+          messages: [...messages, userMessage],
+          useEfmnb,
+          useErikson
         }
       });
 
@@ -175,7 +181,32 @@ const PromptAssistantPage = () => {
         </ScrollArea>
 
         {/* Input Area */}
-        <div className="pt-4 border-t mt-4">
+        <div className="pt-4 border-t mt-4 space-y-4">
+          {/* Filters */}
+          <div className="flex flex-wrap gap-4">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="efmnb-filter"
+                checked={useEfmnb}
+                onCheckedChange={setUseEfmnb}
+              />
+              <Label htmlFor="efmnb-filter" className="cursor-pointer">
+                Фильтр ЕФМНБ
+              </Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="erikson-filter"
+                checked={useErikson}
+                onCheckedChange={setUseErikson}
+              />
+              <Label htmlFor="erikson-filter" className="cursor-pointer">
+                Фильтр Эриксона
+              </Label>
+            </div>
+          </div>
+
+          {/* Input */}
           <div className="flex gap-2">
             <Textarea
               placeholder="Введите ваш промпт для улучшения..."
@@ -199,7 +230,7 @@ const PromptAssistantPage = () => {
               )}
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-xs text-muted-foreground">
             Нажмите Enter для отправки, Shift+Enter для новой строки
           </p>
         </div>
