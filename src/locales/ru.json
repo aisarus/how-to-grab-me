@@ -112,7 +112,10 @@
     "passwordHint": "Минимум 6 символов",
     "signedOut": "Выход выполнен",
     "signedOutSuccessfully": "Вы успешно вышли из системы",
-    "failedToSignOut": "Не удалось выйти"
+    "failedToSignOut": "Не удалось выйти",
+    "skip": "Пропустить",
+    "continueWithoutAccount": "Продолжить без аккаунта",
+    "guestModeNote": "Вы можете использовать приложение без регистрации, но данные не будут сохранены"
   },
   "favorites": {
     "title": "Избранные конфигурации",

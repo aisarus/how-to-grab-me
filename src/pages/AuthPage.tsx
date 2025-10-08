@@ -42,6 +42,10 @@ export default function AuthPage() {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  const handleSkip = () => {
+    navigate('/');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -180,15 +184,26 @@ export default function AuthPage() {
               )}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm">
+          <div className="mt-4 text-center text-sm space-y-2">
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
-              className="text-primary hover:underline"
+              className="text-primary hover:underline block w-full"
               disabled={loading}
             >
               {isLogin ? t('auth.noAccount') : t('auth.haveAccount')}
             </button>
+            <Button
+              variant="ghost"
+              className="w-full text-muted-foreground hover:text-primary"
+              onClick={handleSkip}
+              disabled={loading}
+            >
+              {t('auth.skip')} →
+            </Button>
+            <p className="text-xs text-muted-foreground mt-2">
+              {t('auth.guestModeNote')}
+            </p>
           </div>
         </CardContent>
       </Card>

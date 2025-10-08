@@ -112,7 +112,10 @@
     "passwordHint": "At least 6 characters",
     "signedOut": "Signed out",
     "signedOutSuccessfully": "You have been successfully signed out",
-    "failedToSignOut": "Failed to sign out"
+    "failedToSignOut": "Failed to sign out",
+    "skip": "Skip",
+    "continueWithoutAccount": "Continue without account",
+    "guestModeNote": "You can use the app without registration, but your data won't be saved"
   },
   "favorites": {
     "title": "Favorite Configurations",

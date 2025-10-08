@@ -112,7 +112,10 @@
     "passwordHint": "לפחות 6 תווים",
     "signedOut": "יצאת",
     "signedOutSuccessfully": "יצאת בהצלחה מהמערכת",
-    "failedToSignOut": "נכשל ביציאה"
+    "failedToSignOut": "נכשל ביציאה",
+    "skip": "דלג",
+    "continueWithoutAccount": "המשך ללא חשבון",
+    "guestModeNote": "אתה יכול להשתמש באפליקציה ללא הרשמה, אך הנתונים לא יישמרו"
   },
   "favorites": {
     "title": "תצורות מועדפות",
