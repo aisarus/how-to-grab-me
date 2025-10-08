@@ -17,7 +17,11 @@ interface Message {
   content: string;
 }
 
-const PromptAssistantPage = () => {
+interface PromptAssistantPageProps {
+  hideHeader?: boolean;
+}
+
+const PromptAssistantPage = ({ hideHeader = false }: PromptAssistantPageProps) => {
   const { t, language } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -86,58 +90,60 @@ const PromptAssistantPage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
-      <div className="border-b glass-effect sticky top-0 z-10 flex-shrink-0">
-        <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+      {!hideHeader && (
+        <div className="border-b glass-effect sticky top-0 z-10 flex-shrink-0">
+          <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
+                  <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate">
+                    {t('promptAssistant.title')}
+                  </h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 hidden sm:block">
+                    {t('promptAssistant.subtitle')}
+                  </p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate">
-                  {t('promptAssistant.title')}
-                </h1>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1 hidden sm:block">
-                  {t('promptAssistant.subtitle')}
-                </p>
+              <div className="flex gap-1 sm:gap-2 flex-shrink-0">
+                <LanguageSwitcher />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-1 sm:gap-2"
+                  onClick={() => navigate('/')}
+                >
+                  <Home className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t('common.main')}</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-1 sm:gap-2"
+                  onClick={() => navigate('/analytics')}
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t('common.analytics')}</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-1 sm:gap-2"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    navigate('/auth');
+                  }}
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t('common.logout')}</span>
+                </Button>
               </div>
-            </div>
-            <div className="flex gap-1 sm:gap-2 flex-shrink-0">
-              <LanguageSwitcher />
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="gap-1 sm:gap-2"
-                onClick={() => navigate('/')}
-              >
-                <Home className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('common.main')}</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="gap-1 sm:gap-2"
-                onClick={() => navigate('/analytics')}
-              >
-                <BarChart3 className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('common.analytics')}</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="gap-1 sm:gap-2"
-                onClick={async () => {
-                  await supabase.auth.signOut();
-                  navigate('/auth');
-                }}
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('common.logout')}</span>
-              </Button>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Chat Container */}
       <div className="flex-1 container mx-auto px-4 sm:px-6 py-6 flex flex-col max-w-4xl">
