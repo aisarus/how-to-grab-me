@@ -226,6 +226,20 @@ export type Database = {
       }
     }
     Functions: {
+      get_public_share: {
+        Args: { share_token_param: string }
+        Returns: {
+          created_at: string
+          description: string
+          expires_at: string
+          id: string
+          is_public: boolean
+          optimization_result_id: string
+          share_token: string
+          title: string
+          view_count: number
+        }[]
+      }
       increment_share_view_count: {
         Args: { share_token_param: string }
         Returns: undefined
