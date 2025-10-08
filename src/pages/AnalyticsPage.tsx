@@ -240,9 +240,9 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <div className="border-b glass-effect sticky top-0 z-10">
+      <div className="border-b glass-effect sticky top-0 z-10 flex-shrink-0">
         <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
@@ -275,7 +275,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Filters Bar */}
-      <div className="border-b bg-card/30 backdrop-blur-sm">
+      <div className="border-b bg-card/30 backdrop-blur-sm flex-shrink-0">
         <div className="container mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
             {/* Date Filters */}
@@ -381,7 +381,8 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
+      <div className="flex-1 overflow-y-auto">
+        <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -540,14 +541,14 @@ export default function AnalyticsPage() {
                           <summary className="cursor-pointer text-primary hover:underline">
                             Show prompts
                           </summary>
-                          <div className="mt-2 space-y-2">
+                          <div className="mt-2 space-y-2 max-h-96 overflow-y-auto">
                             <div className="p-2 bg-muted/50 rounded text-xs">
                               <div className="font-semibold mb-1">Original:</div>
-                              <div className="line-clamp-2">{result.original_prompt}</div>
+                              <div className="break-words whitespace-pre-wrap">{result.original_prompt}</div>
                             </div>
                             <div className="p-2 bg-primary/5 rounded text-xs">
                               <div className="font-semibold mb-1">Optimized:</div>
-                              <div className="line-clamp-2">{result.optimized_prompt}</div>
+                              <div className="break-words whitespace-pre-wrap">{result.optimized_prompt}</div>
                             </div>
                             {result.ab_test_winner && (
                               <div className="p-2 bg-background rounded border border-primary/20">
@@ -658,6 +659,7 @@ export default function AnalyticsPage() {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
 
       <PromptCarouselModal

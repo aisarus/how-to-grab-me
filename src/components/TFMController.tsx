@@ -372,52 +372,53 @@ export const TFMController = () => {
   };
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen flex flex-col">
       {/* Hero Header */}
-      <div className="border-b glass-effect sticky top-0 z-10">
-        <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-                <Sparkles className="w-6 h-6 text-white" />
+      <div className="border-b glass-effect sticky top-0 z-10 flex-shrink-0">
+        <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
+                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate">
                   TRI/TFM Controller
                 </h1>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1 hidden sm:block">
                   Cloud AI-powered prompt optimization
                 </p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1 sm:gap-2 flex-shrink-0">
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="gap-2"
+                className="gap-1 sm:gap-2"
                 onClick={() => navigate('/analytics')}
               >
                 <BarChart3 className="w-4 h-4" />
-                Analytics
+                <span className="hidden sm:inline">Analytics</span>
               </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="gap-2"
+                className="gap-1 sm:gap-2"
                 onClick={async () => {
                   await supabase.auth.signOut();
                   navigate('/auth');
                 }}
               >
                 <LogOut className="w-4 h-4" />
-                Logout
+                <span className="hidden sm:inline">Logout</span>
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-8 space-y-8">
+      <div className="flex-1 overflow-y-auto">
+        <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* Main Input Card */}
         <Card className="floating-card border-2 shadow-lg" style={{ animationDelay: '0s' }}>
           <CardHeader>
@@ -1150,6 +1151,7 @@ export const TFMController = () => {
             </Card>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

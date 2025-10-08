@@ -110,8 +110,8 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center p-6">
-      <Card className="w-full max-w-md border-2 shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+      <Card className="w-full max-w-md border-2 shadow-lg my-4">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">
             <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shadow-glow">

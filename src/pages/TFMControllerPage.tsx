@@ -3,10 +3,7 @@ import { UserMenu } from '@/components/UserMenu';
 
 const TFMControllerPage = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="fixed top-4 right-4 z-50">
-        <UserMenu />
-      </div>
+    <div className="min-h-screen flex flex-col bg-background overflow-hidden">
       <TFMController />
     </div>
   );
