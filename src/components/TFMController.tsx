@@ -13,6 +13,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { PromptTemplates } from './PromptTemplates';
 import { FavoriteConfigs } from './FavoriteConfigs';
 import { ComparisonModal } from './ComparisonModal';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 interface TFMResult {
   finalText: string;
@@ -43,6 +45,7 @@ interface ABTestResults {
 }
 
 export const TFMController = () => {
+  const { t } = useLanguage();
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TFMResult | null>(null);
@@ -383,14 +386,15 @@ export const TFMController = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate">
-                  TRI/TFM Controller
+                  {t('tfmController.title')}
                 </h1>
                 <p className="text-xs sm:text-sm text-muted-foreground mt-1 hidden sm:block">
-                  Cloud AI-powered prompt optimization
+                  {t('tfmController.subtitle')}
                 </p>
               </div>
             </div>
             <div className="flex gap-1 sm:gap-2 flex-shrink-0">
+              <LanguageSwitcher />
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -398,7 +402,7 @@ export const TFMController = () => {
                 onClick={() => navigate('/assistant')}
               >
                 <MessageSquare className="w-4 h-4" />
-                <span className="hidden sm:inline">Ассистент</span>
+                <span className="hidden sm:inline">{t('common.assistant')}</span>
               </Button>
               <Button 
                 variant="outline" 
@@ -407,7 +411,7 @@ export const TFMController = () => {
                 onClick={() => navigate('/analytics')}
               >
                 <BarChart3 className="w-4 h-4" />
-                <span className="hidden sm:inline">Analytics</span>
+                <span className="hidden sm:inline">{t('common.analytics')}</span>
               </Button>
               <Button 
                 variant="outline" 
@@ -419,7 +423,7 @@ export const TFMController = () => {
                 }}
               >
                 <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">Logout</span>
+                <span className="hidden sm:inline">{t('common.logout')}</span>
               </Button>
             </div>
           </div>

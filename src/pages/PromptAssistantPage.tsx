@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -16,10 +18,11 @@ interface Message {
 }
 
 const PromptAssistantPage = () => {
+  const { t, language } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Привет! Я ассистент для улучшения промптов. Отправьте мне ваш промпт, и я предложу улучшения, чтобы получить лучшие результаты от AI моделей.'
+      content: t('promptAssistant.initialMessage')
     }
   ]);
   const [input, setInput] = useState('');
@@ -49,7 +52,8 @@ const PromptAssistantPage = () => {
         body: { 
           messages: [...messages, userMessage],
           useEfmnb,
-          useErikson
+          useErikson,
+          language
         }
       });
 
@@ -63,8 +67,8 @@ const PromptAssistantPage = () => {
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Ошибка",
-        description: error instanceof Error ? error.message : "Не удалось получить ответ",
+        title: t('common.error'),
+        description: error instanceof Error ? error.message : t('promptAssistant.errorMessage'),
         variant: "destructive",
       });
     } finally {
@@ -91,14 +95,15 @@ const PromptAssistantPage = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate">
-                  Ассистент Промптов
+                  {t('promptAssistant.title')}
                 </h1>
                 <p className="text-xs sm:text-sm text-muted-foreground mt-1 hidden sm:block">
-                  AI-помощник для улучшения ваших промптов
+                  {t('promptAssistant.subtitle')}
                 </p>
               </div>
             </div>
             <div className="flex gap-1 sm:gap-2 flex-shrink-0">
+              <LanguageSwitcher />
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -106,7 +111,7 @@ const PromptAssistantPage = () => {
                 onClick={() => navigate('/')}
               >
                 <Home className="w-4 h-4" />
-                <span className="hidden sm:inline">Главная</span>
+                <span className="hidden sm:inline">{t('common.main')}</span>
               </Button>
               <Button 
                 variant="outline" 
@@ -115,7 +120,7 @@ const PromptAssistantPage = () => {
                 onClick={() => navigate('/analytics')}
               >
                 <BarChart3 className="w-4 h-4" />
-                <span className="hidden sm:inline">Аналитика</span>
+                <span className="hidden sm:inline">{t('common.analytics')}</span>
               </Button>
               <Button 
                 variant="outline" 
@@ -127,7 +132,7 @@ const PromptAssistantPage = () => {
                 }}
               >
                 <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">Выход</span>
+                <span className="hidden sm:inline">{t('common.logout')}</span>
               </Button>
             </div>
           </div>
@@ -191,7 +196,7 @@ const PromptAssistantPage = () => {
                 onCheckedChange={setUseEfmnb}
               />
               <Label htmlFor="efmnb-filter" className="cursor-pointer">
-                Фильтр ЕФМНБ
+                {t('promptAssistant.filterEfmnb')}
               </Label>
             </div>
             <div className="flex items-center gap-2">
@@ -201,7 +206,7 @@ const PromptAssistantPage = () => {
                 onCheckedChange={setUseErikson}
               />
               <Label htmlFor="erikson-filter" className="cursor-pointer">
-                Фильтр Эриксона
+                {t('promptAssistant.filterErikson')}
               </Label>
             </div>
           </div>
@@ -209,7 +214,7 @@ const PromptAssistantPage = () => {
           {/* Input */}
           <div className="flex gap-2">
             <Textarea
-              placeholder="Введите ваш промпт для улучшения..."
+              placeholder={t('promptAssistant.placeholder')}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -231,7 +236,7 @@ const PromptAssistantPage = () => {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Нажмите Enter для отправки, Shift+Enter для новой строки
+            {t('promptAssistant.sendHint')}
           </p>
         </div>
       </div>

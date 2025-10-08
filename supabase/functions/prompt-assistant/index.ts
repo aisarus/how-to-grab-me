@@ -20,7 +20,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, useEfmnb = true, useErikson = true } = await req.json();
+    const { messages, useEfmnb = true, useErikson = true, language = 'en' } = await req.json();
     
     if (!messages || !Array.isArray(messages)) {
       throw new Error('Messages array is required');
@@ -34,37 +34,45 @@ serve(async (req) => {
       );
     }
 
-    let systemPrompt = `Ты профессиональный ассистент для улучшения промптов. Твоя задача - помогать пользователям создавать более эффективные промпты для AI моделей.
+    const languageMap: Record<string, string> = {
+      'en': 'English',
+      'ru': 'Russian',
+      'he': 'Hebrew'
+    };
+    
+    const languageName = languageMap[language] || 'English';
+    
+    let systemPrompt = `You are a professional prompt improvement assistant. Your task is to help users create more effective prompts for AI models.
 
-Когда пользователь присылает промпт, ты должен:
-1. Проанализировать текущий промпт
-2. Определить его слабые места (неясность, недостаток контекста, отсутствие структуры)
-3. Предложить улучшенную версию промпта
-4. Объяснить, какие именно улучшения были внесены и почему
+When a user sends a prompt, you should:
+1. Analyze the current prompt
+2. Identify its weaknesses (lack of clarity, context, or structure)
+3. Suggest an improved version of the prompt
+4. Explain what improvements were made and why
 
-Принципы хорошего промпта:
-- Четкая структура и явные инструкции
-- Конкретный формат вывода (если нужен)
-- Достаточный контекст для понимания задачи
-- Примеры, если это помогает
-- Ограничения, чтобы избежать галлюцинаций
-- Разбиение сложных задач на подзадачи`;
+Principles of a good prompt:
+- Clear structure and explicit instructions
+- Specific output format (if needed)
+- Sufficient context to understand the task
+- Examples, if helpful
+- Constraints to avoid hallucinations
+- Breaking complex tasks into subtasks`;
 
-    // Добавляем фильтры, если они включены
+    // Add filters if enabled
     if (useEfmnb) {
-      systemPrompt += `\n\nПрименяй фильтр ЕФМНБ (Emotion, Fact, Metaphor, Negation, Bias):
-- Emotion: Добавляй эмоциональный контекст где это уместно
-- Fact: Требуй конкретных фактов и данных
-- Metaphor: Используй метафоры для ясности
-- Negation: Явно указывай, чего НЕ нужно делать
-- Bias: Учитывай и минимизируй возможные предубеждения`;
+      systemPrompt += `\n\nApply the EFMNB filter (Emotion, Fact, Metaphor, Negation, Bias):
+- Emotion: Add emotional context where appropriate
+- Fact: Require specific facts and data
+- Metaphor: Use metaphors for clarity
+- Negation: Explicitly state what NOT to do
+- Bias: Account for and minimize possible biases`;
     }
 
     if (useErikson) {
-      systemPrompt += `\n\nПрименяй психологическую модель Эриксона для более глубокого понимания контекста и потребностей пользователя.`;
+      systemPrompt += `\n\nApply Erikson's psychological model for deeper understanding of context and user needs.`;
     }
 
-    systemPrompt += `\n\nОтвечай на русском языке. Будь дружелюбным и конструктивным.`;
+    systemPrompt += `\n\nRespond in ${languageName}. Be friendly and constructive.`;
 
     const response = await fetch(AI_GATEWAY_URL, {
       method: 'POST',

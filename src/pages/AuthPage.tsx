@@ -8,6 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { z } from 'zod';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 const authSchema = z.object({
   email: z.string().email('Invalid email address').max(255, 'Email too long'),
@@ -15,6 +17,7 @@ const authSchema = z.object({
 });
 
 export default function AuthPage() {
+  const { t } = useLanguage();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -73,7 +76,7 @@ export default function AuthPage() {
         }
 
         toast({
-          title: 'Welcome back!',
+          title: t('auth.welcome'),
           description: 'Successfully logged in',
         });
       } else {
@@ -94,13 +97,13 @@ export default function AuthPage() {
         }
 
         toast({
-          title: 'Check your email!',
+          title: t('auth.checkEmail'),
           description: 'We sent you a confirmation link. Please check your inbox.',
         });
       }
     } catch (error) {
       toast({
-        title: 'Error',
+        title: t('common.error'),
         description: error instanceof Error ? error.message : 'Authentication failed',
         variant: 'destructive',
       });
@@ -111,6 +114,9 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <Card className="w-full max-w-md border-2 shadow-lg my-4">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">
@@ -119,16 +125,16 @@ export default function AuthPage() {
             </div>
           </div>
           <CardTitle className="text-2xl text-center">
-            {isLogin ? 'Welcome Back' : 'Create Account'}
+            {isLogin ? t('auth.signIn') : t('auth.signUp')}
           </CardTitle>
           <CardDescription className="text-center">
-            {isLogin ? 'Sign in to access your optimizations' : 'Sign up to start optimizing prompts'}
+            {isLogin ? t('auth.welcome') : t('auth.welcome')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('auth.email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -141,7 +147,7 @@ export default function AuthPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('auth.password')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -167,10 +173,10 @@ export default function AuthPage() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isLogin ? 'Signing in...' : 'Creating account...'}
+                  {isLogin ? t('auth.signInButton') : t('auth.signUpButton')}
                 </>
               ) : (
-                <>{isLogin ? 'Sign In' : 'Create Account'}</>
+                <>{isLogin ? t('auth.signInButton') : t('auth.signUpButton')}</>
               )}
             </Button>
           </form>
@@ -181,7 +187,7 @@ export default function AuthPage() {
               className="text-primary hover:underline"
               disabled={loading}
             >
-              {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+              {isLogin ? t('auth.noAccount') : t('auth.haveAccount')}
             </button>
           </div>
         </CardContent>
