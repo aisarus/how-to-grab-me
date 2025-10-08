@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TFMController } from '@/components/TFMController';
 import PromptAssistantPage from './PromptAssistantPage';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Sparkles, MessageSquare } from 'lucide-react';
+import { Sparkles, Bot } from 'lucide-react';
 
 const MainPage = () => {
   const { t } = useLanguage();
@@ -49,13 +49,19 @@ const MainPage = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         <div className="border-b glass-effect sticky top-0 z-10">
           <div className="container mx-auto px-4 sm:px-6 py-4">
-            <TabsList className="w-full max-w-md mx-auto grid grid-cols-2">
-              <TabsTrigger value="tfm" className="text-sm sm:text-base gap-2">
+            <TabsList className="w-full max-w-md mx-auto grid grid-cols-2 bg-transparent border border-border">
+              <TabsTrigger 
+                value="tfm" 
+                className="text-sm sm:text-base gap-2 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:rounded-none"
+              >
                 <Sparkles className="w-4 h-4" />
                 {t('common.main')}
               </TabsTrigger>
-              <TabsTrigger value="assistant" className="text-sm sm:text-base gap-2">
-                <MessageSquare className="w-4 h-4" />
+              <TabsTrigger 
+                value="assistant" 
+                className="text-sm sm:text-base gap-2 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:rounded-none"
+              >
+                <Bot className="w-4 h-4" />
                 {t('common.assistant')}
               </TabsTrigger>
             </TabsList>
