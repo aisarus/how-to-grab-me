@@ -1,4 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import enTranslations from '@/locales/en.json';
+import ruTranslations from '@/locales/ru.json';
+import heTranslations from '@/locales/he.json';
 
 type Language = 'en' | 'ru' | 'he';
 
@@ -39,7 +42,12 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   };
 
   const t = (key: string): string => {
-    const translations = require(`../locales/${language}.json`);
+    const translations = {
+      en: enTranslations,
+      ru: ruTranslations,
+      he: heTranslations,
+    }[language];
+    
     const keys = key.split('.');
     let result: any = translations;
     
