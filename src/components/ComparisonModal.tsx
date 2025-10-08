@@ -14,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { GitCompare, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ComparisonModalProps {
   originalPrompt: string;
@@ -32,6 +33,7 @@ export const ComparisonModal = ({
   improvementPercentage,
   iterations,
 }: ComparisonModalProps) => {
+  const { t } = useLanguage();
   const [copiedOriginal, setCopiedOriginal] = useState(false);
   const [copiedOptimized, setCopiedOptimized] = useState(false);
   const [improvements, setImprovements] = useState({
@@ -55,13 +57,13 @@ export const ComparisonModal = ({
       }
 
       toast({
-        title: 'Copied',
-        description: 'Prompt copied to clipboard',
+        title: t('common.copied'),
+        description: t('common.copiedToClipboard'),
       });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to copy text',
+        title: t('common.error'),
+        description: t('common.failedToCopy'),
         variant: 'destructive',
       });
     }
@@ -75,17 +77,17 @@ export const ComparisonModal = ({
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <GitCompare className="w-4 h-4" />
-          Compare
+          {t('comparison.compare')}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-6xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <GitCompare className="w-5 h-5 text-primary" />
-            Side-by-Side Comparison
+            {t('comparison.title')}
           </DialogTitle>
           <DialogDescription>
-            Detailed comparison of original and optimized prompts
+            {t('comparison.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -95,22 +97,22 @@ export const ComparisonModal = ({
             <p className="text-2xl font-bold text-primary">
               +{Math.abs(improvementPercentage)}%
             </p>
-            <p className="text-xs text-muted-foreground mt-1">Quality Improvement</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('comparison.qualityImprovement')}</p>
           </div>
           <div className="text-center">
             <p className="text-xl font-bold">{iterations}</p>
-            <p className="text-xs text-muted-foreground mt-1">Iterations</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('comparison.iterations')}</p>
           </div>
           <div className="text-center">
             <p className="text-xl font-bold">{originalTokens}</p>
-            <p className="text-xs text-muted-foreground mt-1">Tokens Before</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('comparison.tokensBefore')}</p>
           </div>
           <div className="text-center">
             <p className={`text-xl font-bold ${isTokenIncrease ? 'text-blue-600' : 'text-green-600'}`}>
               {optimizedTokens}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Tokens After ({isTokenIncrease ? '+' : ''}{tokenChange})
+              {t('comparison.tokensAfter')} ({isTokenIncrease ? '+' : ''}{tokenChange})
             </p>
           </div>
         </div>
@@ -121,8 +123,8 @@ export const ComparisonModal = ({
           <div className="flex flex-col space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold">Original Prompt</h3>
-                <Badge variant="secondary">{originalTokens} tokens</Badge>
+                <h3 className="font-semibold">{t('comparison.originalPrompt')}</h3>
+                <Badge variant="secondary">{originalTokens} {t('comparison.tokens')}</Badge>
               </div>
               <Button
                 variant="ghost"
@@ -147,8 +149,8 @@ export const ComparisonModal = ({
           <div className="flex flex-col space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-primary">Optimized Prompt</h3>
-                <Badge variant="default">{optimizedTokens} tokens</Badge>
+                <h3 className="font-semibold text-primary">{t('comparison.optimizedPrompt')}</h3>
+                <Badge variant="default">{optimizedTokens} {t('comparison.tokens')}</Badge>
               </div>
               <Button
                 variant="ghost"
@@ -172,7 +174,7 @@ export const ComparisonModal = ({
 
         {/* Improvement Reasons */}
         <div className="space-y-3 p-4 bg-muted/50 rounded-lg border">
-          <Label className="text-sm font-semibold">Mark reasons for improvement:</Label>
+          <Label className="text-sm font-semibold">{t('comparison.markReasons')}</Label>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-center space-x-2">
               <Checkbox 
@@ -183,7 +185,7 @@ export const ComparisonModal = ({
                 }
               />
               <label htmlFor="success-at-one" className="text-sm cursor-pointer">
-                ✔ Success@1
+                {t('comparison.successAtOne')}
               </label>
             </div>
             <div className="flex items-center space-x-2">
@@ -195,7 +197,7 @@ export const ComparisonModal = ({
                 }
               />
               <label htmlFor="reduced-tta" className="text-sm cursor-pointer">
-                ↓ TTA
+                {t('comparison.reducedTTA')}
               </label>
             </div>
             <div className="flex items-center space-x-2">
@@ -207,7 +209,7 @@ export const ComparisonModal = ({
                 }
               />
               <label htmlFor="reduced-cost-variance" className="text-sm cursor-pointer">
-                ↓ cost variance
+                {t('comparison.reducedCostVariance')}
               </label>
             </div>
             <div className="flex items-center space-x-2">
@@ -219,7 +221,7 @@ export const ComparisonModal = ({
                 }
               />
               <label htmlFor="policy-safe" className="text-sm cursor-pointer">
-                policy-safe
+                {t('comparison.policySafe')}
               </label>
             </div>
           </div>
@@ -227,11 +229,9 @@ export const ComparisonModal = ({
 
         {/* Info */}
         <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
-          <p className="text-xs text-muted-foreground">
-            <strong>Important:</strong> Мы осознанно покупаем +{tokenChange > 0 ? tokenChange : 0} refine-токенов, 
-            чтобы сэкономить 1–2 итерации и сократить разброс стоимости. 
-            В проде это даёт <em>предсказуемый бюджет</em> и выше Success@1.
-          </p>
+          <p className="text-xs text-muted-foreground" dangerouslySetInnerHTML={{
+            __html: t('comparison.importantNote').replace('{tokenChange}', String(tokenChange > 0 ? tokenChange : 0))
+          }} />
         </div>
       </DialogContent>
     </Dialog>

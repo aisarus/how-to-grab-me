@@ -165,7 +165,7 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
 
     toast({
       title: t('favorites.loaded'),
-      description: t('favorites.configApplied', { name: favorite.name }),
+      description: `${t('tfmController.configName')}: "${favorite.name}"`,
     });
   };
 

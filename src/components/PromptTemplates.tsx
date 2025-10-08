@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FileText, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Template {
   id: string;
@@ -13,74 +14,74 @@ interface Template {
   description: string;
 }
 
-const templates: Template[] = [
+const getTemplates = (t: any): Template[] => [
   // Text types
   {
     id: '1',
-    name: 'Creative Text',
-    category: 'Text',
-    description: 'Generate artistic and engaging creative content',
-    prompt: 'Write creative, artistic text with vivid imagery and emotional depth. Use literary devices, metaphors, and engaging narrative style. Focus on storytelling, character development, and creating an immersive experience for the reader.',
+    name: t('templates.creativeText.name'),
+    category: t('templates.categories.text'),
+    description: t('templates.creativeText.description'),
+    prompt: t('templates.creativeText.prompt'),
   },
   {
     id: '2',
-    name: 'Scientific Text',
-    category: 'Text',
-    description: 'Create precise and evidence-based scientific content',
-    prompt: 'Generate scientific text with precise terminology, logical structure, and evidence-based arguments. Use formal academic language, cite relevant concepts, maintain objectivity, and ensure technical accuracy. Structure with clear introduction, methodology, results, and conclusions.',
+    name: t('templates.scientificText.name'),
+    category: t('templates.categories.text'),
+    description: t('templates.scientificText.description'),
+    prompt: t('templates.scientificText.prompt'),
   },
   {
     id: '3',
-    name: 'Journalistic Text',
-    category: 'Text',
-    description: 'Write informative and engaging news content',
-    prompt: 'Create journalistic content that is factual, balanced, and engaging. Use the inverted pyramid structure, lead with the most important information, maintain objectivity, include relevant context and quotes. Write in clear, accessible language suitable for a general audience.',
+    name: t('templates.journalisticText.name'),
+    category: t('templates.categories.text'),
+    description: t('templates.journalisticText.description'),
+    prompt: t('templates.journalisticText.prompt'),
   },
   
   // Programming languages
   {
     id: '4',
-    name: 'JavaScript Code',
-    category: 'Code',
-    description: 'Generate modern JavaScript/TypeScript code',
-    prompt: 'Write clean, modern JavaScript/TypeScript code following ES6+ standards. Use proper async/await patterns, implement error handling, follow functional programming principles where appropriate. Include JSDoc comments, use meaningful variable names, and ensure code is modular and testable.',
+    name: t('templates.jsCode.name'),
+    category: t('templates.categories.code'),
+    description: t('templates.jsCode.description'),
+    prompt: t('templates.jsCode.prompt'),
   },
   {
     id: '5',
-    name: 'Python Code',
-    category: 'Code',
-    description: 'Generate Pythonic and efficient Python code',
-    prompt: 'Write Pythonic code following PEP 8 style guidelines. Use type hints, implement proper error handling with try-except blocks, leverage built-in functions and standard library. Include docstrings, use list comprehensions appropriately, and ensure code is readable and maintainable.',
+    name: t('templates.pythonCode.name'),
+    category: t('templates.categories.code'),
+    description: t('templates.pythonCode.description'),
+    prompt: t('templates.pythonCode.prompt'),
   },
   {
     id: '6',
-    name: 'CSS Styles',
-    category: 'Code',
-    description: 'Create modern and responsive CSS',
-    prompt: 'Generate modern CSS using best practices. Implement responsive design with flexbox/grid, use CSS variables for theming, follow BEM or similar naming conventions. Ensure cross-browser compatibility, optimize for performance, and write maintainable, reusable styles.',
+    name: t('templates.cssStyles.name'),
+    category: t('templates.categories.code'),
+    description: t('templates.cssStyles.description'),
+    prompt: t('templates.cssStyles.prompt'),
   },
   {
     id: '7',
-    name: 'Java Code',
-    category: 'Code',
-    description: 'Generate enterprise-grade Java code',
-    prompt: 'Write robust Java code following SOLID principles and design patterns. Use proper encapsulation, implement interfaces where appropriate, handle exceptions correctly. Include JavaDoc comments, follow naming conventions, and ensure code is thread-safe when needed.',
+    name: t('templates.javaCode.name'),
+    category: t('templates.categories.code'),
+    description: t('templates.javaCode.description'),
+    prompt: t('templates.javaCode.prompt'),
   },
   {
     id: '8',
-    name: 'C++ Code',
-    category: 'Code',
-    description: 'Generate efficient and modern C++ code',
-    prompt: 'Write modern C++ code (C++17/20) following best practices. Use RAII principles, smart pointers for memory management, implement proper move semantics. Ensure const-correctness, avoid memory leaks, and optimize for performance while maintaining code clarity.',
+    name: t('templates.cppCode.name'),
+    category: t('templates.categories.code'),
+    description: t('templates.cppCode.description'),
+    prompt: t('templates.cppCode.prompt'),
   },
   
   // Images
   {
     id: '9',
-    name: 'Image Analysis',
-    category: 'Images',
-    description: 'Create detailed and accurate image descriptions',
-    prompt: 'Analyze and describe the image in comprehensive detail. Cover visual elements, composition, colors, lighting, mood, and context. Identify key subjects, their relationships, and spatial arrangement. Be precise and objective while capturing all important aspects of the image.',
+    name: t('templates.imageAnalysis.name'),
+    category: t('templates.categories.images'),
+    description: t('templates.imageAnalysis.description'),
+    prompt: t('templates.imageAnalysis.prompt'),
   },
 ];
 
@@ -89,8 +90,10 @@ interface PromptTemplatesProps {
 }
 
 export const PromptTemplates = ({ onSelectTemplate }: PromptTemplatesProps) => {
+  const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
+  const templates = getTemplates(t);
   const categories = Array.from(new Set(templates.map(t => t.category)));
   const filteredTemplates = selectedCategory
     ? templates.filter(t => t.category === selectedCategory)
@@ -101,10 +104,10 @@ export const PromptTemplates = ({ onSelectTemplate }: PromptTemplatesProps) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="w-5 h-5 text-primary" />
-          Prompt Templates
+          {t('templates.title')}
         </CardTitle>
         <CardDescription>
-          Ready-to-use prompts for common tasks
+          {t('templates.description')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -115,7 +118,7 @@ export const PromptTemplates = ({ onSelectTemplate }: PromptTemplatesProps) => {
             size="sm"
             onClick={() => setSelectedCategory(null)}
           >
-            All
+            {t('common.all')}
           </Button>
           {categories.map((category) => (
             <Button
