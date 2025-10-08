@@ -180,7 +180,50 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      shared_results_public: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          expires_at: string | null
+          id: string | null
+          is_public: boolean | null
+          optimization_result_id: string | null
+          share_token: string | null
+          title: string | null
+          view_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string | null
+          is_public?: boolean | null
+          optimization_result_id?: string | null
+          share_token?: string | null
+          title?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string | null
+          is_public?: boolean | null
+          optimization_result_id?: string | null
+          share_token?: string | null
+          title?: string | null
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_optimization_result"
+            columns: ["optimization_result_id"]
+            isOneToOne: false
+            referencedRelation: "optimization_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       increment_share_view_count: {
