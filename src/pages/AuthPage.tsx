@@ -49,7 +49,7 @@ export default function AuthPage() {
     const validation = authSchema.safeParse({ email, password });
     if (!validation.success) {
       toast({
-        title: 'Validation Error',
+        title: t('auth.validationError'),
         description: validation.error.errors[0].message,
         variant: 'destructive',
       });
@@ -67,17 +67,17 @@ export default function AuthPage() {
 
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
-            throw new Error('Invalid email or password');
+            throw new Error(t('auth.invalidCredentials'));
           }
           if (error.message.includes('Email not confirmed')) {
-            throw new Error('Please verify your email first. Check your inbox for the verification code.');
+            throw new Error(t('auth.emailNotConfirmed'));
           }
           throw error;
         }
 
         toast({
           title: t('auth.welcome'),
-          description: 'Successfully logged in',
+          description: t('auth.successfullyLoggedIn'),
         });
       } else {
         // Sign up with email verification
@@ -91,20 +91,20 @@ export default function AuthPage() {
 
         if (error) {
           if (error.message.includes('already registered')) {
-            throw new Error('This email is already registered. Please login instead.');
+            throw new Error(t('auth.emailAlreadyRegistered'));
           }
           throw error;
         }
 
         toast({
           title: t('auth.checkEmail'),
-          description: 'We sent you a confirmation link. Please check your inbox.',
+          description: t('auth.confirmationEmailSent'),
         });
       }
     } catch (error) {
       toast({
         title: t('common.error'),
-        description: error instanceof Error ? error.message : 'Authentication failed',
+        description: error instanceof Error ? error.message : t('auth.authenticationFailed'),
         variant: 'destructive',
       });
     } finally {
@@ -161,7 +161,7 @@ export default function AuthPage() {
               />
               {!isLogin && (
                 <p className="text-xs text-muted-foreground">
-                  At least 6 characters
+                  {t('auth.passwordHint')}
                 </p>
               )}
             </div>

@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Config {
   a: number;
@@ -46,6 +47,7 @@ interface FavoriteConfigsProps {
 }
 
 export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigsProps) => {
+  const { t } = useLanguage();
   const [favorites, setFavorites] = useState<FavoriteConfig[]>([]);
   const [saveName, setSaveName] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -72,8 +74,8 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
   const handleSave = async () => {
     if (!saveName.trim()) {
       toast({
-        title: 'Error',
-        description: 'Enter a configuration name',
+        title: t('common.error'),
+        description: t('favorites.enterName'),
         variant: 'destructive',
       });
       return;
@@ -84,8 +86,8 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
       
       if (!user) {
         toast({
-          title: 'Error',
-          description: 'You must be logged in to save configurations',
+          title: t('common.error'),
+          description: t('favorites.mustBeLoggedIn'),
           variant: 'destructive',
         });
         return;
@@ -108,8 +110,8 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
       if (error) throw error;
 
       toast({
-        title: 'Success',
-        description: 'Configuration saved',
+        title: t('common.success'),
+        description: t('tfmController.configSaved'),
       });
 
       setSaveName('');
@@ -118,8 +120,8 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
     } catch (error) {
       console.error('Error saving favorite:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to save configuration',
+        title: t('common.error'),
+        description: t('favorites.errorSaving'),
         variant: 'destructive',
       });
     }
@@ -135,16 +137,16 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
       if (error) throw error;
 
       toast({
-        title: 'Deleted',
-        description: 'Configuration deleted',
+        title: t('favorites.deleted'),
+        description: t('favorites.configDeleted'),
       });
 
       loadFavorites();
     } catch (error) {
       console.error('Error deleting favorite:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to delete configuration',
+        title: t('common.error'),
+        description: t('favorites.errorDeleting'),
         variant: 'destructive',
       });
     }
@@ -162,8 +164,8 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
     });
 
     toast({
-      title: 'Loaded',
-      description: `Configuration "${favorite.name}" applied`,
+      title: t('favorites.loaded'),
+      description: t('favorites.configApplied', { name: favorite.name }),
     });
   };
 
@@ -174,40 +176,40 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
           <div>
             <CardTitle className="flex items-center gap-2">
               <Star className="w-5 h-5 text-primary" />
-              Favorite Configurations
+              {t('favorites.title')}
             </CardTitle>
             <CardDescription>
-              Save and load parameter settings
+              {t('favorites.description')}
             </CardDescription>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="default" size="sm" className="gap-2">
                 <Star className="w-4 h-4" />
-                Save Current
+                {t('favorites.saveCurrent')}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Save Configuration</DialogTitle>
+                <DialogTitle>{t('favorites.saveTitle')}</DialogTitle>
                 <DialogDescription>
-                  Enter a name for the current parameter configuration
+                  {t('favorites.saveDescription')}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <Label>Name</Label>
+                  <Label>{t('favorites.name')}</Label>
                   <Input
-                    placeholder="e.g., For content moderation"
+                    placeholder={t('favorites.namePlaceholder')}
                     value={saveName}
                     onChange={(e) => setSaveName(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSave()}
                   />
                 </div>
                 <div className="p-3 bg-muted/50 rounded-lg space-y-1 text-sm">
-                  <p className="font-medium">Current parameters:</p>
+                  <p className="font-medium">{t('favorites.currentParameters')}</p>
                   <p className="text-xs text-muted-foreground">
-                    a: {currentConfig.a} | b: {currentConfig.b} | Iterations: {currentConfig.maxIterations}
+                    a: {currentConfig.a} | b: {currentConfig.b} | {t('favorites.iterations')}: {currentConfig.maxIterations}
                   </p>
                   <div className="flex gap-2 flex-wrap mt-2">
                     {currentConfig.useEFMNB && <Badge variant="secondary" className="text-xs">EFMNB</Badge>}
@@ -217,7 +219,7 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
                 </div>
                 <Button onClick={handleSave} className="w-full">
                   <Check className="w-4 h-4 mr-2" />
-                  Save
+                  {t('common.save')}
                 </Button>
               </div>
             </DialogContent>
@@ -229,8 +231,8 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
           {favorites.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Star className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="text-sm">No saved configurations</p>
-              <p className="text-xs mt-1">Save your current parameters</p>
+              <p className="text-sm">{t('favorites.noSaved')}</p>
+              <p className="text-xs mt-1">{t('favorites.saveYourConfig')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -243,7 +245,7 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
                     <div className="flex-1 space-y-2">
                       <h4 className="font-semibold text-sm">{favorite.name}</h4>
                       <p className="text-xs text-muted-foreground">
-                        a: {favorite.a_parameter} | b: {favorite.b_parameter} | Итерации: {favorite.max_iterations}
+                        a: {favorite.a_parameter} | b: {favorite.b_parameter} | {t('favorites.iterations')}: {favorite.max_iterations}
                       </p>
                       <div className="flex gap-1 flex-wrap">
                         {favorite.use_efmnb && <Badge variant="outline" className="text-xs">EFMNB</Badge>}
@@ -260,7 +262,7 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
                         size="sm"
                         onClick={() => handleLoad(favorite)}
                       >
-                        Load
+                        {t('common.load')}
                       </Button>
                       <Button
                         variant="ghost"

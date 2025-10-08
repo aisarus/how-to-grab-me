@@ -14,8 +14,10 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User, LogOut, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from './ThemeToggle';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const UserMenu = () => {
+  const { t } = useLanguage();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -49,14 +51,14 @@ export const UserMenu = () => {
       if (error) throw error;
 
       toast({
-        title: 'Signed out',
-        description: 'You have been successfully signed out',
+        title: t('auth.signedOut'),
+        description: t('auth.signedOutSuccessfully'),
       });
       navigate('/auth');
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to sign out',
+        title: t('common.error'),
+        description: error instanceof Error ? error.message : t('auth.failedToSignOut'),
         variant: 'destructive',
       });
     }
@@ -93,7 +95,7 @@ export const UserMenu = () => {
         <DropdownMenuContent className="w-56" align="end" forceMount>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">Account</p>
+              <p className="text-sm font-medium leading-none">{t('common.account')}</p>
               <p className="text-xs leading-none text-muted-foreground">
                 {userEmail}
               </p>
@@ -102,7 +104,7 @@ export const UserMenu = () => {
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
             <LogOut className="mr-2 h-4 w-4" />
-            <span>Sign out</span>
+            <span>{t('common.signOut')}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
