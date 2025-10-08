@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { UserMenu } from '@/components/UserMenu';
 import { PromptCarouselModal } from '@/components/PromptCarouselModal';
 import { ComparisonModal } from '@/components/ComparisonModal';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface OptimizationResult {
   id: string;
@@ -44,6 +45,7 @@ export default function AnalyticsPage() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const loadResults = async () => {
     try {
@@ -241,25 +243,30 @@ export default function AnalyticsPage() {
     <div className="min-h-screen relative">
       {/* Header */}
       <div className="border-b glass-effect sticky top-0 z-10">
-        <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
               <Button
                 variant="ghost"
-                size="sm"
+                size={isMobile ? "icon" : "sm"}
                 onClick={() => navigate('/')}
-                className="gap-2"
+                className="gap-2 flex-shrink-0"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Back
+                {!isMobile && "Back"}
               </Button>
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                  Analytics Dashboard
+              <div className="flex-1 min-w-0">
+                <h1 className={cn(
+                  "font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent",
+                  isMobile ? "text-lg" : "text-3xl"
+                )}>
+                  {isMobile ? "Analytics" : "Analytics Dashboard"}
                 </h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                  TRI/TFM Technology Performance Metrics
-                </p>
+                {!isMobile && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    TRI/TFM Technology Performance Metrics
+                  </p>
+                )}
               </div>
             </div>
             <UserMenu />
@@ -269,8 +276,8 @@ export default function AnalyticsPage() {
 
       {/* Filters Bar */}
       <div className="border-b bg-card/30 backdrop-blur-sm">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center gap-4 flex-wrap">
+        <div className="container mx-auto px-4 sm:px-6 py-4">
+          <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
             {/* Date Filters */}
             <Popover>
               <PopoverTrigger asChild>
@@ -319,11 +326,11 @@ export default function AnalyticsPage() {
             {/* Export Buttons */}
             <Button variant="outline" size="sm" onClick={exportToCSV} className="gap-2">
               <Download className="w-4 h-4" />
-              CSV
+              {!isMobile && "CSV"}
             </Button>
             <Button variant="outline" size="sm" onClick={exportToJSON} className="gap-2">
               <Download className="w-4 h-4" />
-              JSON
+              {!isMobile && "JSON"}
             </Button>
             <Button 
               variant="default" 
@@ -368,13 +375,13 @@ export default function AnalyticsPage() {
               className="gap-2 gradient-primary"
             >
               <Download className="w-4 h-4" />
-              Pilot Report
+              {!isMobile && "Pilot Report"}
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-8 space-y-8">
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -387,7 +394,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <Card className="floating-card border-2 border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5" style={{ animationDelay: '0s' }}>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-primary flex items-center gap-2">
@@ -431,7 +438,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Additional Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Card className="border shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">Cost per task</CardTitle>
@@ -500,11 +507,11 @@ export default function AnalyticsPage() {
             ) : (
               <div className="space-y-4">
                 {displayResults.slice(0, 10).map((result, index) => (
-                  <div
+                <div
                     key={result.id}
-                    className="p-4 rounded-lg border bg-card hover:shadow-md transition-all hover:border-primary/50"
+                    className="p-3 sm:p-4 rounded-lg border bg-card hover:shadow-md transition-all hover:border-primary/50"
                   >
-                    <div className="flex items-start justify-between gap-4">
+                    <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
                       <div 
                         className="flex-1 space-y-2 cursor-pointer"
                         onClick={() => {
@@ -512,11 +519,11 @@ export default function AnalyticsPage() {
                           setCarouselOpen(true);
                         }}
                       >
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl font-bold text-primary">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                          <span className="text-xl sm:text-2xl font-bold text-primary">
                             +{Math.abs(result.improvement_percentage)}%
                           </span>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-xs sm:text-sm text-muted-foreground">
                             {result.original_tokens} → {result.optimized_tokens} tokens
                             <span className={result.optimized_tokens > result.original_tokens ? 'text-blue-600' : 'text-green-600'}>
                               {' '}({result.optimized_tokens > result.original_tokens ? '+' : ''}{result.optimized_tokens - result.original_tokens})
@@ -567,7 +574,7 @@ export default function AnalyticsPage() {
                           </div>
                         </details>
                       </div>
-                      <div className="flex flex-col items-end gap-2">
+                      <div className="flex sm:flex-col items-start sm:items-end gap-2 w-full sm:w-auto">
                         {result.ab_test_winner && (
                           <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 text-green-600 text-xs font-semibold">
                             <Award className="w-3 h-3" />
@@ -600,7 +607,7 @@ export default function AnalyticsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="p-4 bg-background/50 rounded-lg border">
                 <div className="text-2xl font-bold mb-2 text-primary">+{stats.successAtOne}%</div>
                 <div className="text-sm text-muted-foreground">
