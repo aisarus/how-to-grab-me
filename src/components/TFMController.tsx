@@ -206,6 +206,12 @@ export const TFMController = () => {
           iterations: data.iterations,
           convergence_threshold: config.convergenceThreshold,
           erikson_stage: complexityAnalysis?.eriksonStage || null,
+          accepted: data.telemetry.accepted,
+          accepted_iter: data.telemetry.accepted_iter,
+          tta_sec: data.telemetry.tta_sec,
+          cost_cents: data.telemetry.cost_cents,
+          cost_variance_cents: data.telemetry.cost_variance_cents,
+          tokens_breakdown: data.telemetry.tokens_breakdown,
         })
         .select()
         .single();

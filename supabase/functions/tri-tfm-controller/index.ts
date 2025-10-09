@@ -36,6 +36,18 @@ interface TFMResponse {
     improvedPrompt: string;
     improvements: string[];
   };
+  telemetry: {
+    accepted: boolean;
+    accepted_iter: number | null;
+    tta_sec: number;
+    cost_cents: number;
+    cost_variance_cents: number;
+    tokens_breakdown: {
+      orig: number;
+      refine: number;
+      final: number;
+    };
+  };
 }
 
 serve(async (req) => {
@@ -90,8 +102,12 @@ serve(async (req) => {
     const tokenHistory: number[] = [currentTokens];
     let iteration = 0;
     let converged = false;
+    let acceptedIteration: number | null = null;
+    const startTime = Date.now();
 
     const initialTokens = currentTokens;
+    const originalTokens = estimateTokens(prompt);
+    const refineTokens = promptImprovement ? estimateTokens(workingPrompt) - originalTokens : 0;
 
     while (iteration < tfmConfig.maxIterations) {
       iteration++;
@@ -118,6 +134,7 @@ serve(async (req) => {
       if (relativeDelta < tfmConfig.convergenceThreshold) {
         console.log('Converged!');
         converged = true;
+        acceptedIteration = iteration;
         currentText = stabilizedText;
         currentTokens = stabilizedTokens;
         break;
@@ -129,6 +146,19 @@ serve(async (req) => {
 
     const finalTokens = currentTokens;
     const percentageSaved = ((initialTokens - finalTokens) / initialTokens) * 100;
+    const endTime = Date.now();
+    const ttaSec = (endTime - startTime) / 1000;
+
+    // Calculate cost metrics (using $0.000002 per token as example rate)
+    const TOKEN_COST = 0.000002;
+    const costDollars = finalTokens * TOKEN_COST;
+    const costCents = costDollars * 100;
+    
+    // Cost variance based on token history variation
+    const avgTokens = tokenHistory.reduce((sum, t) => sum + t, 0) / tokenHistory.length;
+    const variance = tokenHistory.reduce((sum, t) => sum + Math.pow(t - avgTokens, 2), 0) / tokenHistory.length;
+    const stdDev = Math.sqrt(variance);
+    const costVarianceCents = (stdDev * TOKEN_COST) * 100;
 
     const response: TFMResponse = {
       finalText: currentText,
@@ -141,6 +171,18 @@ serve(async (req) => {
         percentageSaved: Math.round(percentageSaved * 100) / 100,
       },
       promptImprovement,
+      telemetry: {
+        accepted: converged,
+        accepted_iter: acceptedIteration,
+        tta_sec: Math.round(ttaSec * 10) / 10,
+        cost_cents: Math.round(costCents * 100) / 100,
+        cost_variance_cents: Math.round(costVarianceCents * 100) / 100,
+        tokens_breakdown: {
+          orig: originalTokens,
+          refine: refineTokens,
+          final: finalTokens,
+        },
+      },
     };
 
     console.log('\n=== Final Results ===');

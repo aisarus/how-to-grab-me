@@ -61,8 +61,12 @@ export type Database = {
           a_parameter: number | null
           ab_test_notes: string | null
           ab_test_winner: string | null
+          accepted: boolean | null
+          accepted_iter: number | null
           b_parameter: number | null
           convergence_threshold: number | null
+          cost_cents: number | null
+          cost_variance_cents: number | null
           created_at: string
           erikson_stage: number | null
           id: string
@@ -72,14 +76,20 @@ export type Database = {
           optimized_tokens: number | null
           original_prompt: string
           original_tokens: number | null
+          tokens_breakdown: Json | null
+          tta_sec: number | null
           user_id: string
         }
         Insert: {
           a_parameter?: number | null
           ab_test_notes?: string | null
           ab_test_winner?: string | null
+          accepted?: boolean | null
+          accepted_iter?: number | null
           b_parameter?: number | null
           convergence_threshold?: number | null
+          cost_cents?: number | null
+          cost_variance_cents?: number | null
           created_at?: string
           erikson_stage?: number | null
           id?: string
@@ -89,14 +99,20 @@ export type Database = {
           optimized_tokens?: number | null
           original_prompt: string
           original_tokens?: number | null
+          tokens_breakdown?: Json | null
+          tta_sec?: number | null
           user_id: string
         }
         Update: {
           a_parameter?: number | null
           ab_test_notes?: string | null
           ab_test_winner?: string | null
+          accepted?: boolean | null
+          accepted_iter?: number | null
           b_parameter?: number | null
           convergence_threshold?: number | null
+          cost_cents?: number | null
+          cost_variance_cents?: number | null
           created_at?: string
           erikson_stage?: number | null
           id?: string
@@ -106,6 +122,8 @@ export type Database = {
           optimized_tokens?: number | null
           original_prompt?: string
           original_tokens?: number | null
+          tokens_breakdown?: Json | null
+          tta_sec?: number | null
           user_id?: string
         }
         Relationships: []

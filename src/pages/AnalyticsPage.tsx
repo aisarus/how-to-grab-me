@@ -33,6 +33,16 @@ interface OptimizationResult {
   ab_test_winner: string | null;
   ab_test_notes: string | null;
   erikson_stage: number | null;
+  accepted: boolean | null;
+  accepted_iter: number | null;
+  tta_sec: number | null;
+  cost_cents: number | null;
+  cost_variance_cents: number | null;
+  tokens_breakdown: {
+    orig: number;
+    refine: number;
+    final: number;
+  } | null;
 }
 
 export default function AnalyticsPage() {
@@ -67,7 +77,14 @@ export default function AnalyticsPage() {
       const { data, error } = await query.limit(100);
 
       if (error) throw error;
-      setResults(data || []);
+      
+      // Type cast the data to match our interface
+      const typedData = (data || []).map(item => ({
+        ...item,
+        tokens_breakdown: item.tokens_breakdown as { orig: number; refine: number; final: number } | null,
+      }));
+      
+      setResults(typedData);
     } catch (error) {
       console.error('Error loading results:', error);
       toast({
@@ -105,36 +122,63 @@ export default function AnalyticsPage() {
       costVariance: 0,
       avgTTA: 0,
       totalOptimizations: 0,
+      avgCostPerTask: 0,
     };
 
-    // Success@1 uplift - доля результатов, принятых с первой попытки
-    const successCount = filteredResults.filter(r => r.ab_test_winner === 'optimized').length;
+    // Success@1 uplift - доля результатов, принятых с первой попытки (используем accepted)
+    const acceptedResults = filteredResults.filter(r => r.accepted === true);
+    const successCount = acceptedResults.filter(r => r.accepted_iter === 1).length;
     const successAtOne = filteredResults.length > 0 ? ((successCount / filteredResults.length) * 100) : 0;
     
-    // Avg iterations to success
-    const avgIterations = filteredResults.reduce((sum, r) => sum + r.iterations, 0) / filteredResults.length;
+    // Avg iterations to success - используем accepted_iter если есть, иначе iterations
+    const avgIterations = filteredResults.reduce((sum, r) => {
+      const iter = r.accepted_iter !== null ? r.accepted_iter : r.iterations;
+      return sum + iter;
+    }, 0) / filteredResults.length;
     
-    // Refine overhead tokens (честно: мы тратим +Х токенов на доводку)
-    const refineOverhead = filteredResults.reduce((sum, r) => sum + (r.optimized_tokens - r.original_tokens), 0) / filteredResults.length;
+    // Refine overhead tokens - используем tokens_breakdown если есть
+    const refineOverhead = filteredResults.reduce((sum, r) => {
+      if (r.tokens_breakdown) {
+        return sum + r.tokens_breakdown.refine;
+      }
+      return sum + (r.optimized_tokens - r.original_tokens);
+    }, 0) / filteredResults.length;
     
-    // Variance of cost per task - разброс стоимости
-    const TOKEN_COST = 0.000002; // $0.000002 per token (example rate)
-    const costs = filteredResults.map(r => r.optimized_tokens * TOKEN_COST);
-    const avgCost = costs.reduce((sum, c) => sum + c, 0) / costs.length;
-    const variance = costs.reduce((sum, c) => sum + Math.pow(c - avgCost, 2), 0) / costs.length;
-    const costVariance = Math.sqrt(variance);
+    // Cost variance - используем cost_variance_cents если есть
+    const costVarianceValues = filteredResults
+      .filter(r => r.cost_variance_cents !== null)
+      .map(r => r.cost_variance_cents!);
     
-    // Time-to-acceptable-answer (TTA) в секундах (примерная оценка)
-    const avgTTA = avgIterations * 2.5; // ~2.5 секунды на итерацию (примерно)
+    const costVariance = costVarianceValues.length > 0
+      ? costVarianceValues.reduce((sum, c) => sum + c, 0) / costVarianceValues.length
+      : 0;
+    
+    // Time-to-acceptable-answer (TTA) - используем tta_sec если есть
+    const ttaValues = filteredResults
+      .filter(r => r.tta_sec !== null)
+      .map(r => r.tta_sec!);
+    
+    const avgTTA = ttaValues.length > 0
+      ? ttaValues.reduce((sum, t) => sum + t, 0) / ttaValues.length
+      : avgIterations * 2.5; // fallback к старой формуле
+
+    // Average cost per task - используем cost_cents если есть
+    const costValues = filteredResults
+      .filter(r => r.cost_cents !== null)
+      .map(r => r.cost_cents!);
+    
+    const avgCostPerTask = costValues.length > 0
+      ? costValues.reduce((sum, c) => sum + c, 0) / costValues.length
+      : 0;
 
     return {
       successAtOne: successAtOne.toFixed(1),
       avgIterations: avgIterations.toFixed(1),
       refineOverhead: refineOverhead.toFixed(0),
-      costVariance: (costVariance * 100).toFixed(2), // в центах
+      costVariance: costVariance.toFixed(2),
       avgTTA: avgTTA.toFixed(1),
       totalOptimizations: filteredResults.length,
-      avgCostPerTask: (avgCost * 100).toFixed(2), // в центах
+      avgCostPerTask: avgCostPerTask.toFixed(2),
     };
   };
 
