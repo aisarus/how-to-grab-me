@@ -339,25 +339,31 @@ export default function AnalyticsPage() {
                 const reportData = {
                   title: "TRI/TFM Pilot Report",
                   date: new Date().toLocaleDateString('en-US'),
-                  kpis: {
-                    before: {
-                      successRate: "45%",
-                      avgIterations: "3.2",
-                      costVariance: "±0.15¢",
-                      tta: "8.0s"
-                    },
-                    after: {
-                      successRate: `${stats.successAtOne}%`,
-                      avgIterations: `${stats.avgIterations}`,
-                      costVariance: `±${stats.costVariance}¢`,
-                      tta: `${stats.avgTTA}s`
+                  summary: {
+                    totalOptimizations: stats.totalOptimizations,
+                    dateRange: {
+                      from: dateFrom ? format(dateFrom, 'yyyy-MM-dd') : 'All time',
+                      to: dateTo ? format(dateTo, 'yyyy-MM-dd') : 'Present'
                     }
                   },
-                  formula: "Savings = (Iterations_before – Iterations_after) × Avg_tokens_per_iter × $/token + (TTA_before – TTA_after) × $/min_agent",
-                  conclusion: `Ready for production. Success@1 uplift: +${stats.successAtOne}%, Cost predictability improved by ${((0.15 - parseFloat(String(stats.costVariance))) / 0.15 * 100).toFixed(1)}%`,
-                  totalOptimizations: stats.totalOptimizations,
-                  refineOverhead: `+${stats.refineOverhead} tokens`,
-                  recommendation: "Approved for production deployment with expected ROI of 2-3x within first quarter"
+                  kpis: {
+                    successRate: `${stats.successAtOne}%`,
+                    avgIterations: `${stats.avgIterations}`,
+                    costVariance: `±${stats.costVariance}¢`,
+                    avgCostPerTask: `${stats.avgCostPerTask}¢`,
+                    tta: `${stats.avgTTA}s`,
+                    refineOverhead: `+${stats.refineOverhead} tokens`
+                  },
+                  metrics: {
+                    successAtOne: parseFloat(String(stats.successAtOne)),
+                    avgIterations: parseFloat(String(stats.avgIterations)),
+                    costVariance: parseFloat(String(stats.costVariance)),
+                    avgCostPerTask: parseFloat(String(stats.avgCostPerTask)),
+                    avgTTA: parseFloat(String(stats.avgTTA)),
+                    refineOverhead: parseInt(String(stats.refineOverhead))
+                  },
+                  conclusion: `Performance summary: Success@1 rate at ${stats.successAtOne}%, averaging ${stats.avgIterations} iterations with ${stats.avgCostPerTask}¢ cost per task. Total ${stats.totalOptimizations} optimizations analyzed.`,
+                  recommendation: stats.totalOptimizations > 10 ? "Production ready with sufficient data for analysis" : "More data recommended for comprehensive evaluation"
                 };
                 
                 const json = JSON.stringify(reportData, null, 2);
