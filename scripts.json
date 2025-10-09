@@ -1,0 +1,7 @@
+{
+  "electron:dev": "concurrently \"cross-env NODE_ENV=development vite\" \"wait-on http://localhost:8080 && cross-env NODE_ENV=development electron .\"",
+  "electron:build": "vite build && electron-builder",
+  "electron:build:win": "vite build && electron-builder --win",
+  "electron:build:mac": "vite build && electron-builder --mac",
+  "electron:build:linux": "vite build && electron-builder --linux"
+}
