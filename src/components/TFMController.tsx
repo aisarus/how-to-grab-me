@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Zap, TrendingDown, Sparkles, Settings, BarChart3, CheckCircle2, Trophy, StopCircle, Copy, Check, LogOut, MessageSquare } from 'lucide-react';
+import { Loader2, Zap, TrendingDown, Sparkles, Settings, BarChart3, CheckCircle2, Trophy, StopCircle, Copy, Check, LogOut, MessageSquare, Brain } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Textarea as TextareaComponent } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -15,6 +15,7 @@ import { FavoriteConfigs } from './FavoriteConfigs';
 import { ComparisonModal } from './ComparisonModal';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { analyzePromptComplexity, type ComplexityScore } from '@/lib/promptComplexityAnalyzer';
 
 interface TFMResult {
   finalText: string;
@@ -54,6 +55,8 @@ export const TFMController = () => {
   const [abTestNotes, setAbTestNotes] = useState('');
   const [lastResultId, setLastResultId] = useState<string | null>(null);
   const [copiedResult, setCopiedResult] = useState(false);
+  const [complexityAnalysis, setComplexityAnalysis] = useState<ComplexityScore | null>(null);
+  const [autoIterations, setAutoIterations] = useState(false);
   const [config, setConfig] = useState({
     a: 0.20,
     b: 0.35,
@@ -94,9 +97,45 @@ export const TFMController = () => {
       abTestWinner,
       abTestNotes,
       lastResultId,
+      autoIterations,
     };
     sessionStorage.setItem('tfm-controller-state', JSON.stringify(stateToSave));
-  }, [prompt, config, result, abTestWinner, abTestNotes, lastResultId]);
+  }, [prompt, config, result, abTestWinner, abTestNotes, lastResultId, autoIterations]);
+
+  // Analyze prompt complexity when prompt changes
+  useEffect(() => {
+    const analyzePrompt = async () => {
+      if (!prompt.trim() || prompt.length < 20) {
+        setComplexityAnalysis(null);
+        return;
+      }
+
+      try {
+        // Fetch historical data for better recommendations
+        const { data: historicalData } = await supabase
+          .from('optimization_results')
+          .select('original_tokens, iterations, improvement_percentage, original_prompt')
+          .order('created_at', { ascending: false })
+          .limit(100);
+
+        const analysis = analyzePromptComplexity(prompt, historicalData || []);
+        setComplexityAnalysis(analysis);
+
+        // Auto-apply recommended iterations if enabled
+        if (autoIterations && analysis.recommendedIterations !== config.maxIterations) {
+          setConfig(prev => ({
+            ...prev,
+            maxIterations: analysis.recommendedIterations
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to analyze prompt:', error);
+      }
+    };
+
+    const debounceTimer = setTimeout(analyzePrompt, 500);
+    return () => clearTimeout(debounceTimer);
+  }, [prompt, autoIterations]);
 
   const handleSubmit = async () => {
     if (!prompt.trim()) {
@@ -444,13 +483,80 @@ export const TFMController = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Textarea
-              placeholder="Enter your prompt here..."
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              rows={8}
-              className="resize-none font-mono text-sm"
-            />
+            <div className="space-y-2">
+              <Textarea
+                placeholder="Enter your prompt here..."
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                rows={8}
+                className="resize-none font-mono text-sm"
+              />
+              
+              {/* Complexity Analysis Display */}
+              {complexityAnalysis && (
+                <div className="p-4 rounded-lg border bg-muted/50 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Brain className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">Анализ сложности</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        Уверенность: {Math.round(complexityAnalysis.confidence * 100)}%
+                      </span>
+                      <span className={`text-sm font-semibold ${
+                        complexityAnalysis.score < 40 ? 'text-green-600' :
+                        complexityAnalysis.score < 70 ? 'text-yellow-600' :
+                        'text-red-600'
+                      }`}>
+                        {complexityAnalysis.score}/100
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground">Длина</div>
+                      <div className="font-medium">{complexityAnalysis.factors.length}/100</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground">Структура</div>
+                      <div className="font-medium">{complexityAnalysis.factors.structure}/100</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground">Термины</div>
+                      <div className="font-medium">{complexityAnalysis.factors.technicalTerms}/100</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground">Детализация</div>
+                      <div className="font-medium">{complexityAnalysis.factors.specificity}/100</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <span className="text-sm text-muted-foreground">
+                      Рекомендуется итераций: <span className="font-bold text-primary">{complexityAnalysis.recommendedIterations}</span>
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setConfig(prev => ({
+                          ...prev,
+                          maxIterations: complexityAnalysis.recommendedIterations
+                        }));
+                        toast({
+                          title: "Применено",
+                          description: `Установлено ${complexityAnalysis.recommendedIterations} итераций`
+                        });
+                      }}
+                    >
+                      Применить
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
             
             <div className="flex gap-2">
               <Button 
@@ -569,6 +675,25 @@ export const TFMController = () => {
                 <Switch
                   checked={config.useProposerCriticVerifier}
                   onCheckedChange={(checked) => setConfig({ ...config, useProposerCriticVerifier: checked })}
+                />
+              </div>
+            </div>
+
+            {/* Auto Iterations Toggle */}
+            <div className="p-4 rounded-xl bg-gradient-to-r from-blue-500/10 to-purple-500/5 border-2 border-blue-500/20">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Brain className="w-4 h-4 text-blue-600" />
+                    <Label className="font-semibold">Автоматический выбор итераций</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Определяет оптимальное количество итераций на основе сложности промпта и статистики
+                  </p>
+                </div>
+                <Switch
+                  checked={autoIterations}
+                  onCheckedChange={setAutoIterations}
                 />
               </div>
             </div>
