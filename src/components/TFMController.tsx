@@ -169,7 +169,7 @@ export const TFMController = () => {
             convergenceThreshold: config.convergenceThreshold,
             useProposerCriticVerifier: config.useProposerCriticVerifier,
             useEFMNB: config.useEFMNB,
-            eriksonStage: config.useErikson ? 5 : undefined,
+            eriksonStage: complexityAnalysis?.eriksonStage || (config.useErikson ? 5 : undefined),
           }
         }
       });
@@ -496,63 +496,52 @@ export const TFMController = () => {
               {complexityAnalysis && (
                 <div className="p-4 rounded-lg border bg-muted/50 space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Brain className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium">Анализ сложности</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">
-                        Уверенность: {Math.round(complexityAnalysis.confidence * 100)}%
-                      </span>
-                      <span className={`text-sm font-semibold ${
-                        complexityAnalysis.score < 40 ? 'text-green-600' :
-                        complexityAnalysis.score < 70 ? 'text-yellow-600' :
-                        'text-red-600'
-                      }`}>
-                        {complexityAnalysis.score}/100
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground">Длина</div>
-                      <div className="font-medium">{complexityAnalysis.factors.length}/100</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground">Структура</div>
-                      <div className="font-medium">{complexityAnalysis.factors.structure}/100</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground">Термины</div>
-                      <div className="font-medium">{complexityAnalysis.factors.technicalTerms}/100</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground">Детализация</div>
-                      <div className="font-medium">{complexityAnalysis.factors.specificity}/100</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between pt-2 border-t">
-                    <span className="text-sm text-muted-foreground">
-                      Рекомендуется итераций: <span className="font-bold text-primary">{complexityAnalysis.recommendedIterations}</span>
+                    <span className="text-sm font-medium">{t('complexityScore')}: {complexityAnalysis.score}/100</span>
+                    <span className="text-xs text-muted-foreground">
+                      {t('confidence')}: {Math.round(complexityAnalysis.confidence * 100)}%
                     </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setConfig(prev => ({
-                          ...prev,
-                          maxIterations: complexityAnalysis.recommendedIterations
-                        }));
-                        toast({
-                          title: "Применено",
-                          description: `Установлено ${complexityAnalysis.recommendedIterations} итераций`
-                        });
-                      }}
-                    >
-                      Применить
-                    </Button>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                    <div className="col-span-2 pb-2 border-b border-border/50">
+                      <span className="text-muted-foreground">{t('taskType')}:</span>
+                      <span className="ml-1 font-medium">
+                        {complexityAnalysis.taskType === 'creative' ? t('creative') : t('technical')}
+                      </span>
+                      <span className="ml-2 text-muted-foreground">{t('eriksonStage')}:</span>
+                      <span className="ml-1 font-medium">{complexityAnalysis.eriksonStage}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">{t('length')}:</span>
+                      <span className="ml-1 font-medium">{complexityAnalysis.factors.length}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">{t('structure')}:</span>
+                      <span className="ml-1 font-medium">{complexityAnalysis.factors.structure}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">{t('technicalTerms')}:</span>
+                      <span className="ml-1 font-medium">{complexityAnalysis.factors.technicalTerms}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">{t('specificity')}:</span>
+                      <span className="ml-1 font-medium">{complexityAnalysis.factors.specificity}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                    <span className="text-sm">
+                      {t('recommendedIterations')}: <strong>{complexityAnalysis.recommendedIterations}</strong>
+                    </span>
+                    {!autoIterations && config.maxIterations !== complexityAnalysis.recommendedIterations && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setConfig(prev => ({ ...prev, maxIterations: complexityAnalysis.recommendedIterations }))}
+                      >
+                        {t('apply')}
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}

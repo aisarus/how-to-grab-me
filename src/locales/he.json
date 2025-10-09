@@ -210,5 +210,18 @@
     "reducedCostVariance": "↓ שונות עלות",
     "policySafe": "בטוח למדיניות",
     "importantNote": "<strong>חשוב:</strong> אנו קונים במכוון +{tokenChange} טוקני-refine כדי לחסוך 1–2 איטרציות ולהפחית שונות עלות. בייצור, זה מספק <em>תקציב צפוי</em> ו-Success@1 גבוה יותר."
-  }
+  },
+  "complexityScore": "מורכבות",
+  "confidence": "בטחון",
+  "length": "אורך",
+  "structure": "מבנה",
+  "technicalTerms": "מונחים טכניים",
+  "specificity": "ספציפיות",
+  "recommendedIterations": "איטרציות מומלצות",
+  "apply": "החל",
+  "autoIterations": "בחירה אוטומטית של איטרציות",
+  "taskType": "סוג משימה",
+  "creative": "יצירתי",
+  "technical": "טכני",
+  "eriksonStage": "שלב אריקסון"
 }

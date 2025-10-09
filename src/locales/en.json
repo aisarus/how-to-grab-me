@@ -210,5 +210,18 @@
     "reducedCostVariance": "↓ cost variance",
     "policySafe": "policy-safe",
     "importantNote": "<strong>Important:</strong> We deliberately purchase +{tokenChange} refine-tokens to save 1–2 iterations and reduce cost variance. In production, this provides <em>predictable budget</em> and higher Success@1."
-  }
+  },
+  "complexityScore": "Complexity",
+  "confidence": "Confidence",
+  "length": "Length",
+  "structure": "Structure",
+  "technicalTerms": "Technical Terms",
+  "specificity": "Specificity",
+  "recommendedIterations": "Recommended Iterations",
+  "apply": "Apply",
+  "autoIterations": "Auto-select iterations",
+  "taskType": "Task Type",
+  "creative": "Creative",
+  "technical": "Technical",
+  "eriksonStage": "Erikson Stage"
 }

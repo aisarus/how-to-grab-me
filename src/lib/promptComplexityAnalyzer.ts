@@ -13,6 +13,8 @@ export interface ComplexityScore {
   };
   recommendedIterations: number;
   confidence: number;
+  taskType: 'creative' | 'technical';
+  eriksonStage: number; // 1-8
 }
 
 /**
@@ -105,6 +107,79 @@ function analyzeSpecificity(text: string): number {
   }
   
   return Math.min(score, 100);
+}
+
+/**
+ * Determine task type based on content analysis
+ */
+function analyzeTaskType(text: string): 'creative' | 'technical' {
+  const lowerText = text.toLowerCase();
+  
+  // Creative indicators
+  const creativeKeywords = [
+    'создай', 'нарисуй', 'придумай', 'сочини', 'напиши историю', 'напиши рассказ',
+    'create', 'draw', 'design', 'imagine', 'story', 'narrative', 'art', 'creative',
+    'видео', 'изображение', 'картин', 'иллюстрац', 'анимац', 'музык',
+    'video', 'image', 'picture', 'illustration', 'animation', 'music',
+    'креатив', 'фантаз', 'вообража', 'художеств',
+    'fantasy', 'artistic', 'visual', 'graphic'
+  ];
+  
+  // Technical indicators
+  const technicalKeywords = [
+    'код', 'программ', 'функци', 'алгоритм', 'бизнес', 'аналити', 'расчет', 'формул',
+    'code', 'programming', 'function', 'algorithm', 'business', 'analytics', 'calculation', 'formula',
+    'api', 'database', 'sql', 'debug', 'optimize', 'refactor', 'implement',
+    'typescript', 'javascript', 'python', 'java', 'react', 'компонент',
+    'архитектур', 'структур данных', 'оптимизац', 'тестирован',
+    'architecture', 'data structure', 'optimization', 'testing',
+    'финанс', 'отчет', 'метрик', 'статистик', 'процесс',
+    'financial', 'report', 'metrics', 'statistics', 'process'
+  ];
+  
+  let creativeScore = 0;
+  let technicalScore = 0;
+  
+  creativeKeywords.forEach(keyword => {
+    if (lowerText.includes(keyword)) {
+      creativeScore++;
+    }
+  });
+  
+  technicalKeywords.forEach(keyword => {
+    if (lowerText.includes(keyword)) {
+      technicalScore++;
+    }
+  });
+  
+  return technicalScore > creativeScore ? 'technical' : 'creative';
+}
+
+/**
+ * Calculate Erikson stage based on task type and complexity
+ */
+function calculateEriksonStage(taskType: 'creative' | 'technical', complexityScore: number): number {
+  if (taskType === 'creative') {
+    // Creative tasks: stages 1-4
+    // Stage 1: Simple, playful creativity (low complexity)
+    // Stage 2: More structured creativity
+    // Stage 3: Purpose-driven creativity
+    // Stage 4: Skilled, competent creativity (high complexity)
+    if (complexityScore < 25) return 1;
+    if (complexityScore < 50) return 2;
+    if (complexityScore < 75) return 3;
+    return 4;
+  } else {
+    // Technical tasks: stages 5-8
+    // Stage 5: Identity/role - establishing solutions
+    // Stage 6: Intimacy - integrating systems
+    // Stage 7: Generativity - creating value
+    // Stage 8: Wisdom - mature, optimal solutions
+    if (complexityScore < 25) return 5;
+    if (complexityScore < 50) return 6;
+    if (complexityScore < 75) return 7;
+    return 8;
+  }
 }
 
 /**
@@ -247,6 +322,10 @@ export function analyzePromptComplexity(
   // Ensure iterations are within reasonable bounds
   recommendedIterations = Math.max(1, Math.min(recommendedIterations, 8));
   
+  // Determine task type and Erikson stage
+  const taskType = analyzeTaskType(prompt);
+  const eriksonStage = calculateEriksonStage(taskType, overallScore);
+  
   return {
     score: overallScore,
     factors: {
@@ -257,5 +336,7 @@ export function analyzePromptComplexity(
     },
     recommendedIterations,
     confidence: Math.round(confidence * 100) / 100,
+    taskType,
+    eriksonStage,
   };
 }

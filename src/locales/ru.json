@@ -210,5 +210,18 @@
     "reducedCostVariance": "↓ разброс стоимости",
     "policySafe": "безопасно для политики",
     "importantNote": "<strong>Важно:</strong> Мы осознанно покупаем +{tokenChange} refine-токенов, чтобы сэкономить 1–2 итерации и сократить разброс стоимости. В проде это даёт <em>предсказуемый бюджет</em> и выше Success@1."
-  }
+  },
+  "complexityScore": "Сложность",
+  "confidence": "Уверенность",
+  "length": "Длина",
+  "structure": "Структура",
+  "technicalTerms": "Технические термины",
+  "specificity": "Специфичность",
+  "recommendedIterations": "Рекомендуется итераций",
+  "apply": "Применить",
+  "autoIterations": "Автоматический выбор итераций",
+  "taskType": "Тип задачи",
+  "creative": "Креативная",
+  "technical": "Техническая",
+  "eriksonStage": "Стадия Эриксона"
 }
