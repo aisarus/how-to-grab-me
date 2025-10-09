@@ -24,7 +24,6 @@ interface Config {
   maxIterations: number;
   convergenceThreshold: number;
   useEFMNB: boolean;
-  useErikson: boolean;
   useProposerCriticVerifier: boolean;
 }
 
@@ -37,7 +36,6 @@ interface FavoriteConfig {
   max_iterations: number;
   convergence_threshold: number;
   use_efmnb: boolean;
-  use_erikson: boolean;
   use_proposer_critic_verifier: boolean;
 }
 
@@ -103,7 +101,6 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
           max_iterations: currentConfig.maxIterations,
           convergence_threshold: currentConfig.convergenceThreshold,
           use_efmnb: currentConfig.useEFMNB,
-          use_erikson: currentConfig.useErikson,
           use_proposer_critic_verifier: currentConfig.useProposerCriticVerifier,
         });
 
@@ -159,7 +156,6 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
       maxIterations: favorite.max_iterations,
       convergenceThreshold: favorite.convergence_threshold,
       useEFMNB: favorite.use_efmnb,
-      useErikson: favorite.use_erikson,
       useProposerCriticVerifier: favorite.use_proposer_critic_verifier,
     });
 
@@ -213,7 +209,6 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
                   </p>
                   <div className="flex gap-2 flex-wrap mt-2">
                     {currentConfig.useEFMNB && <Badge variant="secondary" className="text-xs">EFMNB</Badge>}
-                    {currentConfig.useErikson && <Badge variant="secondary" className="text-xs">Erikson</Badge>}
                     {currentConfig.useProposerCriticVerifier && <Badge variant="secondary" className="text-xs">PCV</Badge>}
                   </div>
                 </div>
@@ -249,7 +244,6 @@ export const FavoriteConfigs = ({ currentConfig, onLoadConfig }: FavoriteConfigs
                       </p>
                       <div className="flex gap-1 flex-wrap">
                         {favorite.use_efmnb && <Badge variant="outline" className="text-xs">EFMNB</Badge>}
-                        {favorite.use_erikson && <Badge variant="outline" className="text-xs">Erikson</Badge>}
                         {favorite.use_proposer_critic_verifier && <Badge variant="outline" className="text-xs">PCV</Badge>}
                       </div>
                       <p className="text-xs text-muted-foreground">

@@ -63,7 +63,6 @@ export const TFMController = () => {
     maxIterations: 4,
     convergenceThreshold: 0.05,
     useEFMNB: true,
-    useErikson: true,
     useProposerCriticVerifier: true,
   });
   const { toast } = useToast();
@@ -169,7 +168,7 @@ export const TFMController = () => {
             convergenceThreshold: config.convergenceThreshold,
             useProposerCriticVerifier: config.useProposerCriticVerifier,
             useEFMNB: config.useEFMNB,
-            eriksonStage: complexityAnalysis?.eriksonStage || (config.useErikson ? 5 : undefined),
+            eriksonStage: complexityAnalysis?.eriksonStage,
           }
         }
       });
@@ -206,7 +205,7 @@ export const TFMController = () => {
           b_parameter: config.b,
           iterations: data.iterations,
           convergence_threshold: config.convergenceThreshold,
-          erikson_stage: config.useErikson ? 5 : null,
+          erikson_stage: complexityAnalysis?.eriksonStage || null,
         })
         .select()
         .single();
@@ -276,7 +275,7 @@ export const TFMController = () => {
     }
   };
 
-  const handleLoadConfig = (newConfig: Omit<typeof config, 'useEFMNB' | 'useErikson' | 'useProposerCriticVerifier'> & { useEFMNB: boolean; useErikson: boolean; useProposerCriticVerifier: boolean }) => {
+  const handleLoadConfig = (newConfig: Omit<typeof config, 'useEFMNB' | 'useProposerCriticVerifier'> & { useEFMNB: boolean; useProposerCriticVerifier: boolean }) => {
     setConfig(newConfig);
   };
 
@@ -374,9 +373,9 @@ export const TFMController = () => {
             b_parameter: config.b,
             iterations: withEFMNB.iterations,
             convergence_threshold: config.convergenceThreshold,
-            erikson_stage: config.useErikson ? 5 : null,
+            erikson_stage: complexityAnalysis?.eriksonStage || null,
             ab_test_winner: winner === 'withEFMNB' ? 'With EFMNB' : winner === 'tie' ? 'Tie' : 'Without EFMNB',
-            ab_test_notes: `A/B Test: With EFMNB${config.useErikson ? ', Erikson Stage 5' : ''}`
+            ab_test_notes: `A/B Test: With EFMNB${complexityAnalysis?.eriksonStage ? `, Erikson Stage ${complexityAnalysis.eriksonStage}` : ''}`
           },
           {
             user_id: user.id,
@@ -389,9 +388,9 @@ export const TFMController = () => {
             b_parameter: config.b,
             iterations: withoutEFMNB.iterations,
             convergence_threshold: config.convergenceThreshold,
-            erikson_stage: config.useErikson ? 5 : null,
+            erikson_stage: complexityAnalysis?.eriksonStage || null,
             ab_test_winner: winner === 'withoutEFMNB' ? 'Without EFMNB' : winner === 'tie' ? 'Tie' : 'With EFMNB',
-            ab_test_notes: `A/B Test: Without EFMNB${config.useErikson ? ', Erikson Stage 5' : ''}`
+            ab_test_notes: `A/B Test: Without EFMNB${complexityAnalysis?.eriksonStage ? `, Erikson Stage ${complexityAnalysis.eriksonStage}` : ''}`
           }
         ]);
       }
@@ -770,7 +769,7 @@ export const TFMController = () => {
             </div>
 
             {/* Advanced Options */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+            <div className="grid grid-cols-1 gap-4 pt-4 border-t">
               <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                 <div className="space-y-1">
                   <Label className="text-sm">EFMNB Framing</Label>
@@ -779,17 +778,6 @@ export const TFMController = () => {
                 <Switch
                   checked={config.useEFMNB}
                   onCheckedChange={(checked) => setConfig({ ...config, useEFMNB: checked })}
-                />
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <div className="space-y-1">
-                  <Label className="text-sm">Erikson Filter</Label>
-                  <p className="text-xs text-muted-foreground">S-block psychosocial lens</p>
-                </div>
-                <Switch
-                  checked={config.useErikson}
-                  onCheckedChange={(checked) => setConfig({ ...config, useErikson: checked })}
                 />
               </div>
             </div>
