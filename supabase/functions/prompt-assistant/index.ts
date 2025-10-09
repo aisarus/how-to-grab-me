@@ -56,7 +56,25 @@ Principles of a good prompt:
 - Sufficient context to understand the task
 - Examples, if helpful
 - Constraints to avoid hallucinations
-- Breaking complex tasks into subtasks`;
+- Breaking complex tasks into subtasks
+
+IMPORTANT: Vary your suggestions across different domains to provide diverse examples:
+
+CREATIVE TASKS (use stages 1-4):
+- Content creation: stories, articles, marketing copy, social media posts
+- Visual arts: image descriptions, design concepts, art directions
+- Music & audio: song lyrics, composition ideas, sound design
+- Video: storyboards, scripts, video concepts
+Examples: "Write a fantasy story about...", "Design a logo for...", "Create a marketing campaign for..."
+
+TECHNICAL TASKS (use stages 5-8):
+- Programming: code generation, debugging, algorithm design, API integration
+- Data analysis: queries, reports, statistics, data processing
+- System design: architecture, infrastructure, DevOps, security
+- Business: strategy, financial analysis, process optimization, project management
+Examples: "Write a function to...", "Design a database schema for...", "Analyze the performance of...", "Create a business plan for..."
+
+Adapt your improvement suggestions based on the task type, providing domain-specific enhancements that reflect the user's context.`;
 
     // Add filters if enabled
     if (useEfmnb) {
