@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import MainPage from "./pages/MainPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import AuthPage from "./pages/AuthPage";
+import PromptAssistantPage from "./pages/PromptAssistantPage";
 import { Starfield } from "./components/Starfield";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/" element={<MainPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/assistant" element={<PromptAssistantPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
