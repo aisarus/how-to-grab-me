@@ -481,16 +481,16 @@ export const TFMController = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Zap className="w-5 h-5 text-primary" />
-              Input Prompt
+              {t('tfmController.inputLabel')}
             </CardTitle>
             <CardDescription>
-              Enter your prompt to optimize with AI-powered prompt engineering
+              {t('tfmController.inputDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Textarea
-                placeholder="Enter your prompt here..."
+                placeholder={t('tfmController.inputPlaceholder')}
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 rows={8}
@@ -501,42 +501,42 @@ export const TFMController = () => {
               {complexityAnalysis && (
                 <div className="p-4 rounded-lg border bg-muted/50 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{t('complexityScore')}: {complexityAnalysis.score}/100</span>
+                    <span className="text-sm font-medium">{t('general.complexityScore')}: {complexityAnalysis.score}/100</span>
                     <span className="text-xs text-muted-foreground">
-                      {t('confidence')}: {Math.round(complexityAnalysis.confidence * 100)}%
+                      {t('general.confidence')}: {Math.round(complexityAnalysis.confidence * 100)}%
                     </span>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2 text-xs mb-2">
                     <div className="col-span-2 pb-2 border-b border-border/50">
-                      <span className="text-muted-foreground">{t('taskType')}:</span>
+                      <span className="text-muted-foreground">{t('general.taskType')}:</span>
                       <span className="ml-1 font-medium">
-                        {complexityAnalysis.taskType === 'creative' ? t('creative') : t('technical')}
+                        {complexityAnalysis.taskType === 'creative' ? t('general.creative') : t('general.technical')}
                       </span>
-                      <span className="ml-2 text-muted-foreground">{t('eriksonStage')}:</span>
+                      <span className="ml-2 text-muted-foreground">{t('general.eriksonStage')}:</span>
                       <span className="ml-1 font-medium">{complexityAnalysis.eriksonStage}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{t('length')}:</span>
+                      <span className="text-muted-foreground">{t('general.length')}:</span>
                       <span className="ml-1 font-medium">{complexityAnalysis.factors.length}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{t('structure')}:</span>
+                      <span className="text-muted-foreground">{t('general.structure')}:</span>
                       <span className="ml-1 font-medium">{complexityAnalysis.factors.structure}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{t('technicalTerms')}:</span>
+                      <span className="text-muted-foreground">{t('general.technicalTerms')}:</span>
                       <span className="ml-1 font-medium">{complexityAnalysis.factors.technicalTerms}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{t('specificity')}:</span>
+                      <span className="text-muted-foreground">{t('general.specificity')}:</span>
                       <span className="ml-1 font-medium">{complexityAnalysis.factors.specificity}</span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-2 border-t border-border/50">
                     <span className="text-sm">
-                      {t('recommendedIterations')}: <strong>{complexityAnalysis.recommendedIterations}</strong>
+                      {t('general.recommendedIterations')}: <strong>{complexityAnalysis.recommendedIterations}</strong>
                     </span>
                     {!autoIterations && config.maxIterations !== complexityAnalysis.recommendedIterations && (
                       <Button
@@ -544,7 +544,7 @@ export const TFMController = () => {
                         size="sm"
                         onClick={() => setConfig(prev => ({ ...prev, maxIterations: complexityAnalysis.recommendedIterations }))}
                       >
-                        {t('apply')}
+                        {t('general.apply')}
                       </Button>
                     )}
                   </div>
