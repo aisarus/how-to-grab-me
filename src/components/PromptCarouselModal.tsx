@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -51,10 +51,23 @@ export function PromptCarouselModal({
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(initialIndex);
 
-  const handleCarouselChange = () => {
+  useEffect(() => {
     if (!api) return;
-    setCurrent(api.selectedScrollSnap());
-  };
+
+    // Set initial index when API is ready
+    api.scrollTo(initialIndex, true);
+
+    // Listen for selection changes
+    const onSelect = () => {
+      setCurrent(api.selectedScrollSnap());
+    };
+
+    api.on('select', onSelect);
+
+    return () => {
+      api.off('select', onSelect);
+    };
+  }, [api, initialIndex]);
 
   const currentResult = results[current];
 
@@ -87,9 +100,10 @@ export function PromptCarouselModal({
           opts={{
             startIndex: initialIndex,
             loop: false,
+            align: 'start',
+            dragFree: true,
           }}
           className="w-full h-full"
-          onScroll={handleCarouselChange}
         >
           <CarouselContent className="h-full">
             {results.map((result, index) => (
