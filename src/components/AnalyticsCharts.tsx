@@ -20,15 +20,15 @@ interface AnalyticsChartsProps {
 export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
   const TOKEN_COST = 0.000002; // $0.000002 per token
   
-  // Prepare data for token trend chart with cost per task
-  const tokenTrendData = results
+  // Prepare data for quality improvement and cost chart
+  const improvementData = results
     .slice(0, 20)
     .reverse()
     .map((r, idx) => ({
       index: idx + 1,
-      original: r.original_tokens,
-      optimized: r.optimized_tokens,
-      costPerTask: (r.optimized_tokens * TOKEN_COST * 100).toFixed(2), // in cents
+      improvement: Math.abs(r.improvement_percentage),
+      costPerPrompt: (r.optimized_tokens * TOKEN_COST * 100).toFixed(2), // in cents
+      iterations: r.iterations,
       date: new Date(r.created_at).toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' }),
     }));
 
@@ -78,21 +78,21 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Token Trend Chart with Cost per Task */}
+      {/* Quality Improvement & Cost Chart */}
       <Card className="border-2 shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <TrendingUp className="w-5 h-5 text-primary" />
-            Token Trend & Cost per Task
+            Улучшение качества & Стоимость
           </CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={tokenTrendData}>
+            <LineChart data={improvementData}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis dataKey="date" className="text-xs" />
-              <YAxis yAxisId="left" className="text-xs" label={{ value: 'Tokens', angle: -90, position: 'insideLeft' }} />
-              <YAxis yAxisId="right" orientation="right" className="text-xs" label={{ value: '¢/task', angle: 90, position: 'insideRight' }} />
+              <YAxis yAxisId="left" className="text-xs" label={{ value: '% улучшения', angle: -90, position: 'insideLeft' }} />
+              <YAxis yAxisId="right" orientation="right" className="text-xs" label={{ value: '¢/промпт', angle: 90, position: 'insideRight' }} />
               <Tooltip 
                 contentStyle={{ 
                   backgroundColor: 'hsl(var(--card))', 
@@ -104,35 +104,26 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
               <Line 
                 yAxisId="left"
                 type="monotone" 
-                dataKey="original" 
-                stroke="hsl(var(--muted-foreground))" 
-                strokeWidth={2}
-                name="Original"
-                dot={{ fill: 'hsl(var(--muted-foreground))' }}
-              />
-              <Line 
-                yAxisId="left"
-                type="monotone" 
-                dataKey="optimized" 
+                dataKey="improvement" 
                 stroke="hsl(var(--primary))" 
-                strokeWidth={2}
-                name="Optimized"
-                dot={{ fill: 'hsl(var(--primary))' }}
+                strokeWidth={3}
+                name="Улучшение (%)"
+                dot={{ fill: 'hsl(var(--primary))', r: 5 }}
               />
               <Line 
                 yAxisId="right"
                 type="monotone" 
-                dataKey="costPerTask" 
+                dataKey="costPerPrompt" 
                 stroke="hsl(142, 76%, 36%)" 
                 strokeWidth={2}
                 strokeDasharray="5 5"
-                name="Cost (¢/task)"
-                dot={{ fill: 'hsl(142, 76%, 36%)' }}
+                name="Стоимость (¢)"
+                dot={{ fill: 'hsl(142, 76%, 36%)', r: 4 }}
               />
             </LineChart>
           </ResponsiveContainer>
           <p className="text-xs text-muted-foreground mt-2">
-            Token increase ≠ cost increase. Refine overhead reduces retry iterations.
+            Инвестиция в токены дает измеримое улучшение качества промптов
           </p>
         </CardContent>
       </Card>
@@ -142,7 +133,7 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <PieIcon className="w-5 h-5 text-primary" />
-            Improvement by Category
+            Распределение улучшений
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -172,7 +163,7 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
             </PieChart>
           </ResponsiveContainer>
           <p className="text-xs text-muted-foreground mt-2">
-            Categories: clarity (readability), structure (organization), constraints (specificity)
+            Категории: clarity (читаемость), structure (структура), constraints (специфичность)
           </p>
         </CardContent>
       </Card>
@@ -182,7 +173,7 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <BarChart3 className="w-5 h-5 text-primary" />
-            Parameter Effectiveness (Top 5)
+            Эффективность параметров (Топ 5)
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -197,19 +188,19 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '8px'
                 }} 
-                formatter={(value: number) => [`${value.toFixed(1)}%`, 'Average Improvement']}
+                formatter={(value: number) => [`${value.toFixed(1)}%`, 'Среднее улучшение']}
               />
               <Legend />
               <Bar 
                 dataKey="avgImprovement" 
                 fill="hsl(var(--primary))" 
-                name="Average Improvement (%)"
+                name="Среднее улучшение (%)"
                 radius={[8, 8, 0, 0]}
               />
             </BarChart>
           </ResponsiveContainer>
           <p className="text-xs text-muted-foreground mt-4 text-center">
-            Best performing a and b parameter combinations
+            Наиболее эффективные комбинации параметров a и b
           </p>
         </CardContent>
       </Card>

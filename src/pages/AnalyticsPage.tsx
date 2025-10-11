@@ -116,69 +116,52 @@ export default function AnalyticsPage() {
     }
 
     if (filteredResults.length === 0) return {
-      successAtOne: 0,
+      totalImproved: 0,
+      avgQualityImprovement: 0,
+      totalTokensInvested: 0,
+      avgCostPerPrompt: 0,
+      successRate: 0,
       avgIterations: 0,
-      refineOverhead: 0,
-      costVariance: 0,
-      avgTTA: 0,
-      totalOptimizations: 0,
-      avgCostPerTask: 0,
     };
 
-    // Success@1 uplift - доля результатов, принятых с первой попытки (используем accepted)
-    const acceptedResults = filteredResults.filter(r => r.accepted === true);
-    const successCount = acceptedResults.filter(r => r.accepted_iter === 1).length;
-    const successAtOne = filteredResults.length > 0 ? ((successCount / filteredResults.length) * 100) : 0;
+    // Количество улучшенных промптов (все результаты - это улучшенные промпты)
+    const totalImproved = filteredResults.length;
     
-    // Avg iterations to success - используем accepted_iter если есть, иначе iterations
-    const avgIterations = filteredResults.reduce((sum, r) => {
-      const iter = r.accepted_iter !== null ? r.accepted_iter : r.iterations;
-      return sum + iter;
+    // Среднее улучшение качества (improvement_percentage может быть отрицательным если промпт стал длиннее, но это нормально)
+    const avgQualityImprovement = filteredResults.reduce((sum, r) => {
+      return sum + Math.abs(r.improvement_percentage);
     }, 0) / filteredResults.length;
     
-    // Refine overhead tokens - используем tokens_breakdown если есть
-    const refineOverhead = filteredResults.reduce((sum, r) => {
-      if (r.tokens_breakdown) {
-        return sum + r.tokens_breakdown.refine;
-      }
-      return sum + (r.optimized_tokens - r.original_tokens);
-    }, 0) / filteredResults.length;
+    // Общее количество токенов, потраченных на улучшение (optimized tokens)
+    const totalTokensInvested = filteredResults.reduce((sum, r) => {
+      return sum + r.optimized_tokens;
+    }, 0);
     
-    // Cost variance - используем cost_variance_cents если есть
-    const costVarianceValues = filteredResults
-      .filter(r => r.cost_variance_cents !== null)
-      .map(r => r.cost_variance_cents!);
-    
-    const costVariance = costVarianceValues.length > 0
-      ? costVarianceValues.reduce((sum, c) => sum + c, 0) / costVarianceValues.length
-      : 0;
-    
-    // Time-to-acceptable-answer (TTA) - используем tta_sec если есть
-    const ttaValues = filteredResults
-      .filter(r => r.tta_sec !== null)
-      .map(r => r.tta_sec!);
-    
-    const avgTTA = ttaValues.length > 0
-      ? ttaValues.reduce((sum, t) => sum + t, 0) / ttaValues.length
-      : avgIterations * 2.5; // fallback к старой формуле
-
-    // Average cost per task - используем cost_cents если есть
+    // Средняя стоимость за промпт
     const costValues = filteredResults
-      .filter(r => r.cost_cents !== null)
+      .filter(r => r.cost_cents !== null && r.cost_cents > 0)
       .map(r => r.cost_cents!);
     
-    const avgCostPerTask = costValues.length > 0
+    const avgCostPerPrompt = costValues.length > 0
       ? costValues.reduce((sum, c) => sum + c, 0) / costValues.length
-      : 0;
+      : (totalTokensInvested * 0.000002 * 100) / filteredResults.length; // fallback: estimate cost
+    
+    // Success rate - процент принятых результатов
+    const acceptedResults = filteredResults.filter(r => r.accepted === true);
+    const successRate = filteredResults.length > 0 ? ((acceptedResults.length / filteredResults.length) * 100) : 0;
+    
+    // Среднее количество итераций для улучшения
+    const avgIterations = filteredResults.reduce((sum, r) => {
+      return sum + r.iterations;
+    }, 0) / filteredResults.length;
 
     return {
-      successAtOne: successAtOne.toFixed(1),
+      totalImproved: totalImproved,
+      avgQualityImprovement: avgQualityImprovement.toFixed(1),
+      totalTokensInvested: totalTokensInvested,
+      avgCostPerPrompt: avgCostPerPrompt.toFixed(2),
+      successRate: successRate.toFixed(1),
       avgIterations: avgIterations.toFixed(1),
-      refineOverhead: refineOverhead.toFixed(0),
-      costVariance: costVariance.toFixed(2),
-      avgTTA: avgTTA.toFixed(1),
-      totalOptimizations: filteredResults.length,
-      avgCostPerTask: avgCostPerTask.toFixed(2),
     };
   };
 
@@ -381,51 +364,49 @@ export default function AnalyticsPage() {
               size="sm" 
               onClick={() => {
                 const reportData = {
-                  title: "TRI/TFM Pilot Report",
-                  date: new Date().toLocaleDateString('en-US'),
+                  title: "TRI/TFM - Отчет о качестве промптов",
+                  date: new Date().toLocaleDateString('ru-RU'),
                   summary: {
-                    totalOptimizations: stats.totalOptimizations,
+                    totalImproved: stats.totalImproved,
                     dateRange: {
-                      from: dateFrom ? format(dateFrom, 'yyyy-MM-dd') : 'All time',
-                      to: dateTo ? format(dateTo, 'yyyy-MM-dd') : 'Present'
+                      from: dateFrom ? format(dateFrom, 'yyyy-MM-dd') : 'Все время',
+                      to: dateTo ? format(dateTo, 'yyyy-MM-dd') : 'Настоящее'
                     }
                   },
                   kpis: {
-                    successRate: `${stats.successAtOne}%`,
+                    successRate: `${stats.successRate}%`,
+                    avgQualityImprovement: `${stats.avgQualityImprovement}%`,
+                    avgCostPerPrompt: `${stats.avgCostPerPrompt}¢`,
                     avgIterations: `${stats.avgIterations}`,
-                    costVariance: `±${stats.costVariance}¢`,
-                    avgCostPerTask: `${stats.avgCostPerTask}¢`,
-                    tta: `${stats.avgTTA}s`,
-                    refineOverhead: `+${stats.refineOverhead} tokens`
+                    totalTokensInvested: `${stats.totalTokensInvested.toLocaleString()}`
                   },
                   metrics: {
-                    successAtOne: parseFloat(String(stats.successAtOne)),
+                    successRate: parseFloat(String(stats.successRate)),
+                    avgQualityImprovement: parseFloat(String(stats.avgQualityImprovement)),
+                    avgCostPerPrompt: parseFloat(String(stats.avgCostPerPrompt)),
                     avgIterations: parseFloat(String(stats.avgIterations)),
-                    costVariance: parseFloat(String(stats.costVariance)),
-                    avgCostPerTask: parseFloat(String(stats.avgCostPerTask)),
-                    avgTTA: parseFloat(String(stats.avgTTA)),
-                    refineOverhead: parseInt(String(stats.refineOverhead))
+                    totalTokensInvested: stats.totalTokensInvested
                   },
-                  conclusion: `Performance summary: Success@1 rate at ${stats.successAtOne}%, averaging ${stats.avgIterations} iterations with ${stats.avgCostPerTask}¢ cost per task. Total ${stats.totalOptimizations} optimizations analyzed.`,
-                  recommendation: stats.totalOptimizations > 10 ? "Production ready with sufficient data for analysis" : "More data recommended for comprehensive evaluation"
+                  conclusion: `Итоги: Success Rate ${stats.successRate}%, среднее улучшение качества ${stats.avgQualityImprovement}%, средняя стоимость ${stats.avgCostPerPrompt}¢ за промпт. Всего улучшено ${stats.totalImproved} промптов с инвестицией ${stats.totalTokensInvested.toLocaleString()} токенов.`,
+                  recommendation: stats.totalImproved > 10 ? "Достаточно данных для анализа, качественные улучшения подтверждены" : "Рекомендуется больше данных для полного анализа"
                 };
                 
                 const json = JSON.stringify(reportData, null, 2);
                 const blob = new Blob([json], { type: 'application/json' });
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.download = `pilot-report-${new Date().toISOString().split('T')[0]}.json`;
+                link.download = `quality-report-${new Date().toISOString().split('T')[0]}.json`;
                 link.click();
 
                 toast({
-                  title: "Pilot Report Exported",
-                  description: "1-page summary ready for management review",
+                  title: "Отчет экспортирован",
+                  description: "Отчет о качестве улучшений готов",
                 });
               }}
               className="gap-2 gradient-primary"
             >
               <Download className="w-4 h-4" />
-              {!isMobile && "Pilot Report"}
+              {!isMobile && "Отчет"}
             </Button>
           </div>
         </div>
@@ -449,13 +430,26 @@ export default function AnalyticsPage() {
           <Card className="floating-card border-2 border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5" style={{ animationDelay: '0s' }}>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-primary flex items-center gap-2">
-                <Award className="w-4 h-4" />
-                Success@1 uplift
+                <Trophy className="w-4 h-4" />
+                Промптов улучшено
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-primary">{stats.successAtOne}%</div>
-              <p className="text-xs text-muted-foreground mt-1">Accepted from first attempt</p>
+              <div className="text-3xl font-bold text-primary">{stats.totalImproved}</div>
+              <p className="text-xs text-muted-foreground mt-1">Всего оптимизаций проведено</p>
+            </CardContent>
+          </Card>
+
+          <Card className="floating-card border-2 border-accent/20 bg-gradient-to-br from-accent/10 to-accent/5" style={{ animationDelay: '0.1s' }}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" />
+                Улучшение качества
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stats.avgQualityImprovement}%</div>
+              <p className="text-xs text-muted-foreground mt-1">Среднее улучшение структуры промпта</p>
             </CardContent>
           </Card>
 
@@ -472,66 +466,6 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
 
-          <Card className="floating-card border-2" style={{ animationDelay: '0.4s' }}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
-                Refine overhead tokens
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className={`text-3xl font-bold ${Number(stats.refineOverhead) > 0 ? 'text-blue-600' : 'text-green-600'}`}>
-                {Number(stats.refineOverhead) > 0 ? '+' : ''}{stats.refineOverhead}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">Spent on refinement</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Additional Metrics */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <Card className="border shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Cost per task</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.avgCostPerTask}¢</div>
-              <p className="text-xs text-muted-foreground mt-1">Average cost</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Cost variance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">±{stats.costVariance}¢</div>
-              <p className="text-xs text-muted-foreground mt-1">Predictability</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Time-to-acceptable</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.avgTTA}s</div>
-              <p className="text-xs text-muted-foreground mt-1">TTA average</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" />
-                Total Optimizations
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalOptimizations}</div>
-              <p className="text-xs text-muted-foreground mt-1">All time</p>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Analytics Charts */}
@@ -646,67 +580,6 @@ export default function AnalyticsPage() {
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
-
-        {/* Value Proposition */}
-        <Card className="floating-card border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 shadow-lg" style={{ animationDelay: '0.8s' }}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-primary">
-              <Award className="w-5 h-5" />
-              Business Value & ROI Calculator
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 bg-background/50 rounded-lg border">
-                <div className="text-2xl font-bold mb-2 text-primary">+{stats.successAtOne}%</div>
-                <div className="text-sm text-muted-foreground">
-                  Success@1 uplift
-                </div>
-              </div>
-              <div className="p-4 bg-background/50 rounded-lg border">
-                <div className="text-2xl font-bold mb-2">{stats.avgCostPerTask}¢</div>
-                <div className="text-sm text-muted-foreground">
-                  Cost per resolved task
-                </div>
-              </div>
-              <div className="p-4 bg-background/50 rounded-lg border">
-                <div className="text-2xl font-bold mb-2">-{stats.avgIterations}</div>
-                <div className="text-sm text-muted-foreground">
-                  Iterations saved
-                </div>
-              </div>
-            </div>
-
-            {/* ROI Formula */}
-            <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
-              <p className="text-sm font-semibold mb-2 text-primary">Savings Formula:</p>
-              <div className="font-mono text-xs bg-background/50 p-3 rounded border mb-2">
-                Savings = (Iterations_before – Iterations_after) × Avg_tokens_per_iter × $/token<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ (TTA_before – TTA_after) × $/min_agent
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Example: 2 iterations saved × 500 tokens × $0.000002 = $0.002 per task<br/>
-                At 1M tasks/month = <strong className="text-primary">$2,000/month savings</strong>
-              </p>
-            </div>
-
-            <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
-              <p className="text-sm">
-                <strong className="text-primary">Business Impact:</strong> TRI/TFM improves Success@1 by {stats.successAtOne}%,
-                which is critical for production tasks (content moderation, search, recommendations). 
-                Lower cost variance (±{stats.costVariance}¢) means predictable budgets and fewer edge-case failures.
-              </p>
-            </div>
-            
-            <div className="p-4 bg-background/50 rounded-lg border">
-              <p className="text-xs text-muted-foreground">
-                <strong>Important:</strong> Мы осознанно покупаем <strong>+{Math.abs(Number(stats.refineOverhead))} refine-токенов</strong>, 
-                чтобы сэкономить 1–2 итерации и сократить разброс стоимости. 
-                В проде это даёт <em>предсказуемый бюджет</em> и выше Success@1.
-              </p>
-            </div>
           </CardContent>
         </Card>
         </div>
