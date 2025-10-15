@@ -16,8 +16,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Copy, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 interface OptimizationResult {
   id: string;
@@ -50,6 +51,15 @@ export function PromptCarouselModal({
 }: PromptCarouselModalProps) {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(initialIndex);
+  const { toast } = useToast();
+
+  const handleCopy = (text: string, type: 'original' | 'optimized') => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: type === 'original' ? 'Оригинальный промпт скопирован' : 'Оптимизированный промпт скопирован',
+      description: 'Текст скопирован в буфер обмена',
+    });
+  };
 
   useEffect(() => {
     if (!api) return;
@@ -75,12 +85,12 @@ export function PromptCarouselModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl h-[90vh] p-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b">
+      <DialogContent className="max-w-7xl h-[92vh] p-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b bg-background/95 backdrop-blur">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-2xl font-bold">
-              Prompt Analysis
-              <span className="text-sm text-muted-foreground ml-3">
+              Анализ промпта
+              <span className="text-sm text-muted-foreground ml-3 font-normal">
                 {current + 1} / {results.length}
               </span>
             </DialogTitle>
@@ -108,9 +118,9 @@ export function PromptCarouselModal({
           <CarouselContent className="h-full">
             {results.map((result, index) => (
               <CarouselItem key={result.id} className="h-full">
-                <div className="px-6 pb-6 h-full">
-                  <ScrollArea className="h-[calc(90vh-120px)]">
-                    <div className="space-y-6 pr-4">
+                <div className="px-6 pb-6 h-full overflow-hidden">
+                  <ScrollArea className="h-[calc(92vh-140px)]">
+                    <div className="space-y-5 pr-4">
                       {/* Metadata */}
                       <div className="flex items-center gap-3 flex-wrap">
                         <Badge variant="outline" className="text-xs">
@@ -201,36 +211,60 @@ export function PromptCarouselModal({
 
                       {/* Prompts Side by Side */}
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        <Card className="border-2 border-muted">
+                        <Card className="border-2 border-muted/50">
                           <CardHeader className="pb-3">
-                            <CardTitle className="text-sm flex items-center justify-between">
-                              <span>Original Prompt</span>
-                              <Badge variant="outline" className="text-xs">
-                                {result.original_tokens} tokens
-                              </Badge>
-                            </CardTitle>
+                            <div className="flex items-center justify-between">
+                              <CardTitle className="text-sm font-semibold">
+                                Оригинальный промпт
+                              </CardTitle>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-xs">
+                                  {result.original_tokens} токенов
+                                </Badge>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  onClick={() => handleCopy(result.original_prompt, 'original')}
+                                >
+                                  <Copy className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </div>
                           </CardHeader>
                           <CardContent>
-                            <ScrollArea className="h-[300px]">
-                              <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                            <ScrollArea className="h-[350px] rounded-md border bg-muted/30 p-4">
+                              <p className="text-sm leading-relaxed whitespace-pre-wrap font-mono">
                                 {result.original_prompt}
                               </p>
                             </ScrollArea>
                           </CardContent>
                         </Card>
 
-                        <Card className="border-2 border-primary/30 bg-primary/5">
+                        <Card className="border-2 border-primary/40 bg-primary/[0.03]">
                           <CardHeader className="pb-3">
-                            <CardTitle className="text-sm flex items-center justify-between">
-                              <span className="text-primary">Optimized Prompt</span>
-                              <Badge variant="default" className="text-xs">
-                                {result.optimized_tokens} tokens
-                              </Badge>
-                            </CardTitle>
+                            <div className="flex items-center justify-between">
+                              <CardTitle className="text-sm font-semibold text-primary">
+                                Оптимизированный промпт
+                              </CardTitle>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="default" className="text-xs">
+                                  {result.optimized_tokens} токенов
+                                </Badge>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  onClick={() => handleCopy(result.optimized_prompt, 'optimized')}
+                                >
+                                  <Copy className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </div>
                           </CardHeader>
                           <CardContent>
-                            <ScrollArea className="h-[300px]">
-                              <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                            <ScrollArea className="h-[350px] rounded-md border border-primary/20 bg-background/50 p-4">
+                              <p className="text-sm leading-relaxed whitespace-pre-wrap font-mono">
                                 {result.optimized_prompt}
                               </p>
                             </ScrollArea>
@@ -242,10 +276,10 @@ export function PromptCarouselModal({
                       {result.ab_test_notes && (
                         <Card className="border-2 border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-800">
                           <CardHeader>
-                            <CardTitle className="text-sm">A/B Test Notes</CardTitle>
+                            <CardTitle className="text-sm">Заметки A/B теста</CardTitle>
                           </CardHeader>
                           <CardContent>
-                            <p className="text-sm leading-relaxed">{result.ab_test_notes}</p>
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap">{result.ab_test_notes}</p>
                           </CardContent>
                         </Card>
                       )}
@@ -256,9 +290,9 @@ export function PromptCarouselModal({
             ))}
           </CarouselContent>
 
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-            <CarouselPrevious className="relative left-0 translate-y-0" />
-            <CarouselNext className="relative right-0 translate-y-0" />
+          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
+            <CarouselPrevious className="relative left-0 translate-y-0 bg-background/80 backdrop-blur hover:bg-background" />
+            <CarouselNext className="relative right-0 translate-y-0 bg-background/80 backdrop-blur hover:bg-background" />
           </div>
         </Carousel>
       </DialogContent>
