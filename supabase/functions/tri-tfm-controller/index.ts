@@ -1,5 +1,13 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { 
+  arbiter, 
+  getDefaultConfig, 
+  initArbiterState,
+  type ArbiterConfig,
+  type ArbiterState,
+  type IterationSnapshot 
+} from './arbiter.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -47,6 +55,13 @@ interface TFMResponse {
       refine: number;
       final: number;
     };
+    arbiter?: {
+      convergenceStreak: number;
+      oscillationCount: number;
+      bestIteration: number;
+      bestScore: number;
+      iterations: any[];
+    };
   };
 }
 
@@ -84,6 +99,14 @@ serve(async (req) => {
 
     console.log('Starting TRI/TFM controller with config:', tfmConfig);
 
+    // Определяем режим (tech/creative) на основе типа задачи
+    const taskMode: 'tech' | 'creative' = tfmConfig.useEFMNB ? 'tech' : 'creative';
+    
+    // Инициализируем Arbiter
+    const arbiterConfig = getDefaultConfig(taskMode);
+    arbiterConfig.budget.maxIterations = tfmConfig.maxIterations;
+    const arbiterState = initArbiterState();
+
     let promptImprovement = undefined;
     let workingPrompt = prompt;
     
@@ -109,6 +132,9 @@ serve(async (req) => {
     const originalTokens = estimateTokens(prompt);
     const refineTokens = promptImprovement ? estimateTokens(workingPrompt) - originalTokens : 0;
 
+    let prevSnapshot: IterationSnapshot | null = null;
+    const arbiterTelemetry: any[] = [];
+
     while (iteration < tfmConfig.maxIterations) {
       iteration++;
       console.log(`\n=== Iteration ${iteration} ===`);
@@ -126,22 +152,68 @@ serve(async (req) => {
 
       tokenHistory.push(stabilizedTokens);
 
-      const delta = Math.abs(stabilizedTokens - currentTokens);
-      const relativeDelta = delta / currentTokens;
+      // Вычисляем EFMNB scores для текущей итерации
+      const scores = await evaluateEFMNBScores(stabilizedText);
       
-      console.log(`Delta: ${delta}, Relative: ${relativeDelta.toFixed(4)}`);
+      // Создаём snapshot текущей итерации
+      const currSnapshot: IterationSnapshot = {
+        iteration,
+        text: stabilizedText,
+        metrics: {
+          sem: 0,
+          lex: 0,
+          dlen: 0,
+          dstyle: 0,
+          defmn: 0,
+        },
+        scores,
+        operator: 'S', // последний оператор в цикле D→S
+        tokensUsed: stabilizedTokens,
+      };
 
-      if (relativeDelta < tfmConfig.convergenceThreshold) {
-        console.log('Converged!');
+      // Вызываем Arbiter для принятия решения
+      console.log('Consulting Arbiter...');
+      const decision = await arbiter(
+        prevSnapshot,
+        currSnapshot,
+        arbiterState,
+        arbiterConfig,
+        LOVABLE_API_KEY!
+      );
+
+      console.log(`Arbiter decision: ${decision.action}`);
+      console.log(`Reason: ${decision.reason}`);
+      console.log(`Metrics - Votes: ${decision.metrics.votes}, Streak: ${decision.metrics.convergenceStreak}, Quality Gate: ${decision.metrics.qualityGate}`);
+
+      arbiterTelemetry.push(decision.telemetry);
+
+      // Действуем на основе решения Arbiter
+      if (decision.action === 'STOP_ACCEPT') {
+        console.log('Arbiter: Convergence achieved!');
         converged = true;
         acceptedIteration = iteration;
+        currentText = decision.text;
+        currentTokens = estimateTokens(currentText);
+        break;
+      } else if (decision.action === 'STOP_BEST') {
+        console.log('Arbiter: Stopping with best candidate');
+        converged = false;
+        acceptedIteration = arbiterState.bestCandidate.iteration;
+        currentText = decision.text;
+        currentTokens = estimateTokens(currentText);
+        break;
+      } else if (decision.action === 'ROLLBACK') {
+        console.log('Arbiter: Rolling back to best candidate');
+        currentText = decision.text;
+        currentTokens = estimateTokens(currentText);
+        // Продолжаем с лучшего кандидата
+        continue;
+      } else {
+        // CONTINUE
         currentText = stabilizedText;
         currentTokens = stabilizedTokens;
-        break;
+        prevSnapshot = currSnapshot;
       }
-
-      currentText = stabilizedText;
-      currentTokens = stabilizedTokens;
     }
 
     const finalTokens = currentTokens;
@@ -182,6 +254,13 @@ serve(async (req) => {
           refine: refineTokens,
           final: finalTokens,
         },
+        arbiter: {
+          convergenceStreak: arbiterState.convergenceStreak,
+          oscillationCount: arbiterState.oscillationCount,
+          bestIteration: arbiterState.bestCandidate.iteration,
+          bestScore: arbiterState.bestCandidate.score,
+          iterations: arbiterTelemetry,
+        },
       },
     };
 
@@ -190,6 +269,9 @@ serve(async (req) => {
     console.log(`Initial tokens: ${initialTokens}`);
     console.log(`Final tokens: ${finalTokens}`);
     console.log(`Savings: ${percentageSaved.toFixed(2)}%`);
+    console.log(`Converged: ${converged}`);
+    console.log(`Arbiter best iteration: ${arbiterState.bestCandidate.iteration}`);
+    console.log(`Arbiter convergence streak: ${arbiterState.convergenceStreak}`);
 
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -447,3 +529,77 @@ Return JSON:
 function estimateTokens(text: string): number {
   return Math.ceil(text.length / 4);
 }
+
+/**
+ * Evaluate EFMNB scores for text using AI
+ */
+async function evaluateEFMNBScores(text: string): Promise<{
+  E: number;
+  F: number;
+  M: number;
+  N: number;
+  B: number;
+}> {
+  try {
+    const response = await fetch(AI_GATEWAY_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: `Evaluate the text on EFMNB dimensions (0-1 scale):
+E (Evaluation): Thoroughness of analysis and critical thinking
+F (Facts): Factual accuracy and proper citations
+M (Meaning): Semantic coherence and logical flow
+N (Novelty): Unique insights or creative perspectives
+B (Brevity): Conciseness vs unnecessary verbosity (lower is better)
+
+Return only JSON:
+{
+  "E": 0.X,
+  "F": 0.X,
+  "M": 0.X,
+  "N": 0.X,
+  "B": 0.X
+}`
+          },
+          {
+            role: 'user',
+            content: `Text to evaluate:\n\n${text.substring(0, 1000)}`
+          }
+        ],
+        temperature: 0.1,
+        max_tokens: 100,
+      }),
+    });
+
+    const data = await response.json();
+    const content = data.choices[0].message.content;
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    const scores = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+
+    return {
+      E: Math.max(0, Math.min(1, scores.E || 0.7)),
+      F: Math.max(0, Math.min(1, scores.F || 0.7)),
+      M: Math.max(0, Math.min(1, scores.M || 0.7)),
+      N: Math.max(0, Math.min(1, scores.N || 0.5)),
+      B: Math.max(0, Math.min(1, scores.B || 0.3)),
+    };
+  } catch (error) {
+    console.error('Error evaluating EFMNB scores:', error);
+    // Default reasonable scores
+    return {
+      E: 0.7,
+      F: 0.7,
+      M: 0.7,
+      N: 0.5,
+      B: 0.3,
+    };
+  }
+}
+
