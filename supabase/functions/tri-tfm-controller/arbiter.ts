@@ -1,8 +1,34 @@
 /**
- * Arbiter Module - Convergence Detection & Quality Gating
+ * Arbiter Module - Automatic Cycle Governor for TFM Controller
  * 
- * Детектор сходимости для TRI·TFM системы.
- * Определяет момент остановки D↔S цикла на основе комитета метрик.
+ * PURPOSE: Automatically determines when D↔S iterations have reached convergence
+ * and further changes no longer provide meaningful improvements.
+ * 
+ * The Arbiter doesn't modify content directly - it analyzes D↔S iteration results
+ * and determines the optimal stopping point based on:
+ * - Semantic similarity (embeddings cosine)
+ * - Lexical similarity (normalized Levenshtein)
+ * - Length change (Δlen)
+ * - Style deviation (Δstyle)
+ * - EFMNB quality scores delta (ΔEFMN)
+ * 
+ * INPUTS:
+ * - prevText, currText: consecutive iteration outputs
+ * - scores: {E, F, M, N, B} quality metrics
+ * - iteration: current iteration number
+ * - mode: "tech" | "creative" (affects thresholds)
+ * 
+ * OUTPUT:
+ * - decision: "CONTINUE" | "STOP_ACCEPT" | "STOP_BEST" | "ROLLBACK"
+ * - reason: human-readable explanation
+ * - telemetry: detailed metrics for debugging
+ * 
+ * CONVERGENCE RULE:
+ * Stop when ≥K metrics (out of 5) stabilize for M consecutive iterations
+ * AND quality gate passes: min(F,N,M) ≥ threshold - penalty·B
+ * 
+ * GOAL: Eliminate manual cycle termination - TFMController now stops automatically
+ * when further iterations cease to provide semantic value.
  */
 
 const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';

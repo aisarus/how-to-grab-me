@@ -4,6 +4,43 @@
 
 **URL**: https://lovable.dev/projects/7da80b4d-2848-4bee-9ce5-f3eb7b5bd544
 
+## TRI·TFM Technology Overview
+
+This project implements the **TRI·TFM (Triangular Flow Methodology)** prompt optimization system with three core components:
+
+### 1. **D-block (Detailer)** - Expansion Operator
+Enriches prompts with context, structure, and detail using EFMNB framing:
+- **E** (Emotion): Tone and emotional context
+- **F** (Facts): Concrete details and specificity
+- **M** (Meaning): Core intent and goals
+- **N** (Nuance): Edge cases and constraints
+- **B** (Brevity): Conciseness penalty
+
+### 2. **S-block (Summarizer)** - Compression Operator
+Distills enriched prompts to essential elements, maximizing token efficiency while preserving semantic value.
+
+### 3. **A-block (Arbiter)** - Automatic Cycle Governor
+The Arbiter is a convergence detection and quality control system that eliminates manual cycle termination.
+
+**Role**: Analyzes D↔S iteration results and determines optimal stopping point.
+
+**Does NOT modify content** - only decides when to stop based on:
+- Semantic similarity (cosine of embeddings)
+- Lexical similarity (normalized Levenshtein)
+- Length change (Δlen)
+- Style deviation (Δstyle)
+- EFMNB quality scores delta (ΔEFMN)
+
+**Decisions**:
+- `STOP_ACCEPT` - Converged: result is stable and high-quality
+- `STOP_BEST` - Budget exhausted: return best candidate seen
+- `ROLLBACK` - Quality degraded: revert to previous best
+- `CONTINUE` - Keep iterating: improvements still possible
+
+**Convergence Rule**: Stop when ≥K metrics (default 3 of 5) stabilize for M consecutive iterations (default 2) AND quality gate passes: `min(F,N,M) ≥ threshold - penalty·B`
+
+This ensures TFMController automatically stops when further iterations cease to provide semantic value, preventing infinite loops and wasted compute.
+
 ## How can I edit this code?
 
 There are several ways of editing your application.

@@ -98,14 +98,16 @@ serve(async (req) => {
     };
 
     console.log('Starting TRI/TFM controller with config:', tfmConfig);
-
-    // Определяем режим (tech/creative) на основе типа задачи
-    const taskMode: 'tech' | 'creative' = tfmConfig.useEFMNB ? 'tech' : 'creative';
     
-    // Инициализируем Arbiter
-    const arbiterConfig = getDefaultConfig(taskMode);
+    // Initialize Arbiter state for automatic convergence detection
+    // Arbiter = cycle governor that determines when D↔S iterations have reached
+    // optimal convergence and further changes no longer improve quality
+    const arbiterMode = tfmConfig.eriksonStage && tfmConfig.eriksonStage <= 4 ? 'creative' : 'tech';
+    const arbiterConfig = getDefaultConfig(arbiterMode);
     arbiterConfig.budget.maxIterations = tfmConfig.maxIterations;
     const arbiterState = initArbiterState();
+    
+    console.log('Arbiter initialized:', { mode: arbiterMode, config: arbiterConfig });
 
     let promptImprovement = undefined;
     let workingPrompt = prompt;
