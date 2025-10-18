@@ -27,6 +27,7 @@ interface TFMConfig {
   useEFMNB: boolean;
   eriksonStage?: number;
   useProposerCriticVerifier: boolean;
+  useArbiter: boolean;
 }
 
 interface TFMResponse {
@@ -95,6 +96,7 @@ serve(async (req) => {
       useEFMNB: config?.useEFMNB ?? true,
       eriksonStage: config?.eriksonStage,
       useProposerCriticVerifier: config?.useProposerCriticVerifier ?? true,
+      useArbiter: config?.useArbiter ?? true,
     };
 
     console.log('Starting TRI/TFM controller with config:', tfmConfig);
@@ -173,48 +175,69 @@ serve(async (req) => {
         tokensUsed: stabilizedTokens,
       };
 
-      // Вызываем Arbiter для принятия решения
-      console.log('Consulting Arbiter...');
-      const decision = await arbiter(
-        prevSnapshot,
-        currSnapshot,
-        arbiterState,
-        arbiterConfig,
-        LOVABLE_API_KEY!
-      );
+      // Check if Arbiter is enabled
+      if (tfmConfig.useArbiter) {
+        // Вызываем Arbiter для принятия решения
+        console.log('Consulting Arbiter...');
+        const decision = await arbiter(
+          prevSnapshot,
+          currSnapshot,
+          arbiterState,
+          arbiterConfig,
+          LOVABLE_API_KEY!
+        );
 
-      console.log(`Arbiter decision: ${decision.action}`);
-      console.log(`Reason: ${decision.reason}`);
-      console.log(`Metrics - Votes: ${decision.metrics.votes}, Streak: ${decision.metrics.convergenceStreak}, Quality Gate: ${decision.metrics.qualityGate}`);
+        console.log(`Arbiter decision: ${decision.action}`);
+        console.log(`Reason: ${decision.reason}`);
+        console.log(`Metrics - Votes: ${decision.metrics.votes}, Streak: ${decision.metrics.convergenceStreak}, Quality Gate: ${decision.metrics.qualityGate}`);
 
-      arbiterTelemetry.push(decision.telemetry);
+        arbiterTelemetry.push(decision.telemetry);
 
-      // Действуем на основе решения Arbiter
-      if (decision.action === 'STOP_ACCEPT') {
-        console.log('Arbiter: Convergence achieved!');
-        converged = true;
-        acceptedIteration = iteration;
-        currentText = decision.text;
-        currentTokens = estimateTokens(currentText);
-        break;
-      } else if (decision.action === 'STOP_BEST') {
-        console.log('Arbiter: Stopping with best candidate');
-        converged = false;
-        acceptedIteration = arbiterState.bestCandidate.iteration;
-        currentText = decision.text;
-        currentTokens = estimateTokens(currentText);
-        break;
-      } else if (decision.action === 'ROLLBACK') {
-        console.log('Arbiter: Rolling back to best candidate');
-        currentText = decision.text;
-        currentTokens = estimateTokens(currentText);
-        // Продолжаем с лучшего кандидата
-        continue;
+        // Действуем на основе решения Arbiter
+        if (decision.action === 'STOP_ACCEPT') {
+          console.log('Arbiter: Convergence achieved!');
+          converged = true;
+          acceptedIteration = iteration;
+          currentText = decision.text;
+          currentTokens = estimateTokens(currentText);
+          break;
+        } else if (decision.action === 'STOP_BEST') {
+          console.log('Arbiter: Stopping with best candidate');
+          converged = false;
+          acceptedIteration = arbiterState.bestCandidate.iteration;
+          currentText = decision.text;
+          currentTokens = estimateTokens(currentText);
+          break;
+        } else if (decision.action === 'ROLLBACK') {
+          console.log('Arbiter: Rolling back to best candidate');
+          currentText = decision.text;
+          currentTokens = estimateTokens(currentText);
+          // Продолжаем с лучшего кандидата
+          continue;
+        } else {
+          // CONTINUE
+          currentText = stabilizedText;
+          currentTokens = stabilizedTokens;
+          prevSnapshot = currSnapshot;
+        }
       } else {
-        // CONTINUE
+        // Arbiter disabled - use classic convergence logic
+        const tokenDiff = Math.abs(stabilizedTokens - currentTokens);
+        const changeRate = tokenDiff / currentTokens;
+
+        console.log(`Iteration ${iteration}: ${currentTokens} → ${stabilizedTokens} tokens (${(changeRate * 100).toFixed(2)}% change)`);
+        
         currentText = stabilizedText;
         currentTokens = stabilizedTokens;
         prevSnapshot = currSnapshot;
+
+        // Check classic convergence
+        if (changeRate < tfmConfig.convergenceThreshold) {
+          console.log('Classic convergence achieved!');
+          converged = true;
+          acceptedIteration = iteration;
+          break;
+        }
       }
     }
 

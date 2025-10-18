@@ -86,7 +86,6 @@ export const TFMController = () => {
   const [lastResultId, setLastResultId] = useState<string | null>(null);
   const [copiedResult, setCopiedResult] = useState(false);
   const [complexityAnalysis, setComplexityAnalysis] = useState<ComplexityScore | null>(null);
-  const [autoIterations, setAutoIterations] = useState(false);
   const [config, setConfig] = useState({
     a: 0.20,
     b: 0.35,
@@ -94,6 +93,7 @@ export const TFMController = () => {
     convergenceThreshold: 0.05,
     useEFMNB: true,
     useProposerCriticVerifier: true,
+    useArbiter: true,
   });
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -126,10 +126,9 @@ export const TFMController = () => {
       abTestWinner,
       abTestNotes,
       lastResultId,
-      autoIterations,
     };
     sessionStorage.setItem('tfm-controller-state', JSON.stringify(stateToSave));
-  }, [prompt, config, result, abTestWinner, abTestNotes, lastResultId, autoIterations]);
+  }, [prompt, config, result, abTestWinner, abTestNotes, lastResultId]);
 
   // Analyze prompt complexity when prompt changes
   useEffect(() => {
@@ -149,14 +148,6 @@ export const TFMController = () => {
 
         const analysis = analyzePromptComplexity(prompt, historicalData || []);
         setComplexityAnalysis(analysis);
-
-        // Auto-apply recommended iterations if enabled
-        if (autoIterations && analysis.recommendedIterations !== config.maxIterations) {
-          setConfig(prev => ({
-            ...prev,
-            maxIterations: analysis.recommendedIterations
-          }));
-        }
       } catch (error) {
         console.error('Failed to analyze prompt:', error);
       }
@@ -164,7 +155,7 @@ export const TFMController = () => {
 
     const debounceTimer = setTimeout(analyzePrompt, 500);
     return () => clearTimeout(debounceTimer);
-  }, [prompt, autoIterations]);
+  }, [prompt]);
 
   const handleSubmit = async () => {
     if (!prompt.trim()) {
@@ -198,6 +189,7 @@ export const TFMController = () => {
             convergenceThreshold: config.convergenceThreshold,
             useProposerCriticVerifier: config.useProposerCriticVerifier,
             useEFMNB: config.useEFMNB,
+            useArbiter: config.useArbiter,
             eriksonStage: complexityAnalysis?.eriksonStage,
           }
         }
@@ -311,7 +303,7 @@ export const TFMController = () => {
     }
   };
 
-  const handleLoadConfig = (newConfig: Omit<typeof config, 'useEFMNB' | 'useProposerCriticVerifier'> & { useEFMNB: boolean; useProposerCriticVerifier: boolean }) => {
+  const handleLoadConfig = (newConfig: Omit<typeof config, 'useEFMNB' | 'useProposerCriticVerifier' | 'useArbiter'> & { useEFMNB: boolean; useProposerCriticVerifier: boolean; useArbiter: boolean }) => {
     setConfig(newConfig);
   };
 
@@ -563,21 +555,6 @@ export const TFMController = () => {
                       <span className="ml-1 font-medium">{complexityAnalysis.factors.specificity}</span>
                     </div>
                   </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                    <span className="text-sm">
-                      {t('general.recommendedIterations')}: <strong>{complexityAnalysis.recommendedIterations}</strong>
-                    </span>
-                    {!autoIterations && config.maxIterations !== complexityAnalysis.recommendedIterations && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setConfig(prev => ({ ...prev, maxIterations: complexityAnalysis.recommendedIterations }))}
-                      >
-                        {t('general.apply')}
-                      </Button>
-                    )}
-                  </div>
                 </div>
               )}
             </div>
@@ -703,21 +680,21 @@ export const TFMController = () => {
               </div>
             </div>
 
-            {/* Auto Iterations Toggle */}
-            <div className="p-4 rounded-xl bg-gradient-to-r from-blue-500/10 to-purple-500/5 border-2 border-blue-500/20">
+            {/* Arbiter Toggle */}
+            <div className="p-4 rounded-xl bg-gradient-to-r from-purple-500/10 to-indigo-500/5 border-2 border-purple-500/20">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <Brain className="w-4 h-4 text-blue-600" />
-                    <Label className="font-semibold">Автоматический выбор итераций</Label>
+                    <Gauge className="w-4 h-4 text-purple-600" />
+                    <Label className="font-semibold">{t('tfmController.arbiter')}</Label>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Определяет оптимальное количество итераций на основе сложности промпта и статистики
+                    {t('tfmController.arbiterDescription')}
                   </p>
                 </div>
                 <Switch
-                  checked={autoIterations}
-                  onCheckedChange={setAutoIterations}
+                  checked={config.useArbiter}
+                  onCheckedChange={(checked) => setConfig({ ...config, useArbiter: checked })}
                 />
               </div>
             </div>
