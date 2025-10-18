@@ -452,23 +452,56 @@ export default function AnalyticsPage() {
               <p className="text-xs text-muted-foreground mt-1">{t('analytics.avgQualityGain')}</p>
             </CardContent>
           </Card>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{stats.avgQualityImprovement}%</div>
-              <p className="text-xs text-muted-foreground mt-1">Среднее улучшение структуры промпта</p>
-            </CardContent>
-          </Card>
 
           <Card className="floating-card border-2" style={{ animationDelay: '0.2s' }}>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Target className="w-4 h-4" />
-                Avg iterations to success
+                {t('analytics.tokensInvested')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stats.totalTokensInvested.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground mt-1">{t('analytics.totalTokensUsed')}</p>
+            </CardContent>
+          </Card>
+
+          <Card className="floating-card border-2" style={{ animationDelay: '0.3s' }}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Award className="w-4 h-4" />
+                {t('analytics.costPerPrompt')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stats.avgCostPerPrompt}¢</div>
+              <p className="text-xs text-muted-foreground mt-1">{t('analytics.avgCostInCents')}</p>
+            </CardContent>
+          </Card>
+
+          <Card className="floating-card border-2" style={{ animationDelay: '0.4s' }}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Trophy className="w-4 h-4" />
+                {t('analytics.successRate')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stats.successRate}%</div>
+              <p className="text-xs text-muted-foreground mt-1">{t('analytics.acceptedResults')}</p>
+            </CardContent>
+          </Card>
+
+          <Card className="floating-card border-2" style={{ animationDelay: '0.5s' }}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Target className="w-4 h-4" />
+                {t('analytics.iterations')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{stats.avgIterations}</div>
-              <p className="text-xs text-muted-foreground mt-1">Until acceptable answer</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('analytics.avgIterationsNeeded')}</p>
             </CardContent>
           </Card>
 
@@ -482,17 +515,17 @@ export default function AnalyticsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-primary" />
-              Optimization History
+              {t('analytics.optimizationHistory')}
             </CardTitle>
-            <CardDescription>Recent TRI/TFM results</CardDescription>
+            <CardDescription>{t('analytics.recentResults')}</CardDescription>
           </CardHeader>
           <CardContent>
             {displayResults.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <BarChart3 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>No data available yet</p>
+                <p>{t('analytics.noData')}</p>
                 <p className="text-sm mt-2">
-                  Optimize a prompt to see statistics
+                  {t('tfmController.enterTextToOptimize')}
                 </p>
               </div>
             ) : (
@@ -515,63 +548,37 @@ export default function AnalyticsPage() {
                             +{Math.abs(result.improvement_percentage)}%
                           </span>
                           <div className="text-xs sm:text-sm text-muted-foreground">
-                            {result.original_tokens} → {result.optimized_tokens} tokens
-                            <span className={result.optimized_tokens > result.original_tokens ? 'text-blue-600' : 'text-green-600'}>
-                              {' '}({result.optimized_tokens > result.original_tokens ? '+' : ''}{result.optimized_tokens - result.original_tokens})
-                            </span>
+                            {new Date(result.created_at).toLocaleDateString()}
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            {result.iterations} iterations
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge variant="outline" className="text-xs">
+                              a={result.a_parameter}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              b={result.b_parameter}
+                            </Badge>
+                            <Badge variant="secondary" className="text-xs">
+                              {result.iterations} {t('analytics.iterations').toLowerCase()}
+                            </Badge>
                           </div>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {new Date(result.created_at).toLocaleString('en-US')}
-                        </div>
-                        <details className="text-sm">
-                          <summary className="cursor-pointer text-primary hover:underline">
-                            Show prompts
-                          </summary>
-                          <div className="mt-2 space-y-2 max-h-96 overflow-y-auto">
-                            <div className="p-2 bg-muted/50 rounded text-xs">
-                              <div className="font-semibold mb-1">Original:</div>
-                              <div className="break-words whitespace-pre-wrap">{result.original_prompt}</div>
-                            </div>
-                            <div className="p-2 bg-primary/5 rounded text-xs">
-                              <div className="font-semibold mb-1">Optimized:</div>
-                              <div className="break-words whitespace-pre-wrap">{result.optimized_prompt}</div>
-                            </div>
-                            {result.ab_test_winner && (
-                              <div className="p-2 bg-background rounded border border-primary/20">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Trophy className="w-3 h-3 text-yellow-500" />
-                                  <span className="font-semibold text-xs">A/B Test Result:</span>
-                                  <Badge variant={
-                                    result.ab_test_winner === 'optimized' ? 'default' : 
-                                    result.ab_test_winner === 'original' ? 'secondary' : 
-                                    'outline'
-                                  } className="text-xs">
-                                    {result.ab_test_winner === 'optimized' ? 'Optimized' :
-                                     result.ab_test_winner === 'original' ? 'Original' :
-                                     'Tie'}
-                                  </Badge>
-                                </div>
-                                {result.ab_test_notes && (
-                                  <div className="text-xs text-muted-foreground mt-1">
-                                    <span className="font-medium">Notes:</span> {result.ab_test_notes}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </details>
+                        <p className="text-xs sm:text-sm line-clamp-2 text-muted-foreground">
+                          {result.original_prompt}
+                        </p>
                       </div>
-                      <div className="flex sm:flex-col items-start sm:items-end gap-2 w-full sm:w-auto">
-                        {result.ab_test_winner && (
-                          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 text-green-600 text-xs font-semibold">
-                            <Award className="w-3 h-3" />
-                            A/B: {result.ab_test_winner}
-                          </div>
-                        )}
+                      <div className="flex flex-row sm:flex-col gap-2 w-full sm:w-auto">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedIndex(index);
+                            setCarouselOpen(true);
+                          }}
+                          className="gap-2 flex-1 sm:flex-auto"
+                        >
+                          <BarChart3 className="w-4 h-4" />
+                          {!isMobile && t('analytics.viewAnalysis')}
+                        </Button>
                         <ComparisonModal
                           originalPrompt={result.original_prompt}
                           optimizedPrompt={result.optimized_prompt}

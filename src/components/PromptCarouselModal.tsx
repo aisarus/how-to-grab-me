@@ -148,7 +148,7 @@ export function PromptCarouselModal({
                         <Card className="border-2">
                           <CardHeader className="pb-2">
                             <CardTitle className="text-xs text-muted-foreground">
-                              Improvement
+                              {t('carousel.improvement')}
                             </CardTitle>
                           </CardHeader>
                           <CardContent>
@@ -161,7 +161,7 @@ export function PromptCarouselModal({
                         <Card className="border-2">
                           <CardHeader className="pb-2">
                             <CardTitle className="text-xs text-muted-foreground">
-                              Iterations
+                              {t('carousel.iterations')}
                             </CardTitle>
                           </CardHeader>
                           <CardContent>
@@ -172,7 +172,7 @@ export function PromptCarouselModal({
                         <Card className="border-2">
                           <CardHeader className="pb-2">
                             <CardTitle className="text-xs text-muted-foreground">
-                              Tokens Before
+                              {t('carousel.tokensBefore')}
                             </CardTitle>
                           </CardHeader>
                           <CardContent>
@@ -183,7 +183,7 @@ export function PromptCarouselModal({
                         <Card className="border-2">
                           <CardHeader className="pb-2">
                             <CardTitle className="text-xs text-muted-foreground">
-                              Tokens After
+                              {t('carousel.tokensAfter')}
                             </CardTitle>
                           </CardHeader>
                           <CardContent>
@@ -197,15 +197,15 @@ export function PromptCarouselModal({
                       {/* Parameters */}
                       <Card className="border-2">
                         <CardHeader>
-                          <CardTitle className="text-sm">Parameters</CardTitle>
+                          <CardTitle className="text-sm">{t('carousel.parameters')}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
                           <div className="flex justify-between">
-                            <span className="text-sm text-muted-foreground">A Parameter:</span>
+                            <span className="text-sm text-muted-foreground">{t('carousel.aParameter')}</span>
                             <span className="text-sm font-mono">{result.a_parameter}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-sm text-muted-foreground">B Parameter:</span>
+                            <span className="text-sm text-muted-foreground">{t('carousel.bParameter')}</span>
                             <span className="text-sm font-mono">{result.b_parameter}</span>
                           </div>
                         </CardContent>
@@ -278,7 +278,7 @@ export function PromptCarouselModal({
                       {result.ab_test_notes && (
                         <Card className="border-2 border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-800">
                           <CardHeader>
-                            <CardTitle className="text-sm">Заметки A/B теста</CardTitle>
+                            <CardTitle className="text-sm">{t('carousel.abTestNotes')}</CardTitle>
                           </CardHeader>
                           <CardContent>
                             <p className="text-sm leading-relaxed whitespace-pre-wrap">{result.ab_test_notes}</p>
