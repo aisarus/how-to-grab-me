@@ -92,7 +92,7 @@ export const TFMController = () => {
     maxIterations: 10,
     convergenceThreshold: 0.05,
     useEFMNB: true,
-    useProposerCriticVerifier: true,
+    useProposerCriticVerifier: false,
     useArbiter: true,
   });
   const { toast } = useToast();

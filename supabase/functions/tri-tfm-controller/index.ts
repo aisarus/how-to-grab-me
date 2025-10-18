@@ -95,7 +95,7 @@ serve(async (req) => {
       convergenceThreshold: config?.convergenceThreshold ?? 0.05,
       useEFMNB: config?.useEFMNB ?? true,
       eriksonStage: config?.eriksonStage,
-      useProposerCriticVerifier: config?.useProposerCriticVerifier ?? true,
+      useProposerCriticVerifier: config?.useProposerCriticVerifier ?? false,
       useArbiter: config?.useArbiter ?? true,
     };
 
