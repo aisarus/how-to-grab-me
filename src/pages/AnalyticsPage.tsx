@@ -18,6 +18,7 @@ import { UserMenu } from '@/components/UserMenu';
 import { PromptCarouselModal } from '@/components/PromptCarouselModal';
 import { ComparisonModal } from '@/components/ComparisonModal';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface OptimizationResult {
   id: string;
@@ -56,6 +57,7 @@ export default function AnalyticsPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { t } = useLanguage();
 
   const loadResults = async () => {
     try {
@@ -88,8 +90,8 @@ export default function AnalyticsPage() {
     } catch (error) {
       console.error('Error loading results:', error);
       toast({
-        title: "Error",
-        description: "Failed to load analytics data",
+        title: t('common.error'),
+        description: t('analytics.errorLoading'),
         variant: "destructive",
       });
     } finally {
@@ -170,27 +172,27 @@ export default function AnalyticsPage() {
     
     if (displayResults.length === 0) {
       toast({
-        title: "No data",
-        description: "Nothing to export",
+        title: t('analytics.noData'),
+        description: t('analytics.nothingToExport'),
         variant: "destructive",
       });
       return;
     }
 
     const headers = [
-      'Date',
-      'Original Prompt',
-      'Optimized Prompt',
-      'Tokens Before',
-      'Tokens After',
-      'Improvement (%)',
-      'Iterations',
+      t('analytics.date'),
+      t('carousel.originalPrompt'),
+      t('carousel.optimizedPrompt'),
+      t('carousel.tokensBefore'),
+      t('carousel.tokensAfter'),
+      t('analytics.improvement'),
+      t('analytics.iterations'),
       'A/B Winner',
       'A/B Notes'
     ];
 
     const rows = displayResults.map(r => [
-      new Date(r.created_at).toLocaleString('en-US'),
+      new Date(r.created_at).toLocaleString(),
       `"${r.original_prompt.replace(/"/g, '""')}"`,
       `"${r.optimized_prompt.replace(/"/g, '""')}"`,
       r.original_tokens,
@@ -209,8 +211,8 @@ export default function AnalyticsPage() {
     link.click();
 
     toast({
-      title: "Export completed",
-      description: `Exported ${displayResults.length} records`,
+      title: t('analytics.exportCompleted'),
+      description: t('analytics.exportedRecords').replace('{count}', String(displayResults.length)),
     });
   };
 
@@ -219,8 +221,8 @@ export default function AnalyticsPage() {
     
     if (displayResults.length === 0) {
       toast({
-        title: "No data",
-        description: "Nothing to export",
+        title: t('analytics.noData'),
+        description: t('analytics.nothingToExport'),
         variant: "destructive",
       });
       return;
@@ -234,8 +236,8 @@ export default function AnalyticsPage() {
     link.click();
 
     toast({
-      title: "Export completed",
-      description: `Exported ${displayResults.length} records`,
+      title: t('analytics.exportCompleted'),
+      description: t('analytics.exportedRecords').replace('{count}', String(displayResults.length)),
     });
   };
 
@@ -280,18 +282,18 @@ export default function AnalyticsPage() {
                 className="gap-2 flex-shrink-0"
               >
                 <ArrowLeft className="w-4 h-4" />
-                {!isMobile && "Back"}
+                {!isMobile && t('analytics.back')}
               </Button>
               <div className="flex-1 min-w-0">
                 <h1 className={cn(
                   "font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent",
                   isMobile ? "text-lg" : "text-3xl"
                 )}>
-                  {isMobile ? "Analytics" : "Analytics Dashboard"}
+                  {isMobile ? t('analytics.shortTitle') : t('analytics.title')}
                 </h1>
                 {!isMobile && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    TRI/TFM Technology Performance Metrics
+                    {t('analytics.subtitle')}
                   </p>
                 )}
               </div>
@@ -310,13 +312,13 @@ export default function AnalyticsPage() {
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Calendar className="w-4 h-4" />
-                  {dateFrom || dateTo ? 'Filter: active' : 'Select dates'}
+                  {dateFrom || dateTo ? t('analytics.filterActive') : t('analytics.selectDates')}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="end">
                 <div className="p-4 space-y-4">
                   <div>
-                    <Label className="text-xs mb-2 block">From</Label>
+                    <Label className="text-xs mb-2 block">{t('analytics.from')}</Label>
                     <CalendarComponent
                       mode="single"
                       selected={dateFrom}
@@ -325,7 +327,7 @@ export default function AnalyticsPage() {
                     />
                   </div>
                   <div>
-                    <Label className="text-xs mb-2 block">To</Label>
+                    <Label className="text-xs mb-2 block">{t('analytics.to')}</Label>
                     <CalendarComponent
                       mode="single"
                       selected={dateTo}
@@ -343,7 +345,7 @@ export default function AnalyticsPage() {
                       }}
                       className="flex-1"
                     >
-                      Reset
+                      {t('analytics.reset')}
                     </Button>
                   </div>
                 </div>
@@ -353,24 +355,24 @@ export default function AnalyticsPage() {
             {/* Export Buttons */}
             <Button variant="outline" size="sm" onClick={exportToCSV} className="gap-2">
               <Download className="w-4 h-4" />
-              {!isMobile && "CSV"}
+              {!isMobile && t('analytics.exportCSV')}
             </Button>
             <Button variant="outline" size="sm" onClick={exportToJSON} className="gap-2">
               <Download className="w-4 h-4" />
-              {!isMobile && "JSON"}
+              {!isMobile && t('analytics.exportJSON')}
             </Button>
             <Button 
               variant="default" 
               size="sm" 
               onClick={() => {
                 const reportData = {
-                  title: "TRI/TFM - Отчет о качестве промптов",
-                  date: new Date().toLocaleDateString('ru-RU'),
+                  title: "TRI/TFM - " + t('analytics.reportReady'),
+                  date: new Date().toLocaleDateString(),
                   summary: {
                     totalImproved: stats.totalImproved,
                     dateRange: {
-                      from: dateFrom ? format(dateFrom, 'yyyy-MM-dd') : 'Все время',
-                      to: dateTo ? format(dateTo, 'yyyy-MM-dd') : 'Настоящее'
+                      from: dateFrom ? format(dateFrom, 'yyyy-MM-dd') : t('analytics.from'),
+                      to: dateTo ? format(dateTo, 'yyyy-MM-dd') : t('analytics.to')
                     }
                   },
                   kpis: {
@@ -386,9 +388,7 @@ export default function AnalyticsPage() {
                     avgCostPerPrompt: parseFloat(String(stats.avgCostPerPrompt)),
                     avgIterations: parseFloat(String(stats.avgIterations)),
                     totalTokensInvested: stats.totalTokensInvested
-                  },
-                  conclusion: `Итоги: Success Rate ${stats.successRate}%, среднее улучшение качества ${stats.avgQualityImprovement}%, средняя стоимость ${stats.avgCostPerPrompt}¢ за промпт. Всего улучшено ${stats.totalImproved} промптов с инвестицией ${stats.totalTokensInvested.toLocaleString()} токенов.`,
-                  recommendation: stats.totalImproved > 10 ? "Достаточно данных для анализа, качественные улучшения подтверждены" : "Рекомендуется больше данных для полного анализа"
+                  }
                 };
                 
                 const json = JSON.stringify(reportData, null, 2);
@@ -399,14 +399,14 @@ export default function AnalyticsPage() {
                 link.click();
 
                 toast({
-                  title: "Отчет экспортирован",
-                  description: "Отчет о качестве улучшений готов",
+                  title: t('analytics.reportExported'),
+                  description: t('analytics.reportReady'),
                 });
               }}
               className="gap-2 gradient-primary"
             >
               <Download className="w-4 h-4" />
-              {!isMobile && "Отчет"}
+              {!isMobile && t('analytics.exportReport')}
             </Button>
           </div>
         </div>
@@ -418,7 +418,7 @@ export default function AnalyticsPage() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
-            placeholder="Search prompts or notes..."
+            placeholder={t('analytics.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 h-12"
@@ -431,12 +431,12 @@ export default function AnalyticsPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-primary flex items-center gap-2">
                 <Trophy className="w-4 h-4" />
-                Промптов улучшено
+                {t('analytics.promptsImproved')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-primary">{stats.totalImproved}</div>
-              <p className="text-xs text-muted-foreground mt-1">Всего оптимизаций проведено</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('analytics.totalOptimizations')}</p>
             </CardContent>
           </Card>
 
@@ -444,8 +444,14 @@ export default function AnalyticsPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <TrendingUp className="w-4 h-4" />
-                Улучшение качества
+                {t('analytics.qualityImprovement')}
               </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stats.avgQualityImprovement}%</div>
+              <p className="text-xs text-muted-foreground mt-1">{t('analytics.avgQualityGain')}</p>
+            </CardContent>
+          </Card>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{stats.avgQualityImprovement}%</div>

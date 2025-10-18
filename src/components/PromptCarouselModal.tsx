@@ -19,6 +19,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Copy, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface OptimizationResult {
   id: string;
@@ -52,12 +53,13 @@ export function PromptCarouselModal({
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(initialIndex);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const handleCopy = (text: string, type: 'original' | 'optimized') => {
     navigator.clipboard.writeText(text);
     toast({
-      title: type === 'original' ? 'Оригинальный промпт скопирован' : 'Оптимизированный промпт скопирован',
-      description: 'Текст скопирован в буфер обмена',
+      title: type === 'original' ? t('carousel.originalCopied') : t('carousel.optimizedCopied'),
+      description: t('carousel.copiedToClipboard'),
     });
   };
 
@@ -88,12 +90,12 @@ export function PromptCarouselModal({
       <DialogContent className="max-w-7xl h-[92vh] p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4 border-b bg-background/95 backdrop-blur">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl font-bold">
-              Анализ промпта
-              <span className="text-sm text-muted-foreground ml-3 font-normal">
-                {current + 1} / {results.length}
-              </span>
-            </DialogTitle>
+          <DialogTitle className="text-2xl font-bold">
+            {t('carousel.promptAnalysis')}
+            <span className="text-sm text-muted-foreground ml-3 font-normal">
+              {t('carousel.ofTotal').replace('{current}', String(current + 1)).replace('{total}', String(results.length))}
+            </span>
+          </DialogTitle>
             <Button
               variant="ghost"
               size="icon"
@@ -215,11 +217,11 @@ export function PromptCarouselModal({
                           <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
                               <CardTitle className="text-sm font-semibold">
-                                Оригинальный промпт
+                                {t('carousel.originalPrompt')}
                               </CardTitle>
                               <div className="flex items-center gap-2">
                                 <Badge variant="outline" className="text-xs">
-                                  {result.original_tokens} токенов
+                                  {result.original_tokens} {t('carousel.tokens')}
                                 </Badge>
                                 <Button
                                   variant="ghost"
@@ -245,11 +247,11 @@ export function PromptCarouselModal({
                           <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
                               <CardTitle className="text-sm font-semibold text-primary">
-                                Оптимизированный промпт
+                                {t('carousel.optimizedPrompt')}
                               </CardTitle>
                               <div className="flex items-center gap-2">
                                 <Badge variant="default" className="text-xs">
-                                  {result.optimized_tokens} токенов
+                                  {result.optimized_tokens} {t('carousel.tokens')}
                                 </Badge>
                                 <Button
                                   variant="ghost"
