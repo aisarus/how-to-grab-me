@@ -91,7 +91,7 @@ serve(async (req) => {
       b: config?.b ?? 0.35,
       I: config?.I ?? 50,
       R: config?.R ?? 100,
-      maxIterations: config?.maxIterations ?? 4,
+      maxIterations: config?.maxIterations ?? 10,
       convergenceThreshold: config?.convergenceThreshold ?? 0.05,
       useEFMNB: config?.useEFMNB ?? true,
       eriksonStage: config?.eriksonStage,
@@ -156,8 +156,10 @@ serve(async (req) => {
 
       tokenHistory.push(stabilizedTokens);
 
-      // Вычисляем EFMNB scores для текущей итерации
-      const scores = await evaluateEFMNBScores(stabilizedText);
+      // Вычисляем EFMNB scores для текущей итерации (только если включён Arbiter)
+      const scores = tfmConfig.useArbiter 
+        ? await evaluateEFMNBScores(stabilizedText)
+        : { E: 0.7, F: 0.7, M: 0.7, N: 0.5, B: 0.3 };
       
       // Создаём snapshot текущей итерации
       const currSnapshot: IterationSnapshot = {

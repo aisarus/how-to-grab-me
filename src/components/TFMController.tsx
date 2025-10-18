@@ -89,7 +89,7 @@ export const TFMController = () => {
   const [config, setConfig] = useState({
     a: 0.20,
     b: 0.35,
-    maxIterations: 4,
+    maxIterations: 10,
     convergenceThreshold: 0.05,
     useEFMNB: true,
     useProposerCriticVerifier: true,
