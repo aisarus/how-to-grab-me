@@ -312,5 +312,50 @@
     "technical": "Technical",
     "apply": "Apply",
     "all": "All"
+  },
+  "arbiter": {
+    "title": "Arbiter Convergence Analysis",
+    "subtitle": "D↔S cycle control metrics and quality gates",
+    "decision": "Decision",
+    "reason": "Reason",
+    "converged": "Converged",
+    "notConverged": "Not Converged",
+    "action": {
+      "CONTINUE": "Continue",
+      "STOP_ACCEPT": "Stop & Accept",
+      "STOP_BEST": "Stop & Return Best",
+      "ROLLBACK": "Rollback"
+    },
+    "metrics": {
+      "votes": "Convergence Votes",
+      "votesDescription": "{votes} of 5 metrics passed threshold",
+      "convergenceStreak": "Convergence Streak",
+      "convergenceStreakDescription": "Stable for {streak} iterations",
+      "qualityGate": "Quality Gate",
+      "qualityGatePassed": "Passed",
+      "qualityGateFailed": "Failed",
+      "oscillationDetected": "Oscillation Detected",
+      "oscillationYes": "Yes - Applying Damping",
+      "oscillationNo": "No",
+      "semantic": "Semantic Similarity",
+      "lexical": "Lexical Similarity",
+      "lengthChange": "Length Change",
+      "styleChange": "Style Deviation",
+      "efmnDelta": "EFMNB Axes Delta"
+    },
+    "scores": {
+      "title": "EFMNB Quality Scores",
+      "E": "E (Emotion)",
+      "F": "F (Facts)",
+      "M": "M (Meaning)",
+      "N": "N (Nuance)",
+      "B": "B (Brevity)"
+    },
+    "iterationHistory": {
+      "title": "Iteration History",
+      "iteration": "Iteration",
+      "operator": "Operator",
+      "metricsSnapshot": "Metrics Snapshot"
+    }
   }
 }

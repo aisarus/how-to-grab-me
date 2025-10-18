@@ -312,5 +312,50 @@
     "technical": "טכני",
     "apply": "החל",
     "all": "הכל"
+  },
+  "arbiter": {
+    "title": "ניתוח התכנסות הבורר",
+    "subtitle": "מדדי בקרת מחזור D↔S ושערי איכות",
+    "decision": "החלטה",
+    "reason": "סיבה",
+    "converged": "התכנס",
+    "notConverged": "לא התכנס",
+    "action": {
+      "CONTINUE": "המשך",
+      "STOP_ACCEPT": "עצור וקבל",
+      "STOP_BEST": "עצור והחזר הטוב ביותר",
+      "ROLLBACK": "חזור אחורה"
+    },
+    "metrics": {
+      "votes": "הצבעות התכנסות",
+      "votesDescription": "{votes} מתוך 5 מדדים עברו סף",
+      "convergenceStreak": "רצף התכנסות",
+      "convergenceStreakDescription": "יציב במשך {streak} איטרציות",
+      "qualityGate": "שער איכות",
+      "qualityGatePassed": "עבר",
+      "qualityGateFailed": "נכשל",
+      "oscillationDetected": "זוהתה תנודה",
+      "oscillationYes": "כן - מפעיל שיכוך",
+      "oscillationNo": "לא",
+      "semantic": "דמיון סמנטי",
+      "lexical": "דמיון לקסיקלי",
+      "lengthChange": "שינוי אורך",
+      "styleChange": "סטיית סגנון",
+      "efmnDelta": "דלתא צירי EFMNB"
+    },
+    "scores": {
+      "title": "ציוני איכות EFMNB",
+      "E": "E (רגש)",
+      "F": "F (עובדות)",
+      "M": "M (משמעות)",
+      "N": "N (ניואנס)",
+      "B": "B (תמציתיות)"
+    },
+    "iterationHistory": {
+      "title": "היסטוריית איטרציות",
+      "iteration": "איטרציה",
+      "operator": "מפעיל",
+      "metricsSnapshot": "תמונת מדדים"
+    }
   }
 }
