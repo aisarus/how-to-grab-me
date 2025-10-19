@@ -66,8 +66,6 @@
     "advancedSettings": "Расширенные настройки",
     "proposerCriticVerifier": "Предлагатель-Критик-Проверяющий",
     "proposerCriticVerifierDescription": "Автоматически улучшить качество промпта перед обработкой",
-    "arbiter": "Арбитр (Автоматическая остановка)",
-    "arbiterDescription": "Автоматически останавливает цикл D↔S при обнаружении сходимости на основе сходства, гейтов качества и детекции осцилляций",
     "efmnbFraming": "EFMNB структура",
     "efmnbFramingDescription": "Структура D-блока",
     "abTestResults": "Результаты A/B теста: Сравнение EFMNB структуры",
@@ -312,50 +310,5 @@
     "technical": "Технический",
     "apply": "Применить",
     "all": "Все"
-  },
-  "arbiter": {
-    "title": "Анализ сходимости Арбитра",
-    "subtitle": "Метрики контроля цикла D↔S и гейты качества",
-    "decision": "Решение",
-    "reason": "Причина",
-    "converged": "Сошлось",
-    "notConverged": "Не сошлось",
-    "action": {
-      "CONTINUE": "Продолжить",
-      "STOP_ACCEPT": "Остановить и принять",
-      "STOP_BEST": "Остановить и вернуть лучший",
-      "ROLLBACK": "Откат"
-    },
-    "metrics": {
-      "votes": "Голоса сходимости",
-      "votesDescription": "{votes} из 5 метрик прошли порог",
-      "convergenceStreak": "Серия сходимости",
-      "convergenceStreakDescription": "Стабильно {streak} итераций",
-      "qualityGate": "Гейт качества",
-      "qualityGatePassed": "Пройден",
-      "qualityGateFailed": "Провален",
-      "oscillationDetected": "Обнаружена осцилляция",
-      "oscillationYes": "Да - применяется демпфирование",
-      "oscillationNo": "Нет",
-      "semantic": "Семантическое сходство",
-      "lexical": "Лексическое сходство",
-      "lengthChange": "Изменение длины",
-      "styleChange": "Отклонение стиля",
-      "efmnDelta": "Дельта осей EFMNB"
-    },
-    "scores": {
-      "title": "Оценки качества EFMNB",
-      "E": "E (Эмоция)",
-      "F": "F (Факты)",
-      "M": "M (Смысл)",
-      "N": "N (Нюанс)",
-      "B": "B (Краткость)"
-    },
-    "iterationHistory": {
-      "title": "История итераций",
-      "iteration": "Итерация",
-      "operator": "Оператор",
-      "metricsSnapshot": "Снимок метрик"
-    }
   }
 }
