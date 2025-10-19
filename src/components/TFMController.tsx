@@ -89,11 +89,12 @@ export const TFMController = () => {
   const [config, setConfig] = useState({
     a: 0.20,
     b: 0.35,
-    maxIterations: 10,
+    maxIterations: 3,
     convergenceThreshold: 0.05,
-    useEFMNB: true,
-    useProposerCriticVerifier: false,
-    useArbiter: true,
+    useEFMNB: false,
+    useProposerCriticVerifier: true,
+    useArbiter: false,
+    proposerCriticOnly: true,
   });
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -190,6 +191,7 @@ export const TFMController = () => {
             useProposerCriticVerifier: config.useProposerCriticVerifier,
             useEFMNB: config.useEFMNB,
             useArbiter: config.useArbiter,
+            proposerCriticOnly: config.proposerCriticOnly,
             eriksonStage: complexityAnalysis?.eriksonStage,
           }
         }
@@ -303,8 +305,8 @@ export const TFMController = () => {
     }
   };
 
-  const handleLoadConfig = (newConfig: Omit<typeof config, 'useEFMNB' | 'useProposerCriticVerifier' | 'useArbiter'> & { useEFMNB: boolean; useProposerCriticVerifier: boolean; useArbiter: boolean }) => {
-    setConfig(newConfig);
+  const handleLoadConfig = (newConfig: Partial<typeof config>) => {
+    setConfig(prev => ({ ...prev, ...newConfig }));
   };
 
   const runABTest = async () => {

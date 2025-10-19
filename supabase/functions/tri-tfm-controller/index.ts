@@ -28,6 +28,7 @@ interface TFMConfig {
   eriksonStage?: number;
   useProposerCriticVerifier: boolean;
   useArbiter: boolean;
+  proposerCriticOnly: boolean;
 }
 
 interface TFMResponse {
@@ -97,6 +98,7 @@ serve(async (req) => {
       eriksonStage: config?.eriksonStage,
       useProposerCriticVerifier: config?.useProposerCriticVerifier ?? false,
       useArbiter: config?.useArbiter ?? true,
+      proposerCriticOnly: config?.proposerCriticOnly ?? false,
     };
 
     console.log('Starting TRI/TFM controller with config:', tfmConfig);
@@ -122,6 +124,71 @@ serve(async (req) => {
       console.log('Original prompt length:', estimateTokens(prompt));
       console.log('Improved prompt length:', estimateTokens(workingPrompt));
       console.log('Improvements:', improved.improvements);
+    }
+
+    // Proposer–Critic only mode: skip D/S loop and Arbiter entirely
+    if (tfmConfig.proposerCriticOnly) {
+      console.log('\n=== Proposer–Critic only mode ===');
+      let pcCurrent = prompt;
+      const pcTokenHistory: number[] = [estimateTokens(pcCurrent)];
+      let pcIteration = 0;
+      let lastImprovement: { originalPrompt: string; improvedPrompt: string; improvements: string[] } | undefined = undefined;
+      const pcStart = Date.now();
+
+      while (pcIteration < tfmConfig.maxIterations) {
+        pcIteration++;
+        const improved = await improvePrompt(pcCurrent);
+        lastImprovement = improved;
+        if (improved.improvedPrompt && improved.improvedPrompt.trim() !== '' && improved.improvedPrompt !== pcCurrent) {
+          pcCurrent = improved.improvedPrompt;
+          pcTokenHistory.push(estimateTokens(pcCurrent));
+        } else {
+          break;
+        }
+      }
+
+      const initialTokens = estimateTokens(prompt);
+      const finalTokens = estimateTokens(pcCurrent);
+      const percentageSaved = ((initialTokens - finalTokens) / initialTokens) * 100;
+      const ttaSec = (Date.now() - pcStart) / 1000;
+
+      const TOKEN_COST = 0.000002;
+      const costCents = (finalTokens * TOKEN_COST) * 100;
+
+      // Simple variance on PC history
+      const avgTokens = pcTokenHistory.reduce((s, t) => s + t, 0) / pcTokenHistory.length;
+      const variance = pcTokenHistory.reduce((s, t) => s + Math.pow(t - avgTokens, 2), 0) / pcTokenHistory.length;
+      const stdDev = Math.sqrt(variance);
+      const costVarianceCents = (stdDev * TOKEN_COST) * 100;
+
+      const response: TFMResponse = {
+        finalText: pcCurrent,
+        iterations: pcIteration,
+        tokenHistory: pcTokenHistory,
+        converged: pcIteration < tfmConfig.maxIterations, // stopped early due to no further improvement
+        savings: {
+          initialTokens,
+          finalTokens,
+          percentageSaved: Math.round(percentageSaved * 100) / 100,
+        },
+        promptImprovement: lastImprovement,
+        telemetry: {
+          accepted: pcIteration < tfmConfig.maxIterations,
+          accepted_iter: pcIteration < tfmConfig.maxIterations ? pcIteration : null,
+          tta_sec: Math.round(ttaSec * 10) / 10,
+          cost_cents: Math.round(costCents * 100) / 100,
+          cost_variance_cents: Math.round(costVarianceCents * 100) / 100,
+          tokens_breakdown: {
+            orig: initialTokens,
+            refine: finalTokens - initialTokens,
+            final: finalTokens,
+          },
+        },
+      };
+
+      return new Response(JSON.stringify(response), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     let currentText = workingPrompt;
