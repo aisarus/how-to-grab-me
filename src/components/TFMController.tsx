@@ -32,36 +32,6 @@ interface TFMResult {
     improvedPrompt: string;
     improvements: string[];
   };
-  arbiter?: {
-    action: 'CONTINUE' | 'STOP_ACCEPT' | 'STOP_BEST' | 'ROLLBACK';
-    reason: string;
-    converged: boolean;
-    metrics: {
-      votes: number;
-      convergenceStreak: number;
-      qualityGate: boolean;
-      oscillationDetected: boolean;
-    };
-    iterations: Array<{
-      iteration: number;
-      operator: 'D' | 'S';
-      metrics: {
-        sem: number;
-        lex: number;
-        dlen: number;
-        dstyle: number;
-        defmn: number;
-      };
-      scores: {
-        E: number;
-        F: number;
-        M: number;
-        N: number;
-        B: number;
-      };
-    }>;
-    telemetry: Record<string, any>;
-  };
 }
 
 interface ABTestResults {
@@ -93,7 +63,6 @@ export const TFMController = () => {
     convergenceThreshold: 0.05,
     useEFMNB: false,
     useProposerCriticVerifier: true,
-    useArbiter: false,
     proposerCriticOnly: true,
   });
   const { toast } = useToast();
@@ -190,7 +159,6 @@ export const TFMController = () => {
             convergenceThreshold: config.convergenceThreshold,
             useProposerCriticVerifier: config.useProposerCriticVerifier,
             useEFMNB: config.useEFMNB,
-            useArbiter: config.useArbiter,
             proposerCriticOnly: config.proposerCriticOnly,
             eriksonStage: complexityAnalysis?.eriksonStage,
           }
@@ -682,25 +650,6 @@ export const TFMController = () => {
               </div>
             </div>
 
-            {/* Arbiter Toggle */}
-            <div className="p-4 rounded-xl bg-gradient-to-r from-purple-500/10 to-indigo-500/5 border-2 border-purple-500/20">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Gauge className="w-4 h-4 text-purple-600" />
-                    <Label className="font-semibold">{t('tfmController.arbiter')}</Label>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {t('tfmController.arbiterDescription')}
-                  </p>
-                </div>
-                <Switch
-                  checked={config.useArbiter}
-                  onCheckedChange={(checked) => setConfig({ ...config, useArbiter: checked })}
-                />
-              </div>
-            </div>
-
             {/* Parameters Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
@@ -1089,194 +1038,6 @@ export const TFMController = () => {
                 </CardContent>
               </Card>
             </div>
-
-            {/* Arbiter Analysis Section */}
-            {result.arbiter && (
-              <Card className="floating-card border-2 border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-purple-500/10 shadow-lg" style={{ animationDelay: '0.8s' }}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-purple-600 dark:text-purple-400">
-                    <Gauge className="w-5 h-5" />
-                    {t('arbiter.title')}
-                  </CardTitle>
-                  <CardDescription>{t('arbiter.subtitle')}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Decision Banner */}
-                  <div className={`p-4 rounded-xl border-2 ${
-                    result.arbiter.action === 'STOP_ACCEPT' ? 'bg-green-500/10 border-green-500/30' :
-                    result.arbiter.action === 'STOP_BEST' ? 'bg-blue-500/10 border-blue-500/30' :
-                    result.arbiter.action === 'ROLLBACK' ? 'bg-red-500/10 border-red-500/30' :
-                    'bg-yellow-500/10 border-yellow-500/30'
-                  }`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-semibold">{t('arbiter.decision')}:</span>
-                      <span className="px-3 py-1 rounded-full text-sm font-bold bg-background/50">
-                        {t(`arbiter.action.${result.arbiter.action}`)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{result.arbiter.reason}</p>
-                  </div>
-
-                  {/* Convergence Metrics */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {/* Votes */}
-                    <div className="p-4 rounded-lg bg-background/50 border">
-                      <div className="flex items-center justify-between mb-2">
-                        <Target className="w-4 h-4 text-purple-500" />
-                        <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                          {result.arbiter.metrics.votes}/5
-                        </span>
-                      </div>
-                      <p className="text-xs font-medium">{t('arbiter.metrics.votes')}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t('arbiter.metrics.votesDescription').replace('{votes}', result.arbiter.metrics.votes.toString())}
-                      </p>
-                    </div>
-
-                    {/* Convergence Streak */}
-                    <div className="p-4 rounded-lg bg-background/50 border">
-                      <div className="flex items-center justify-between mb-2">
-                        <CheckCircle2 className="w-4 h-4 text-green-500" />
-                        <span className="text-2xl font-bold text-green-600 dark:text-green-400">
-                          {result.arbiter.metrics.convergenceStreak}
-                        </span>
-                      </div>
-                      <p className="text-xs font-medium">{t('arbiter.metrics.convergenceStreak')}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t('arbiter.metrics.convergenceStreakDescription').replace('{streak}', result.arbiter.metrics.convergenceStreak.toString())}
-                      </p>
-                    </div>
-
-                    {/* Quality Gate */}
-                    <div className={`p-4 rounded-lg border ${
-                      result.arbiter.metrics.qualityGate 
-                        ? 'bg-green-500/10 border-green-500/30' 
-                        : 'bg-red-500/10 border-red-500/30'
-                    }`}>
-                      <div className="flex items-center justify-between mb-2">
-                        {result.arbiter.metrics.qualityGate ? (
-                          <CheckCircle2 className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <AlertTriangle className="w-4 h-4 text-red-600" />
-                        )}
-                        <span className={`text-sm font-bold ${
-                          result.arbiter.metrics.qualityGate ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {result.arbiter.metrics.qualityGate 
-                            ? t('arbiter.metrics.qualityGatePassed')
-                            : t('arbiter.metrics.qualityGateFailed')}
-                        </span>
-                      </div>
-                      <p className="text-xs font-medium">{t('arbiter.metrics.qualityGate')}</p>
-                    </div>
-
-                    {/* Oscillation Detection */}
-                    <div className={`p-4 rounded-lg border ${
-                      result.arbiter.metrics.oscillationDetected 
-                        ? 'bg-amber-500/10 border-amber-500/30' 
-                        : 'bg-green-500/10 border-green-500/30'
-                    }`}>
-                      <div className="flex items-center justify-between mb-2">
-                        {result.arbiter.metrics.oscillationDetected ? (
-                          <AlertTriangle className="w-4 h-4 text-amber-600" />
-                        ) : (
-                          <CheckCircle2 className="w-4 h-4 text-green-600" />
-                        )}
-                        <span className={`text-sm font-bold ${
-                          result.arbiter.metrics.oscillationDetected ? 'text-amber-600' : 'text-green-600'
-                        }`}>
-                          {result.arbiter.metrics.oscillationDetected 
-                            ? t('arbiter.metrics.oscillationYes')
-                            : t('arbiter.metrics.oscillationNo')}
-                        </span>
-                      </div>
-                      <p className="text-xs font-medium">{t('arbiter.metrics.oscillationDetected')}</p>
-                    </div>
-                  </div>
-
-                  {/* Detailed Metrics from Last Iteration */}
-                  {result.arbiter.iterations && result.arbiter.iterations.length > 0 && (
-                    <div className="space-y-4">
-                      <h4 className="text-sm font-semibold">{t('arbiter.iterationHistory.metricsSnapshot')}</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                        {(() => {
-                          const lastIter = result.arbiter.iterations[result.arbiter.iterations.length - 1];
-                          return (
-                            <>
-                              <div className="p-3 rounded-lg bg-background/50 border">
-                                <p className="text-xs text-muted-foreground mb-1">{t('arbiter.metrics.semantic')}</p>
-                                <p className="text-lg font-bold">{(lastIter.metrics.sem * 100).toFixed(1)}%</p>
-                              </div>
-                              <div className="p-3 rounded-lg bg-background/50 border">
-                                <p className="text-xs text-muted-foreground mb-1">{t('arbiter.metrics.lexical')}</p>
-                                <p className="text-lg font-bold">{(lastIter.metrics.lex * 100).toFixed(1)}%</p>
-                              </div>
-                              <div className="p-3 rounded-lg bg-background/50 border">
-                                <p className="text-xs text-muted-foreground mb-1">{t('arbiter.metrics.lengthChange')}</p>
-                                <p className="text-lg font-bold">{(lastIter.metrics.dlen * 100).toFixed(1)}%</p>
-                              </div>
-                              <div className="p-3 rounded-lg bg-background/50 border">
-                                <p className="text-xs text-muted-foreground mb-1">{t('arbiter.metrics.styleChange')}</p>
-                                <p className="text-lg font-bold">{(lastIter.metrics.dstyle * 100).toFixed(1)}%</p>
-                              </div>
-                              <div className="p-3 rounded-lg bg-background/50 border">
-                                <p className="text-xs text-muted-foreground mb-1">{t('arbiter.metrics.efmnDelta')}</p>
-                                <p className="text-lg font-bold">{(lastIter.metrics.defmn * 100).toFixed(1)}%</p>
-                              </div>
-                            </>
-                          );
-                        })()}
-                      </div>
-
-                      {/* EFMNB Scores */}
-                      <div className="pt-4 border-t">
-                        <h4 className="text-sm font-semibold mb-3">{t('arbiter.scores.title')}</h4>
-                        <div className="grid grid-cols-5 gap-3">
-                          {(() => {
-                            const lastIter = result.arbiter.iterations[result.arbiter.iterations.length - 1];
-                            const scores = [
-                              { key: 'E', value: lastIter.scores.E, color: 'text-purple-600' },
-                              { key: 'F', value: lastIter.scores.F, color: 'text-blue-600' },
-                              { key: 'M', value: lastIter.scores.M, color: 'text-green-600' },
-                              { key: 'N', value: lastIter.scores.N, color: 'text-yellow-600' },
-                              { key: 'B', value: lastIter.scores.B, color: 'text-red-600' },
-                            ];
-                            return scores.map((score) => (
-                              <div key={score.key} className="text-center p-3 rounded-lg bg-background/50 border">
-                                <p className="text-xs text-muted-foreground mb-1">{t(`arbiter.scores.${score.key}`)}</p>
-                                <p className={`text-2xl font-bold ${score.color}`}>{score.value.toFixed(2)}</p>
-                              </div>
-                            ));
-                          })()}
-                        </div>
-                      </div>
-
-                      {/* Iteration Timeline */}
-                      <div className="pt-4 border-t">
-                        <h4 className="text-sm font-semibold mb-3">{t('arbiter.iterationHistory.title')}</h4>
-                        <div className="space-y-2 max-h-48 overflow-y-auto">
-                          {result.arbiter.iterations.map((iter, idx) => (
-                            <div key={idx} className="flex items-center gap-3 p-2 rounded-lg bg-background/50 border text-xs">
-                              <span className="font-mono font-bold w-12">{iter.iteration}</span>
-                              <span className={`px-2 py-1 rounded font-bold ${
-                                iter.operator === 'D' ? 'bg-primary/20 text-primary' : 'bg-secondary/20 text-secondary'
-                              }`}>
-                                {iter.operator}
-                              </span>
-                              <div className="flex-1 flex gap-2 text-muted-foreground">
-                                <span>sem: {(iter.metrics.sem * 100).toFixed(0)}%</span>
-                                <span>lex: {(iter.metrics.lex * 100).toFixed(0)}%</span>
-                                <span>Δlen: {(iter.metrics.dlen * 100).toFixed(0)}%</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
 
             {/* Quality Analysis */}
             {result.promptImprovement && (

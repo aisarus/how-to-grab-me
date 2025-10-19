@@ -1,13 +1,5 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { 
-  arbiter, 
-  getDefaultConfig, 
-  initArbiterState,
-  type ArbiterConfig,
-  type ArbiterState,
-  type IterationSnapshot 
-} from './arbiter.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,7 +19,6 @@ interface TFMConfig {
   useEFMNB: boolean;
   eriksonStage?: number;
   useProposerCriticVerifier: boolean;
-  useArbiter: boolean;
   proposerCriticOnly: boolean;
 }
 
@@ -56,13 +47,6 @@ interface TFMResponse {
       orig: number;
       refine: number;
       final: number;
-    };
-    arbiter?: {
-      convergenceStreak: number;
-      oscillationCount: number;
-      bestIteration: number;
-      bestScore: number;
-      iterations: any[];
     };
   };
 }
@@ -97,21 +81,10 @@ serve(async (req) => {
       useEFMNB: config?.useEFMNB ?? true,
       eriksonStage: config?.eriksonStage,
       useProposerCriticVerifier: config?.useProposerCriticVerifier ?? false,
-      useArbiter: config?.useArbiter ?? true,
       proposerCriticOnly: config?.proposerCriticOnly ?? false,
     };
 
     console.log('Starting TRI/TFM controller with config:', tfmConfig);
-    
-    // Initialize Arbiter state for automatic convergence detection
-    // Arbiter = cycle governor that determines when D↔S iterations have reached
-    // optimal convergence and further changes no longer improve quality
-    const arbiterMode = tfmConfig.eriksonStage && tfmConfig.eriksonStage <= 4 ? 'creative' : 'tech';
-    const arbiterConfig = getDefaultConfig(arbiterMode);
-    arbiterConfig.budget.maxIterations = tfmConfig.maxIterations;
-    const arbiterState = initArbiterState();
-    
-    console.log('Arbiter initialized:', { mode: arbiterMode, config: arbiterConfig });
 
     let promptImprovement = undefined;
     let workingPrompt = prompt;
@@ -203,9 +176,6 @@ serve(async (req) => {
     const originalTokens = estimateTokens(prompt);
     const refineTokens = promptImprovement ? estimateTokens(workingPrompt) - originalTokens : 0;
 
-    let prevSnapshot: IterationSnapshot | null = null;
-    const arbiterTelemetry: any[] = [];
-
     while (iteration < tfmConfig.maxIterations) {
       iteration++;
       console.log(`\n=== Iteration ${iteration} ===`);
@@ -223,90 +193,21 @@ serve(async (req) => {
 
       tokenHistory.push(stabilizedTokens);
 
-      // Вычисляем EFMNB scores для текущей итерации (только если включён Arbiter)
-      const scores = tfmConfig.useArbiter 
-        ? await evaluateEFMNBScores(stabilizedText)
-        : { E: 0.7, F: 0.7, M: 0.7, N: 0.5, B: 0.3 };
+      // Classic convergence logic
+      const tokenDiff = Math.abs(stabilizedTokens - currentTokens);
+      const changeRate = tokenDiff / currentTokens;
+
+      console.log(`Iteration ${iteration}: ${currentTokens} → ${stabilizedTokens} tokens (${(changeRate * 100).toFixed(2)}% change)`);
       
-      // Создаём snapshot текущей итерации
-      const currSnapshot: IterationSnapshot = {
-        iteration,
-        text: stabilizedText,
-        metrics: {
-          sem: 0,
-          lex: 0,
-          dlen: 0,
-          dstyle: 0,
-          defmn: 0,
-        },
-        scores,
-        operator: 'S', // последний оператор в цикле D→S
-        tokensUsed: stabilizedTokens,
-      };
+      currentText = stabilizedText;
+      currentTokens = stabilizedTokens;
 
-      // Check if Arbiter is enabled
-      if (tfmConfig.useArbiter) {
-        // Вызываем Arbiter для принятия решения
-        console.log('Consulting Arbiter...');
-        const decision = await arbiter(
-          prevSnapshot,
-          currSnapshot,
-          arbiterState,
-          arbiterConfig,
-          LOVABLE_API_KEY!
-        );
-
-        console.log(`Arbiter decision: ${decision.action}`);
-        console.log(`Reason: ${decision.reason}`);
-        console.log(`Metrics - Votes: ${decision.metrics.votes}, Streak: ${decision.metrics.convergenceStreak}, Quality Gate: ${decision.metrics.qualityGate}`);
-
-        arbiterTelemetry.push(decision.telemetry);
-
-        // Действуем на основе решения Arbiter
-        if (decision.action === 'STOP_ACCEPT') {
-          console.log('Arbiter: Convergence achieved!');
-          converged = true;
-          acceptedIteration = iteration;
-          currentText = decision.text;
-          currentTokens = estimateTokens(currentText);
-          break;
-        } else if (decision.action === 'STOP_BEST') {
-          console.log('Arbiter: Stopping with best candidate');
-          converged = false;
-          acceptedIteration = arbiterState.bestCandidate.iteration;
-          currentText = decision.text;
-          currentTokens = estimateTokens(currentText);
-          break;
-        } else if (decision.action === 'ROLLBACK') {
-          console.log('Arbiter: Rolling back to best candidate');
-          currentText = decision.text;
-          currentTokens = estimateTokens(currentText);
-          // Продолжаем с лучшего кандидата
-          continue;
-        } else {
-          // CONTINUE
-          currentText = stabilizedText;
-          currentTokens = stabilizedTokens;
-          prevSnapshot = currSnapshot;
-        }
-      } else {
-        // Arbiter disabled - use classic convergence logic
-        const tokenDiff = Math.abs(stabilizedTokens - currentTokens);
-        const changeRate = tokenDiff / currentTokens;
-
-        console.log(`Iteration ${iteration}: ${currentTokens} → ${stabilizedTokens} tokens (${(changeRate * 100).toFixed(2)}% change)`);
-        
-        currentText = stabilizedText;
-        currentTokens = stabilizedTokens;
-        prevSnapshot = currSnapshot;
-
-        // Check classic convergence
-        if (changeRate < tfmConfig.convergenceThreshold) {
-          console.log('Classic convergence achieved!');
-          converged = true;
-          acceptedIteration = iteration;
-          break;
-        }
+      // Check classic convergence
+      if (changeRate < tfmConfig.convergenceThreshold) {
+        console.log('Classic convergence achieved!');
+        converged = true;
+        acceptedIteration = iteration;
+        break;
       }
     }
 
@@ -348,13 +249,6 @@ serve(async (req) => {
           refine: refineTokens,
           final: finalTokens,
         },
-        arbiter: {
-          convergenceStreak: arbiterState.convergenceStreak,
-          oscillationCount: arbiterState.oscillationCount,
-          bestIteration: arbiterState.bestCandidate.iteration,
-          bestScore: arbiterState.bestCandidate.score,
-          iterations: arbiterTelemetry,
-        },
       },
     };
 
@@ -364,8 +258,6 @@ serve(async (req) => {
     console.log(`Final tokens: ${finalTokens}`);
     console.log(`Savings: ${percentageSaved.toFixed(2)}%`);
     console.log(`Converged: ${converged}`);
-    console.log(`Arbiter best iteration: ${arbiterState.bestCandidate.iteration}`);
-    console.log(`Arbiter convergence streak: ${arbiterState.convergenceStreak}`);
 
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
