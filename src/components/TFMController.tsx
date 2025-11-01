@@ -960,7 +960,7 @@ export const TFMController = () => {
             <div className="flex gap-2 justify-end">
               <ComparisonModal
                 originalPrompt={result.promptImprovement?.originalPrompt || prompt}
-                optimizedPrompt={result.promptImprovement?.improvedPrompt || result.finalText}
+                optimizedPrompt={result.finalText}
                 originalTokens={result.savings.initialTokens}
                 optimizedTokens={result.savings.finalTokens}
                 improvementPercentage={result.savings.percentageSaved}
