@@ -930,7 +930,7 @@ export const TFMController = () => {
                     <div className="space-y-2">
                       <Label className="text-xs font-medium text-muted-foreground">Original</Label>
                       <div className="p-3 bg-background/50 rounded-lg text-sm max-h-32 overflow-y-auto border">
-                        {result.promptImprovement.originalPrompt}
+                        {prompt}
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -959,7 +959,7 @@ export const TFMController = () => {
             {/* Action Buttons */}
             <div className="flex gap-2 justify-end">
               <ComparisonModal
-                originalPrompt={result.promptImprovement?.originalPrompt || prompt}
+                originalPrompt={prompt}
                 optimizedPrompt={result.finalText}
                 originalTokens={result.savings.initialTokens}
                 optimizedTokens={result.savings.finalTokens}
@@ -1108,7 +1108,7 @@ export const TFMController = () => {
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold">Original Prompt</Label>
                     <div className="p-3 bg-background rounded-lg border max-h-48 overflow-y-auto text-sm">
-                      {result.promptImprovement?.originalPrompt || prompt}
+                      {prompt}
                     </div>
                     <Button
                       variant={abTestWinner === 'original' ? 'default' : 'outline'}
