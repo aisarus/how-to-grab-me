@@ -130,6 +130,7 @@ export default function AnalyticsPage() {
       avgCostPerPrompt: 0,
       successRate: 0,
       avgIterations: 0,
+      needsRecalculation: false,
     };
 
     // Количество улучшенных промптов
@@ -140,6 +141,8 @@ export default function AnalyticsPage() {
       .filter(r => r.quality_improvement_score !== null && r.quality_improvement_score !== undefined)
       .map(r => r.quality_improvement_score!)
       .sort((a, b) => a - b);
+    
+    const needsRecalculation = qualityScores.length === 0 && filteredResults.length > 0;
     
     let medianQualityImprovement = 0;
     if (qualityScores.length > 0) {
@@ -184,6 +187,7 @@ export default function AnalyticsPage() {
       avgCostPerPrompt: avgCostPerPrompt.toFixed(2),
       successRate: successRate.toFixed(1),
       avgIterations: avgIterations.toFixed(1),
+      needsRecalculation,
     };
   };
 
@@ -328,7 +332,55 @@ export default function AnalyticsPage() {
                 )}
               </div>
             </div>
-            <UserMenu />
+            <div className="flex items-center gap-2">
+              <Button 
+                variant={stats.needsRecalculation ? "default" : "outline"}
+                size="sm"
+                disabled={isRecalculating}
+                onClick={async () => {
+                  try {
+                    setIsRecalculating(true);
+                    toast({
+                      title: t('analytics.recalculating'),
+                      description: t('analytics.recalculating'),
+                    });
+
+                    const { data, error } = await supabase.functions.invoke('recalculate-quality-metrics', {
+                      body: {}
+                    });
+
+                    if (error) throw error;
+
+                    toast({
+                      title: t('analytics.recalculationComplete'),
+                      description: t('analytics.processedResults')
+                        .replace('{processed}', data.processed)
+                        .replace('{errors}', data.errors),
+                    });
+
+                    loadResults();
+                  } catch (error) {
+                    console.error('Recalculation error:', error);
+                    toast({
+                      title: t('common.error'),
+                      description: error instanceof Error ? error.message : "Failed to recalculate metrics",
+                      variant: "destructive",
+                    });
+                  } finally {
+                    setIsRecalculating(false);
+                  }
+                }}
+                className="gap-2"
+              >
+                {isRecalculating ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <TrendingUp className="w-4 h-4" />
+                )}
+                {!isMobile && (isRecalculating ? '...' : t('analytics.recalculateMetrics'))}
+              </Button>
+              <UserMenu />
+            </div>
           </div>
         </div>
       </div>
@@ -390,58 +442,6 @@ export default function AnalyticsPage() {
             <Button variant="outline" size="sm" onClick={exportToJSON} className="gap-2">
               <Download className="w-4 h-4" />
               {!isMobile && t('analytics.exportJSON')}
-            </Button>
-            <Button 
-              variant="outline"
-              size="sm"
-              disabled={isRecalculating}
-              onClick={async () => {
-                try {
-                  setIsRecalculating(true);
-                  toast({
-                    title: t('analytics.recalculating'),
-                    description: t('analytics.recalculating'),
-                  });
-
-                  const { data, error } = await supabase.functions.invoke('recalculate-quality-metrics', {
-                    body: {}
-                  });
-
-                  if (error) throw error;
-
-                  toast({
-                    title: t('analytics.recalculationComplete'),
-                    description: t('analytics.processedResults')
-                      .replace('{processed}', data.processed)
-                      .replace('{errors}', data.errors),
-                  });
-
-                  // Reload results
-                  loadResults();
-                } catch (error) {
-                  console.error('Recalculation error:', error);
-                  toast({
-                    title: t('common.error'),
-                    description: error instanceof Error ? error.message : "Failed to recalculate metrics",
-                    variant: "destructive",
-                  });
-                } finally {
-                  setIsRecalculating(false);
-                }
-              }}
-              className="gap-2"
-            >
-              {isRecalculating ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  {!isMobile && "..."}
-                </>
-              ) : (
-                <>
-                  <TrendingUp className="w-4 h-4" />
-                  {!isMobile && t('analytics.recalculateMetrics')}
-                </>
-              )}
             </Button>
             <Button
               variant="default" 
