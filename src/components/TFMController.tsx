@@ -215,7 +215,7 @@ export const TFMController = () => {
           new_quality_score: data.qualityMetrics.newScore,
           compression_percentage: data.qualityMetrics.compression,
           quality_gain_percentage: data.qualityMetrics.qualityGain,
-          quality_improvement_score: data.qualityMetrics.qualityImprovement,
+          reasoning_gain_index: data.qualityMetrics.qualityImprovement,
         })
         .select()
         .single();

@@ -15,7 +15,7 @@ interface OptimizationResult {
   new_quality_score?: number | null;
   compression_percentage?: number | null;
   quality_gain_percentage?: number | null;
-  quality_improvement_score?: number | null;
+  reasoning_gain_index?: number | null;
 }
 
 interface AnalyticsChartsProps {
@@ -31,7 +31,7 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
     .reverse()
     .map((r, idx) => ({
       index: idx + 1,
-      qualityImprovement: r.quality_improvement_score ?? Math.abs(r.improvement_percentage),
+      rgi: r.reasoning_gain_index ?? Math.abs(r.improvement_percentage),
       qualityGain: r.quality_gain_percentage ?? 0,
       compression: r.compression_percentage ?? (100 * (1 - r.optimized_tokens / r.original_tokens)),
       costPerPrompt: parseFloat((r.optimized_tokens * TOKEN_COST * 100).toFixed(2)),
@@ -41,20 +41,20 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
 
   // Prepare data for quality metrics distribution
   const metricsDistribution = [
-    { category: 'Positive QI (>0)', count: 0, color: 'hsl(142, 76%, 36%)' },
-    { category: 'Negative QI (<0)', count: 0, color: 'hsl(0, 84%, 60%)' },
+    { category: 'Positive RGI (>0)', count: 0, color: 'hsl(142, 76%, 36%)' },
+    { category: 'Negative RGI (<0)', count: 0, color: 'hsl(0, 84%, 60%)' },
     { category: 'Quality Gain+', count: 0, color: 'hsl(var(--primary))' },
     { category: 'Compression+', count: 0, color: 'hsl(262, 83%, 58%)' },
   ];
 
   // Categorize based on new metrics
   results.forEach((r) => {
-    const qi = r.quality_improvement_score ?? 0;
+    const rgi = r.reasoning_gain_index ?? 0;
     const qg = r.quality_gain_percentage ?? 0;
     const comp = r.compression_percentage ?? 0;
     
-    if (qi > 0) metricsDistribution[0].count++;
-    if (qi < 0) metricsDistribution[1].count++;
+    if (rgi > 0) metricsDistribution[0].count++;
+    if (rgi < 0) metricsDistribution[1].count++;
     if (qg > 0) metricsDistribution[2].count++;
     if (comp > 0) metricsDistribution[3].count++;
   });
@@ -112,10 +112,10 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
               <Legend />
               <Line 
                 type="monotone" 
-                dataKey="qualityImprovement" 
+                dataKey="rgi" 
                 stroke="hsl(var(--primary))" 
                 strokeWidth={3}
-                name="Quality Improvement"
+                name="Reasoning Gain Index"
                 dot={{ fill: 'hsl(var(--primary))', r: 5 }}
               />
               <Line 
@@ -138,7 +138,7 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
             </LineChart>
           </ResponsiveContainer>
           <p className="text-xs text-muted-foreground mt-2">
-            QI = 0.6×Quality Gain + 0.4×Compression (EFMNB оценка + сжатие токенов)
+            RGI = (NewScore - OldScore) / max((FinalTokens - InitialTokens), ε) — прирост качества на 1 токен
           </p>
         </CardContent>
       </Card>
@@ -178,7 +178,7 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
             </PieChart>
           </ResponsiveContainer>
           <p className="text-xs text-muted-foreground mt-2">
-            Positive QI: улучшение качества, Quality Gain+: рост EFMNB балла, Compression+: сжатие токенов
+            Positive RGI: эффективное улучшение на токен, Quality Gain+: рост EFMNB балла, Compression+: сжатие токенов
           </p>
         </CardContent>
       </Card>

@@ -75,14 +75,18 @@ function calculateQualityMetrics(
   
   const compression = 100 * (1 - finalTokens / initialTokens);
   const qualityGain = 100 * (newScore - oldScore) / Math.max(oldScore, epsilon);
-  const qualityImprovement = 0.6 * qualityGain + 0.4 * compression;
+  
+  // Reasoning Gain Index (RGI): (NewScore - OldScore) / max((FinalTokens - InitialTokens), ε)
+  // Measures quality improvement per additional token
+  const tokenDelta = Math.max(finalTokens - initialTokens, epsilon);
+  const reasoningGainIndex = (newScore - oldScore) / tokenDelta;
   
   const clamp = (val: number) => Math.max(-100, Math.min(100, val));
   
   return {
     compression: Math.round(clamp(compression) * 100) / 100,
     qualityGain: Math.round(clamp(qualityGain) * 100) / 100,
-    qualityImprovement: Math.round(clamp(qualityImprovement) * 100) / 100,
+    qualityImprovement: Math.round(reasoningGainIndex * 100) / 100, // Now using RGI formula
   };
 }
 
@@ -102,7 +106,7 @@ serve(async (req) => {
     const { data: results, error: fetchError } = await supabase
       .from('optimization_results')
       .select('*')
-      .or('old_quality_score.is.null,new_quality_score.is.null,quality_improvement_score.is.null')
+      .or('old_quality_score.is.null,new_quality_score.is.null,reasoning_gain_index.is.null')
       .order('created_at', { ascending: false })
       .limit(100); // Process 100 at a time
 
@@ -149,7 +153,7 @@ serve(async (req) => {
             new_quality_score: newScore,
             compression_percentage: metrics.compression,
             quality_gain_percentage: metrics.qualityGain,
-            quality_improvement_score: metrics.qualityImprovement,
+            reasoning_gain_index: metrics.qualityImprovement,
           })
           .eq('id', result.id);
 
@@ -158,7 +162,7 @@ serve(async (req) => {
           errors++;
         } else {
           processed++;
-          console.log(`✓ Updated result ${result.id} (QI: ${metrics.qualityImprovement}%)`);
+          console.log(`✓ Updated result ${result.id} (RGI: ${metrics.qualityImprovement}%)`);
         }
 
         // Small delay to avoid rate limits

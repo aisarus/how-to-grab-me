@@ -80,7 +80,7 @@ export type Database = {
           original_prompt: string
           original_tokens: number | null
           quality_gain_percentage: number | null
-          quality_improvement_score: number | null
+          reasoning_gain_index: number | null
           tokens_breakdown: Json | null
           tta_sec: number | null
           user_id: string
@@ -108,7 +108,7 @@ export type Database = {
           original_prompt: string
           original_tokens?: number | null
           quality_gain_percentage?: number | null
-          quality_improvement_score?: number | null
+          reasoning_gain_index?: number | null
           tokens_breakdown?: Json | null
           tta_sec?: number | null
           user_id: string
@@ -136,7 +136,7 @@ export type Database = {
           original_prompt?: string
           original_tokens?: number | null
           quality_gain_percentage?: number | null
-          quality_improvement_score?: number | null
+          reasoning_gain_index?: number | null
           tokens_breakdown?: Json | null
           tta_sec?: number | null
           user_id?: string

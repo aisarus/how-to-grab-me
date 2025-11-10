@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { AnalyticsCharts } from '@/components/AnalyticsCharts';
+import { QualityVsTokensChart } from '@/components/QualityVsTokensChart';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
@@ -48,7 +49,7 @@ interface OptimizationResult {
   new_quality_score?: number | null;
   compression_percentage?: number | null;
   quality_gain_percentage?: number | null;
-  quality_improvement_score?: number | null;
+  reasoning_gain_index?: number | null;
 }
 
 export default function AnalyticsPage() {
@@ -136,23 +137,23 @@ export default function AnalyticsPage() {
     // Количество улучшенных промптов
     const totalImproved = filteredResults.length;
     
-    // Медиана Quality Improvement Score (новая метрика)
-    const qualityScores = filteredResults
-      .filter(r => r.quality_improvement_score !== null && r.quality_improvement_score !== undefined)
-      .map(r => r.quality_improvement_score!)
+    // Медиана Reasoning Gain Index (новая метрика)
+    const rgiScores = filteredResults
+      .filter(r => r.reasoning_gain_index !== null && r.reasoning_gain_index !== undefined)
+      .map(r => r.reasoning_gain_index!)
       .sort((a, b) => a - b);
     
-    const needsRecalculation = qualityScores.length === 0 && filteredResults.length > 0;
+    const needsRecalculation = rgiScores.length === 0 && filteredResults.length > 0;
     
-    let medianQualityImprovement = 0;
-    if (qualityScores.length > 0) {
-      const mid = Math.floor(qualityScores.length / 2);
-      medianQualityImprovement = qualityScores.length % 2 === 0
-        ? (qualityScores[mid - 1] + qualityScores[mid]) / 2
-        : qualityScores[mid];
+    let medianRGI = 0;
+    if (rgiScores.length > 0) {
+      const mid = Math.floor(rgiScores.length / 2);
+      medianRGI = rgiScores.length % 2 === 0
+        ? (rgiScores[mid - 1] + rgiScores[mid]) / 2
+        : rgiScores[mid];
     } else {
       // Fallback to old calculation if new metrics not available
-      medianQualityImprovement = filteredResults.reduce((sum, r) => {
+      medianRGI = filteredResults.reduce((sum, r) => {
         return sum + Math.abs(r.improvement_percentage);
       }, 0) / filteredResults.length;
     }
@@ -182,7 +183,7 @@ export default function AnalyticsPage() {
 
     return {
       totalImproved: totalImproved,
-      avgQualityImprovement: medianQualityImprovement.toFixed(1),
+      avgQualityImprovement: medianRGI.toFixed(1),
       totalTokensInvested: totalTokensInvested,
       avgCostPerPrompt: avgCostPerPrompt.toFixed(2),
       successRate: successRate.toFixed(1),
@@ -210,7 +211,7 @@ export default function AnalyticsPage() {
       t('carousel.tokensBefore'),
       t('carousel.tokensAfter'),
       t('analytics.improvement'),
-      'Quality Improvement',
+      'Quality Improvement (RGI)',
       'Quality Gain',
       'Compression',
       'Old Score',
@@ -227,7 +228,7 @@ export default function AnalyticsPage() {
       r.original_tokens,
       r.optimized_tokens,
       r.improvement_percentage.toFixed(2),
-      r.quality_improvement_score?.toFixed(2) ?? 'N/A',
+      r.reasoning_gain_index?.toFixed(2) ?? 'N/A',
       r.quality_gain_percentage?.toFixed(2) ?? 'N/A',
       r.compression_percentage?.toFixed(2) ?? 'N/A',
       r.old_quality_score?.toFixed(2) ?? 'N/A',
@@ -591,6 +592,9 @@ export default function AnalyticsPage() {
 
         {/* Analytics Charts */}
         <AnalyticsCharts results={displayResults} />
+        
+        {/* Quality vs Tokens Chart */}
+        <QualityVsTokensChart results={displayResults} />
 
         {/* Recent Optimizations */}
         <Card className="floating-card border-2 shadow-lg" style={{ animationDelay: '0.6s' }}>
@@ -627,10 +631,10 @@ export default function AnalyticsPage() {
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                           <div className="flex items-center gap-2 flex-wrap">
-                            {result.quality_improvement_score !== null && result.quality_improvement_score !== undefined ? (
+                            {result.reasoning_gain_index !== null && result.reasoning_gain_index !== undefined ? (
                               <>
-                                <span className={`text-xl sm:text-2xl font-bold ${result.quality_improvement_score >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                                  {result.quality_improvement_score > 0 ? '+' : ''}{result.quality_improvement_score.toFixed(1)}%
+                                <span className={`text-xl sm:text-2xl font-bold ${result.reasoning_gain_index >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                                  {result.reasoning_gain_index > 0 ? '+' : ''}{result.reasoning_gain_index.toFixed(1)}%
                                 </span>
                                 <Badge variant="outline" className="text-xs">
                                   QG: {result.quality_gain_percentage?.toFixed(1) ?? 'N/A'}%

@@ -373,8 +373,10 @@ function calculateQualityMetrics(
   // QualityGain: 100 * (NewScore - OldScore) / max(OldScore, ε)
   const qualityGain = 100 * (newScore - oldScore) / Math.max(oldScore, epsilon);
   
-  // QualityImprovement: 0.6 * QualityGain + 0.4 * Compression
-  const qualityImprovement = 0.6 * qualityGain + 0.4 * compression;
+  // Reasoning Gain Index (RGI): (NewScore - OldScore) / max((FinalTokens - InitialTokens), ε)
+  // Measures quality improvement per additional token
+  const tokenDelta = Math.max(finalTokens - initialTokens, epsilon);
+  const reasoningGainIndex = (newScore - oldScore) / tokenDelta;
   
   // Clamp all values to [-100, +100]
   const clamp = (val: number) => Math.max(-100, Math.min(100, val));
@@ -384,7 +386,7 @@ function calculateQualityMetrics(
     newScore: Math.round(newScore * 100) / 100,
     compression: Math.round(clamp(compression) * 100) / 100,
     qualityGain: Math.round(clamp(qualityGain) * 100) / 100,
-    qualityImprovement: Math.round(clamp(qualityImprovement) * 100) / 100,
+    qualityImprovement: Math.round(reasoningGainIndex * 100) / 100, // Now using RGI formula
   };
 }
 
