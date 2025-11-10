@@ -137,7 +137,7 @@ export default function AnalyticsPage() {
     // Количество улучшенных промптов
     const totalImproved = filteredResults.length;
     
-    // Медиана Reasoning Gain Index (новая метрика)
+    // Reasoning Gain Index метрики
     const rgiScores = filteredResults
       .filter(r => r.reasoning_gain_index !== null && r.reasoning_gain_index !== undefined)
       .map(r => r.reasoning_gain_index!)
@@ -145,6 +145,13 @@ export default function AnalyticsPage() {
     
     const needsRecalculation = rgiScores.length === 0 && filteredResults.length > 0;
     
+    // Среднее арифметическое RGI
+    let averageRGI = 0;
+    if (rgiScores.length > 0) {
+      averageRGI = rgiScores.reduce((sum, score) => sum + score, 0) / rgiScores.length;
+    }
+    
+    // Медиана RGI
     let medianRGI = 0;
     if (rgiScores.length > 0) {
       const mid = Math.floor(rgiScores.length / 2);
@@ -183,6 +190,7 @@ export default function AnalyticsPage() {
 
     return {
       totalImproved: totalImproved,
+      averageRGI: averageRGI,
       avgQualityImprovement: medianRGI.toFixed(1),
       totalTokensInvested: totalTokensInvested,
       avgCostPerPrompt: avgCostPerPrompt.toFixed(2),
@@ -524,6 +532,19 @@ export default function AnalyticsPage() {
           </Card>
 
           <Card className="floating-card border-2 border-accent/20 bg-gradient-to-br from-accent/10 to-accent/5" style={{ animationDelay: '0.1s' }}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" />
+                {t('analytics.averageRGI')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stats.averageRGI.toFixed(4)}%</div>
+              <p className="text-xs text-muted-foreground mt-1">{t('analytics.averageRGIDesc')}</p>
+            </CardContent>
+          </Card>
+
+          <Card className="floating-card border-2 border-accent/20 bg-gradient-to-br from-accent/10 to-accent/5" style={{ animationDelay: '0.15s' }}>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <TrendingUp className="w-4 h-4" />
