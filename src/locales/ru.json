@@ -146,7 +146,11 @@
     "improvement": "Улучшение",
     "compare": "Сравнить",
     "viewDetails": "Просмотр деталей",
-    "viewAnalysis": "Просмотр анализа"
+    "viewAnalysis": "Просмотр анализа",
+    "recalculateMetrics": "Пересчитать метрики",
+    "recalculating": "Пересчёт качественных метрик...",
+    "recalculationComplete": "Пересчёт завершён",
+    "processedResults": "Обработано: {processed}, ошибок: {errors}"
   },
   "auth": {
     "signIn": "Вход",

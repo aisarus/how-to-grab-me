@@ -146,7 +146,11 @@
     "improvement": "שיפור",
     "compare": "השווה",
     "viewDetails": "צפה בפרטים",
-    "viewAnalysis": "צפה בניתוח"
+    "viewAnalysis": "צפה בניתוח",
+    "recalculateMetrics": "חישוב מחדש של מדדים",
+    "recalculating": "מחשב מחדש מדדי איכות...",
+    "recalculationComplete": "חישוב מחדש הושלם",
+    "processedResults": "עובדו: {processed}, שגיאות: {errors}"
   },
   "auth": {
     "signIn": "כניסה",

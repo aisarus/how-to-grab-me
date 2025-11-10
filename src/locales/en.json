@@ -146,7 +146,11 @@
     "improvement": "Improvement",
     "compare": "Compare",
     "viewDetails": "View Details",
-    "viewAnalysis": "View Analysis"
+    "viewAnalysis": "View Analysis",
+    "recalculateMetrics": "Recalculate Metrics",
+    "recalculating": "Recalculating quality metrics...",
+    "recalculationComplete": "Recalculation complete",
+    "processedResults": "Processed: {processed}, errors: {errors}"
   },
   "auth": {
     "signIn": "Sign In",

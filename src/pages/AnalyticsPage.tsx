@@ -59,6 +59,7 @@ export default function AnalyticsPage() {
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [carouselOpen, setCarouselOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isRecalculating, setIsRecalculating] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -205,6 +206,11 @@ export default function AnalyticsPage() {
       t('carousel.tokensBefore'),
       t('carousel.tokensAfter'),
       t('analytics.improvement'),
+      'Quality Improvement',
+      'Quality Gain',
+      'Compression',
+      'Old Score',
+      'New Score',
       t('analytics.iterations'),
       'A/B Winner',
       'A/B Notes'
@@ -217,6 +223,11 @@ export default function AnalyticsPage() {
       r.original_tokens,
       r.optimized_tokens,
       r.improvement_percentage.toFixed(2),
+      r.quality_improvement_score?.toFixed(2) ?? 'N/A',
+      r.quality_gain_percentage?.toFixed(2) ?? 'N/A',
+      r.compression_percentage?.toFixed(2) ?? 'N/A',
+      r.old_quality_score?.toFixed(2) ?? 'N/A',
+      r.new_quality_score?.toFixed(2) ?? 'N/A',
       r.iterations,
       r.ab_test_winner || '',
       r.ab_test_notes ? `"${r.ab_test_notes.replace(/"/g, '""')}"` : ''
@@ -381,6 +392,58 @@ export default function AnalyticsPage() {
               {!isMobile && t('analytics.exportJSON')}
             </Button>
             <Button 
+              variant="outline"
+              size="sm"
+              disabled={isRecalculating}
+              onClick={async () => {
+                try {
+                  setIsRecalculating(true);
+                  toast({
+                    title: t('analytics.recalculating'),
+                    description: t('analytics.recalculating'),
+                  });
+
+                  const { data, error } = await supabase.functions.invoke('recalculate-quality-metrics', {
+                    body: {}
+                  });
+
+                  if (error) throw error;
+
+                  toast({
+                    title: t('analytics.recalculationComplete'),
+                    description: t('analytics.processedResults')
+                      .replace('{processed}', data.processed)
+                      .replace('{errors}', data.errors),
+                  });
+
+                  // Reload results
+                  loadResults();
+                } catch (error) {
+                  console.error('Recalculation error:', error);
+                  toast({
+                    title: t('common.error'),
+                    description: error instanceof Error ? error.message : "Failed to recalculate metrics",
+                    variant: "destructive",
+                  });
+                } finally {
+                  setIsRecalculating(false);
+                }
+              }}
+              className="gap-2"
+            >
+              {isRecalculating ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {!isMobile && "..."}
+                </>
+              ) : (
+                <>
+                  <TrendingUp className="w-4 h-4" />
+                  {!isMobile && t('analytics.recalculateMetrics')}
+                </>
+              )}
+            </Button>
+            <Button
               variant="default" 
               size="sm" 
               onClick={() => {
@@ -563,9 +626,25 @@ export default function AnalyticsPage() {
                         }}
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                          <span className="text-xl sm:text-2xl font-bold text-primary">
-                            +{Math.abs(result.improvement_percentage)}%
-                          </span>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {result.quality_improvement_score !== null && result.quality_improvement_score !== undefined ? (
+                              <>
+                                <span className={`text-xl sm:text-2xl font-bold ${result.quality_improvement_score >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                                  {result.quality_improvement_score > 0 ? '+' : ''}{result.quality_improvement_score.toFixed(1)}%
+                                </span>
+                                <Badge variant="outline" className="text-xs">
+                                  QG: {result.quality_gain_percentage?.toFixed(1) ?? 'N/A'}%
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  Comp: {result.compression_percentage?.toFixed(1) ?? 'N/A'}%
+                                </Badge>
+                              </>
+                            ) : (
+                              <span className="text-xl sm:text-2xl font-bold text-primary">
+                                +{Math.abs(result.improvement_percentage).toFixed(1)}%
+                              </span>
+                            )}
+                          </div>
                           <div className="text-xs sm:text-sm text-muted-foreground">
                             {new Date(result.created_at).toLocaleDateString()}
                           </div>
