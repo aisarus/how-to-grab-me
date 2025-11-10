@@ -654,9 +654,12 @@ export default function AnalyticsPage() {
                           <div className="flex items-center gap-2 flex-wrap">
                             {result.reasoning_gain_index !== null && result.reasoning_gain_index !== undefined ? (
                               <>
-                                <span className={`text-xl sm:text-2xl font-bold ${result.reasoning_gain_index >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                                  {result.reasoning_gain_index > 0 ? '+' : ''}{result.reasoning_gain_index.toFixed(1)}%
-                                </span>
+                                <div className="flex flex-col items-start gap-1">
+                                  <span className={`text-xl sm:text-2xl font-bold ${result.reasoning_gain_index >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                                    {result.reasoning_gain_index > 0 ? '+' : ''}{result.reasoning_gain_index.toFixed(4)}%
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">RGI</span>
+                                </div>
                                 <Badge variant="outline" className="text-xs">
                                   QG: {result.quality_gain_percentage?.toFixed(1) ?? 'N/A'}%
                                 </Badge>
