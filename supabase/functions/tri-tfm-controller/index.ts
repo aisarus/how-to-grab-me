@@ -22,6 +22,14 @@ interface TFMConfig {
   proposerCriticOnly: boolean;
 }
 
+interface QualityMetrics {
+  oldScore: number;
+  newScore: number;
+  compression: number;
+  qualityGain: number;
+  qualityImprovement: number;
+}
+
 interface TFMResponse {
   finalText: string;
   iterations: number;
@@ -32,6 +40,7 @@ interface TFMResponse {
     finalTokens: number;
     percentageSaved: number;
   };
+  qualityMetrics: QualityMetrics;
   promptImprovement?: {
     originalPrompt: string;
     improvedPrompt: string;
@@ -86,6 +95,10 @@ serve(async (req) => {
 
     console.log('Starting TRI/TFM controller with config:', tfmConfig);
 
+    // Evaluate initial quality
+    console.log('Evaluating initial prompt quality...');
+    const oldScore = await evaluatePromptQuality(prompt);
+
     let promptImprovement = undefined;
     let workingPrompt = prompt;
     
@@ -108,6 +121,10 @@ serve(async (req) => {
       let lastImprovement: { originalPrompt: string; improvedPrompt: string; improvements: string[] } | undefined = undefined;
       const pcStart = Date.now();
 
+      // Evaluate initial quality
+      console.log('Evaluating initial prompt quality...');
+      const oldScore = await evaluatePromptQuality(prompt);
+
       while (pcIteration < tfmConfig.maxIterations) {
         pcIteration++;
         const improved = await improvePrompt(pcCurrent);
@@ -120,10 +137,16 @@ serve(async (req) => {
         }
       }
 
+      // Evaluate final quality
+      console.log('Evaluating final prompt quality...');
+      const newScore = await evaluatePromptQuality(pcCurrent);
+
       const initialTokens = estimateTokens(prompt);
       const finalTokens = estimateTokens(pcCurrent);
       const percentageSaved = ((initialTokens - finalTokens) / initialTokens) * 100;
       const ttaSec = (Date.now() - pcStart) / 1000;
+
+      const qualityMetrics = calculateQualityMetrics(initialTokens, finalTokens, oldScore, newScore);
 
       const TOKEN_COST = 0.000002;
       const costCents = (finalTokens * TOKEN_COST) * 100;
@@ -138,12 +161,13 @@ serve(async (req) => {
         finalText: pcCurrent,
         iterations: pcIteration,
         tokenHistory: pcTokenHistory,
-        converged: pcIteration < tfmConfig.maxIterations, // stopped early due to no further improvement
+        converged: pcIteration < tfmConfig.maxIterations,
         savings: {
           initialTokens,
           finalTokens,
           percentageSaved: Math.round(percentageSaved * 100) / 100,
         },
+        qualityMetrics,
         promptImprovement: lastImprovement,
         telemetry: {
           accepted: pcIteration < tfmConfig.maxIterations,
@@ -216,6 +240,12 @@ serve(async (req) => {
     const endTime = Date.now();
     const ttaSec = (endTime - startTime) / 1000;
 
+    // Evaluate final quality
+    console.log('Evaluating final prompt quality...');
+    const newScore = await evaluatePromptQuality(currentText);
+
+    const qualityMetrics = calculateQualityMetrics(initialTokens, finalTokens, oldScore, newScore);
+
     // Calculate cost metrics (using $0.000002 per token as example rate)
     const TOKEN_COST = 0.000002;
     const costDollars = finalTokens * TOKEN_COST;
@@ -237,6 +267,7 @@ serve(async (req) => {
         finalTokens,
         percentageSaved: Math.round(percentageSaved * 100) / 100,
       },
+      qualityMetrics,
       promptImprovement,
       telemetry: {
         accepted: converged,
@@ -275,6 +306,87 @@ serve(async (req) => {
     );
   }
 });
+
+async function evaluatePromptQuality(prompt: string): Promise<number> {
+  const response = await fetch(AI_GATEWAY_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        {
+          role: 'system',
+          content: `You are an EFMNB quality evaluator. Evaluate prompt quality on 4 dimensions:
+
+1. CLARITY (0-25): How clear and unambiguous is the request?
+2. STRUCTURE (0-25): How well organized and logically structured?
+3. CONSTRAINTS (0-25): How well does it prevent hallucinations and guide output?
+4. FACTUALITY (0-25): How grounded in specific, verifiable requirements?
+
+Return ONLY a JSON object with the total score:
+{
+  "score": <number 0-100>
+}`
+        },
+        {
+          role: 'user',
+          content: `Evaluate this prompt:\n${prompt}`
+        }
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    console.error('Quality evaluation failed, using default score 50');
+    return 50;
+  }
+
+  const data = await response.json();
+  const content = data.choices[0].message.content;
+  
+  try {
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+    const score = Math.max(0, Math.min(100, parsed.score || 50));
+    console.log(`Quality score: ${score}`);
+    return score;
+  } catch (error) {
+    console.error('Failed to parse quality score:', error);
+    return 50;
+  }
+}
+
+function calculateQualityMetrics(
+  initialTokens: number,
+  finalTokens: number,
+  oldScore: number,
+  newScore: number
+): QualityMetrics {
+  const epsilon = 0.01;
+  
+  // Compression: 100 * (1 - FinalTokens / InitialTokens)
+  const compression = 100 * (1 - finalTokens / initialTokens);
+  
+  // QualityGain: 100 * (NewScore - OldScore) / max(OldScore, ε)
+  const qualityGain = 100 * (newScore - oldScore) / Math.max(oldScore, epsilon);
+  
+  // QualityImprovement: 0.6 * QualityGain + 0.4 * Compression
+  const qualityImprovement = 0.6 * qualityGain + 0.4 * compression;
+  
+  // Clamp all values to [-100, +100]
+  const clamp = (val: number) => Math.max(-100, Math.min(100, val));
+  
+  return {
+    oldScore: Math.round(oldScore * 100) / 100,
+    newScore: Math.round(newScore * 100) / 100,
+    compression: Math.round(clamp(compression) * 100) / 100,
+    qualityGain: Math.round(clamp(qualityGain) * 100) / 100,
+    qualityImprovement: Math.round(clamp(qualityImprovement) * 100) / 100,
+  };
+}
 
 const ERIKSON_STAGES = {
   1: { name: 'Trust vs. Mistrust', virtue: 'Hope', focus: 'Basic safety and reliability' },
