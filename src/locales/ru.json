@@ -131,7 +131,7 @@
     "promptsImproved": "Промптов улучшено",
     "totalOptimizations": "Всего оптимизаций проведено",
     "qualityImprovement": "Улучшение качества",
-    "avgQualityGain": "Среднее улучшение качества",
+    "avgQualityGain": "Медиана комбинированного балла (0.6×качество + 0.4×сжатие)",
     "tokensInvested": "Токенов инвестировано",
     "totalTokensUsed": "Всего токенов использовано для оптимизации",
     "costPerPrompt": "Стоимость за промпт",

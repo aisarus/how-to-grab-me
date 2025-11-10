@@ -64,6 +64,7 @@ export type Database = {
           accepted: boolean | null
           accepted_iter: number | null
           b_parameter: number | null
+          compression_percentage: number | null
           convergence_threshold: number | null
           cost_cents: number | null
           cost_variance_cents: number | null
@@ -72,10 +73,14 @@ export type Database = {
           id: string
           improvement_percentage: number | null
           iterations: number | null
+          new_quality_score: number | null
+          old_quality_score: number | null
           optimized_prompt: string
           optimized_tokens: number | null
           original_prompt: string
           original_tokens: number | null
+          quality_gain_percentage: number | null
+          quality_improvement_score: number | null
           tokens_breakdown: Json | null
           tta_sec: number | null
           user_id: string
@@ -87,6 +92,7 @@ export type Database = {
           accepted?: boolean | null
           accepted_iter?: number | null
           b_parameter?: number | null
+          compression_percentage?: number | null
           convergence_threshold?: number | null
           cost_cents?: number | null
           cost_variance_cents?: number | null
@@ -95,10 +101,14 @@ export type Database = {
           id?: string
           improvement_percentage?: number | null
           iterations?: number | null
+          new_quality_score?: number | null
+          old_quality_score?: number | null
           optimized_prompt: string
           optimized_tokens?: number | null
           original_prompt: string
           original_tokens?: number | null
+          quality_gain_percentage?: number | null
+          quality_improvement_score?: number | null
           tokens_breakdown?: Json | null
           tta_sec?: number | null
           user_id: string
@@ -110,6 +120,7 @@ export type Database = {
           accepted?: boolean | null
           accepted_iter?: number | null
           b_parameter?: number | null
+          compression_percentage?: number | null
           convergence_threshold?: number | null
           cost_cents?: number | null
           cost_variance_cents?: number | null
@@ -118,10 +129,14 @@ export type Database = {
           id?: string
           improvement_percentage?: number | null
           iterations?: number | null
+          new_quality_score?: number | null
+          old_quality_score?: number | null
           optimized_prompt?: string
           optimized_tokens?: number | null
           original_prompt?: string
           original_tokens?: number | null
+          quality_gain_percentage?: number | null
+          quality_improvement_score?: number | null
           tokens_breakdown?: Json | null
           tta_sec?: number | null
           user_id?: string
@@ -229,7 +244,7 @@ export type Database = {
         }[]
       }
       get_shared_results_public: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           description: string

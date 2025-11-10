@@ -131,7 +131,7 @@
     "promptsImproved": "Prompts Improved",
     "totalOptimizations": "Total optimizations completed",
     "qualityImprovement": "Quality Improvement",
-    "avgQualityGain": "Average quality gain",
+    "avgQualityGain": "Median combined score (0.6×quality + 0.4×compression)",
     "tokensInvested": "Tokens Invested",
     "totalTokensUsed": "Total tokens used for optimization",
     "costPerPrompt": "Cost Per Prompt",

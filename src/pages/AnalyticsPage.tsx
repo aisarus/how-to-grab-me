@@ -44,6 +44,11 @@ interface OptimizationResult {
     refine: number;
     final: number;
   } | null;
+  old_quality_score?: number | null;
+  new_quality_score?: number | null;
+  compression_percentage?: number | null;
+  quality_gain_percentage?: number | null;
+  quality_improvement_score?: number | null;
 }
 
 export default function AnalyticsPage() {
@@ -126,13 +131,27 @@ export default function AnalyticsPage() {
       avgIterations: 0,
     };
 
-    // Количество улучшенных промптов (все результаты - это улучшенные промпты)
+    // Количество улучшенных промптов
     const totalImproved = filteredResults.length;
     
-    // Среднее улучшение качества (improvement_percentage может быть отрицательным если промпт стал длиннее, но это нормально)
-    const avgQualityImprovement = filteredResults.reduce((sum, r) => {
-      return sum + Math.abs(r.improvement_percentage);
-    }, 0) / filteredResults.length;
+    // Медиана Quality Improvement Score (новая метрика)
+    const qualityScores = filteredResults
+      .filter(r => r.quality_improvement_score !== null && r.quality_improvement_score !== undefined)
+      .map(r => r.quality_improvement_score!)
+      .sort((a, b) => a - b);
+    
+    let medianQualityImprovement = 0;
+    if (qualityScores.length > 0) {
+      const mid = Math.floor(qualityScores.length / 2);
+      medianQualityImprovement = qualityScores.length % 2 === 0
+        ? (qualityScores[mid - 1] + qualityScores[mid]) / 2
+        : qualityScores[mid];
+    } else {
+      // Fallback to old calculation if new metrics not available
+      medianQualityImprovement = filteredResults.reduce((sum, r) => {
+        return sum + Math.abs(r.improvement_percentage);
+      }, 0) / filteredResults.length;
+    }
     
     // Общее количество токенов, потраченных на улучшение (optimized tokens)
     const totalTokensInvested = filteredResults.reduce((sum, r) => {
@@ -146,7 +165,7 @@ export default function AnalyticsPage() {
     
     const avgCostPerPrompt = costValues.length > 0
       ? costValues.reduce((sum, c) => sum + c, 0) / costValues.length
-      : (totalTokensInvested * 0.000002 * 100) / filteredResults.length; // fallback: estimate cost
+      : (totalTokensInvested * 0.000002 * 100) / filteredResults.length;
     
     // Success rate - процент принятых результатов
     const acceptedResults = filteredResults.filter(r => r.accepted === true);
@@ -159,7 +178,7 @@ export default function AnalyticsPage() {
 
     return {
       totalImproved: totalImproved,
-      avgQualityImprovement: avgQualityImprovement.toFixed(1),
+      avgQualityImprovement: medianQualityImprovement.toFixed(1),
       totalTokensInvested: totalTokensInvested,
       avgCostPerPrompt: avgCostPerPrompt.toFixed(2),
       successRate: successRate.toFixed(1),

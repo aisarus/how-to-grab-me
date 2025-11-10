@@ -27,6 +27,13 @@ interface TFMResult {
     finalTokens: number;
     percentageSaved: number;
   };
+  qualityMetrics: {
+    oldScore: number;
+    newScore: number;
+    compression: number;
+    qualityGain: number;
+    qualityImprovement: number;
+  };
   promptImprovement?: {
     originalPrompt: string;
     improvedPrompt: string;
@@ -204,6 +211,11 @@ export const TFMController = () => {
           cost_cents: data.telemetry.cost_cents,
           cost_variance_cents: data.telemetry.cost_variance_cents,
           tokens_breakdown: data.telemetry.tokens_breakdown,
+          old_quality_score: data.qualityMetrics.oldScore,
+          new_quality_score: data.qualityMetrics.newScore,
+          compression_percentage: data.qualityMetrics.compression,
+          quality_gain_percentage: data.qualityMetrics.qualityGain,
+          quality_improvement_score: data.qualityMetrics.qualityImprovement,
         })
         .select()
         .single();
@@ -216,7 +228,7 @@ export const TFMController = () => {
 
       toast({
         title: "Optimization completed",
-        description: `Quality improved by ${Math.abs(data.savings.percentageSaved)}% in ${data.iterations} iterations`,
+        description: `Quality Improvement: ${data.qualityMetrics.qualityImprovement.toFixed(1)}% (${data.iterations} iterations)`,
       });
     } catch (error) {
       console.error('Error:', error);
@@ -987,7 +999,7 @@ export const TFMController = () => {
             </div>
 
             {/* Metrics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card className="floating-card border-2" style={{ animationDelay: '0.2s' }}>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Iterations</CardTitle>
@@ -1007,33 +1019,47 @@ export const TFMController = () => {
                 </CardContent>
               </Card>
 
-              <Card className="floating-card border-2" style={{ animationDelay: '0.4s' }}>
+              <Card className="floating-card border-2 border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5" style={{ animationDelay: '0.3s' }}>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Token Flow</CardTitle>
+                  <CardTitle className="text-sm font-medium flex items-center gap-2 text-primary">
+                    <TrendingDown className="w-4 h-4" />
+                    Quality Improvement
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    {result.savings.initialTokens} → {result.savings.finalTokens}
+                  <div className={`text-4xl font-bold ${result.qualityMetrics.qualityImprovement >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                    {result.qualityMetrics.qualityImprovement > 0 ? '+' : ''}{result.qualityMetrics.qualityImprovement.toFixed(1)}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Initial → Optimized
+                    Combined metric (0.6×quality + 0.4×compression)
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="floating-card border-2 border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5" style={{ animationDelay: '0.6s' }}>
+              <Card className="floating-card border-2" style={{ animationDelay: '0.4s' }}>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2 text-primary">
-                    <TrendingDown className="w-4 h-4" />
-                    Success@1 uplift
-                  </CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Quality Gain</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-bold text-primary">
-                    +{Math.abs(result.savings.percentageSaved)}%
+                  <div className={`text-3xl font-bold ${result.qualityMetrics.qualityGain >= 0 ? 'text-green-600' : 'text-amber-600'}`}>
+                    {result.qualityMetrics.qualityGain > 0 ? '+' : ''}{result.qualityMetrics.qualityGain.toFixed(1)}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    First-attempt acceptance rate
+                    EFMNB score: {result.qualityMetrics.oldScore.toFixed(1)} → {result.qualityMetrics.newScore.toFixed(1)}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="floating-card border-2" style={{ animationDelay: '0.5s' }}>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Compression</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className={`text-3xl font-bold ${result.qualityMetrics.compression >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                    {result.qualityMetrics.compression > 0 ? '+' : ''}{result.qualityMetrics.compression.toFixed(1)}%
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Tokens: {result.savings.initialTokens} → {result.savings.finalTokens}
                   </p>
                 </CardContent>
               </Card>

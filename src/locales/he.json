@@ -131,7 +131,7 @@
     "promptsImproved": "פרומפטים שופרו",
     "totalOptimizations": "סה\"כ אופטימיזציות שבוצעו",
     "qualityImprovement": "שיפור איכות",
-    "avgQualityGain": "שיפור איכות ממוצע",
+    "avgQualityGain": "חציון ציון משולב (0.6×איכות + 0.4×דחיסה)",
     "tokensInvested": "טוקנים הושקעו",
     "totalTokensUsed": "סה\"כ טוקנים ששימשו לאופטימיזציה",
     "costPerPrompt": "עלות לפרומפט",
