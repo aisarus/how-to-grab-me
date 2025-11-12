@@ -16,6 +16,56 @@ import { ComparisonModal } from './ComparisonModal';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { analyzePromptComplexity, type ComplexityScore } from '@/lib/promptComplexityAnalyzer';
+import { ModuleControls } from './ModuleControls';
+import { SmartQueueDisplay } from './SmartQueueDisplay';
+import { ExplanationViewer } from './ExplanationViewer';
+import { VersionHistoryViewer } from './VersionHistoryViewer';
+import { IntegrationReadinessOutput } from './IntegrationReadinessOutput';
+
+interface ExplanationData {
+  mainIssues: string[];
+  keyTransformations: string[];
+  expectedEffects: string[];
+  fullExplanation: string;
+}
+
+interface VersionLogEntry {
+  originalId: string;
+  newId: string;
+  iterationNumber: number;
+  previousContentHash: string;
+  contentHash: string;
+  promptContent: string;
+  reviewerAction: 'pending' | 'accept' | 'reject' | 'rollback';
+  timestamp: string;
+}
+
+interface SmartQueueResult {
+  priorityScore: number;
+  shouldOptimize: boolean;
+  clarityScore: number;
+  structureScore: number;
+  constraintsScore: number;
+}
+
+interface IntegrationReadinessData {
+  optimizedPrompt: string;
+  explain: string;
+  metrics: {
+    QGPercent: number;
+    RGIPercent: number;
+    EffPercent: number;
+    Iterations: number;
+  };
+  versionLog: {
+    originalId: string;
+    finalId: string;
+    finalIterationNumber: number;
+    reviewerAction: string;
+    timestamp: string;
+    hashOfContent: string;
+  };
+}
 
 interface TFMResult {
   finalText: string;
@@ -55,6 +105,10 @@ interface TFMResult {
       final: number;
     };
   };
+  smartQueue?: SmartQueueResult;
+  explanations?: ExplanationData[];
+  versionLog?: VersionLogEntry[];
+  integrationReadiness?: IntegrationReadinessData;
 }
 
 interface ABTestResults {
@@ -87,6 +141,10 @@ export const TFMController = () => {
     useEFMNB: false,
     useProposerCriticVerifier: true,
     proposerCriticOnly: true,
+    smartQueueEnabled: true,
+    explainModeEnabled: true,
+    versioningEnabled: true,
+    clarityThreshold: 0.85,
   });
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -781,6 +839,16 @@ export const TFMController = () => {
           </CardContent>
         </Card>
 
+        {/* PromptOps Module Controls */}
+        <ModuleControls
+          smartQueueEnabled={config.smartQueueEnabled}
+          explainModeEnabled={config.explainModeEnabled}
+          versioningEnabled={config.versioningEnabled}
+          onSmartQueueToggle={(enabled) => setConfig({ ...config, smartQueueEnabled: enabled })}
+          onExplainModeToggle={(enabled) => setConfig({ ...config, explainModeEnabled: enabled })}
+          onVersioningToggle={(enabled) => setConfig({ ...config, versioningEnabled: enabled })}
+        />
+
         {/* A/B Test Results Section */}
         {abTestResults && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -1152,6 +1220,31 @@ export const TFMController = () => {
                   </div>
                 </CardContent>
               </Card>
+            )}
+
+            {/* PromptOps Module Outputs */}
+            {result.smartQueue && (
+              <div style={{ animationDelay: '0.9s' }}>
+                <SmartQueueDisplay result={result.smartQueue} />
+              </div>
+            )}
+
+            {result.explanations && result.explanations.length > 0 && (
+              <div style={{ animationDelay: '1.0s' }}>
+                <ExplanationViewer explanations={result.explanations} />
+              </div>
+            )}
+
+            {result.versionLog && result.versionLog.length > 0 && (
+              <div style={{ animationDelay: '1.1s' }}>
+                <VersionHistoryViewer versionLog={result.versionLog} />
+              </div>
+            )}
+
+            {result.integrationReadiness && (
+              <div style={{ animationDelay: '1.2s' }}>
+                <IntegrationReadinessOutput data={result.integrationReadiness} />
+              </div>
             )}
 
             {/* A/B Testing Card */}
