@@ -104,7 +104,7 @@ export const QualityVsTokensChart = ({ results }: QualityVsTokensChartProps) => 
                 borderRadius: '8px'
               }}
               formatter={(value: number, name: string) => {
-                if (name === 'Качество') return [value.toFixed(2), name];
+                if (name === 'Качество') return [value?.toFixed(2) ?? 'N/A', name];
                 return [value, name];
               }}
             />

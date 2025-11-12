@@ -46,8 +46,8 @@ export const SmartQueueDisplay = ({ result }: SmartQueueDisplayProps) => {
               Formula: 0.5×(1−Clarity) + 0.3×(1−Structure) + 0.2×(1−Constraints)
             </p>
           </div>
-          <Badge className={getPriorityColor(result.priorityScore)} variant="outline">
-            {result.priorityScore.toFixed(3)}
+          <Badge className={getPriorityColor(result.priorityScore ?? 0)} variant="outline">
+            {result.priorityScore?.toFixed(3) ?? 'N/A'}
           </Badge>
         </div>
 
@@ -79,31 +79,31 @@ export const SmartQueueDisplay = ({ result }: SmartQueueDisplayProps) => {
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span>Clarity</span>
-              <span className={getScoreColor(result.clarityScore)}>
-                {(result.clarityScore * 100).toFixed(0)}%
+              <span className={getScoreColor(result.clarityScore ?? 0)}>
+                {((result.clarityScore ?? 0) * 100).toFixed(0)}%
               </span>
             </div>
-            <Progress value={result.clarityScore * 100} className="h-2" />
+            <Progress value={(result.clarityScore ?? 0) * 100} className="h-2" />
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span>Structure</span>
-              <span className={getScoreColor(result.structureScore)}>
-                {(result.structureScore * 100).toFixed(0)}%
+              <span className={getScoreColor(result.structureScore ?? 0)}>
+                {((result.structureScore ?? 0) * 100).toFixed(0)}%
               </span>
             </div>
-            <Progress value={result.structureScore * 100} className="h-2" />
+            <Progress value={(result.structureScore ?? 0) * 100} className="h-2" />
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span>Constraints</span>
-              <span className={getScoreColor(result.constraintsScore)}>
-                {(result.constraintsScore * 100).toFixed(0)}%
+              <span className={getScoreColor(result.constraintsScore ?? 0)}>
+                {((result.constraintsScore ?? 0) * 100).toFixed(0)}%
               </span>
             </div>
-            <Progress value={result.constraintsScore * 100} className="h-2" />
+            <Progress value={(result.constraintsScore ?? 0) * 100} className="h-2" />
           </div>
         </div>
       </CardContent>

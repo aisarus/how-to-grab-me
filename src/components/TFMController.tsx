@@ -307,7 +307,7 @@ export const TFMController = () => {
 
       toast({
         title: "Optimization completed",
-        description: `RGI: ${data.modeFreeMetrics.rgiPercent.toFixed(2)}%, Efficiency: ${data.modeFreeMetrics.efficiencyPercent.toFixed(2)}% (${data.iterations} iterations)`,
+        description: `RGI: ${data.modeFreeMetrics?.rgiPercent?.toFixed(2) ?? 'N/A'}%, Efficiency: ${data.modeFreeMetrics?.efficiencyPercent?.toFixed(2) ?? 'N/A'}% (${data.iterations} iterations)`,
       });
     } catch (error) {
       console.error('Error:', error);
@@ -881,7 +881,7 @@ export const TFMController = () => {
                           abTestResults.comparison.tokenSavingsDiff < 0 ? 'text-red-600' : 'text-yellow-600'
                         }`}>
                           {abTestResults.comparison.tokenSavingsDiff > 0 ? '+' : ''}
-                          {abTestResults.comparison.tokenSavingsDiff.toFixed(2)}%
+                          {abTestResults.comparison.tokenSavingsDiff?.toFixed(2) ?? 'N/A'}%
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
                           {abTestResults.comparison.tokenSavingsDiff > 0 ? 'EFMNB saves more' : 
@@ -943,7 +943,7 @@ export const TFMController = () => {
                         <div>
                           <p className="text-xs text-muted-foreground">Quality Improvement</p>
                           <p className="text-xl font-bold text-green-600">
-                            {Math.abs(abTestResults.withEFMNB.savings.percentageSaved).toFixed(2)}%
+                            {Math.abs(abTestResults.withEFMNB.savings?.percentageSaved ?? 0).toFixed(2)}%
                           </p>
                         </div>
                         <div>
@@ -984,7 +984,7 @@ export const TFMController = () => {
                         <div>
                           <p className="text-xs text-muted-foreground">Quality Improvement</p>
                           <p className="text-xl font-bold text-green-600">
-                            {Math.abs(abTestResults.withoutEFMNB.savings.percentageSaved).toFixed(2)}%
+                            {Math.abs(abTestResults.withoutEFMNB.savings?.percentageSaved ?? 0).toFixed(2)}%
                           </p>
                         </div>
                         <div>
@@ -1116,8 +1116,8 @@ export const TFMController = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-4xl font-bold ${result.modeFreeMetrics.rgiPercent >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                    {result.modeFreeMetrics.rgiPercent > 0 ? '+' : ''}{result.modeFreeMetrics.rgiPercent.toFixed(1)}%
+                  <div className={`text-4xl font-bold ${(result.modeFreeMetrics?.rgiPercent ?? 0) >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                    {(result.modeFreeMetrics?.rgiPercent ?? 0) > 0 ? '+' : ''}{result.modeFreeMetrics?.rgiPercent?.toFixed(1) ?? 'N/A'}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
                     Quality improvement per unit length change
@@ -1130,8 +1130,8 @@ export const TFMController = () => {
                   <CardTitle className="text-sm font-medium text-muted-foreground">Quality Gain (QG%)</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-3xl font-bold ${result.modeFreeMetrics.qualityGainPercent >= 0 ? 'text-green-600' : 'text-amber-600'}`}>
-                    {result.modeFreeMetrics.qualityGainPercent > 0 ? '+' : ''}{result.modeFreeMetrics.qualityGainPercent.toFixed(1)}%
+                  <div className={`text-3xl font-bold ${(result.modeFreeMetrics?.qualityGainPercent ?? 0) >= 0 ? 'text-green-600' : 'text-amber-600'}`}>
+                    {(result.modeFreeMetrics?.qualityGainPercent ?? 0) > 0 ? '+' : ''}{result.modeFreeMetrics?.qualityGainPercent?.toFixed(1) ?? 'N/A'}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
                     Mean pairwise comparison score
@@ -1144,11 +1144,11 @@ export const TFMController = () => {
                   <CardTitle className="text-sm font-medium text-muted-foreground">Compactness%</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-3xl font-bold ${result.modeFreeMetrics.compactnessPercent >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                    {result.modeFreeMetrics.compactnessPercent > 0 ? '+' : ''}{result.modeFreeMetrics.compactnessPercent.toFixed(1)}%
+                  <div className={`text-3xl font-bold ${(result.modeFreeMetrics?.compactnessPercent ?? 0) >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                    {(result.modeFreeMetrics?.compactnessPercent ?? 0) > 0 ? '+' : ''}{result.modeFreeMetrics?.compactnessPercent?.toFixed(1) ?? 'N/A'}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Tokens: {result.savings.initialTokens} → {result.savings.finalTokens}
+                    Tokens: {result.savings?.initialTokens ?? 'N/A'} → {result.savings?.finalTokens ?? 'N/A'}
                   </p>
                 </CardContent>
               </Card>
@@ -1158,8 +1158,8 @@ export const TFMController = () => {
                   <CardTitle className="text-sm font-medium text-muted-foreground">Efficiency (Eff%)</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-3xl font-bold ${result.modeFreeMetrics.efficiencyPercent >= 0 ? 'text-purple-600' : 'text-red-600'}`}>
-                    {result.modeFreeMetrics.efficiencyPercent > 0 ? '+' : ''}{result.modeFreeMetrics.efficiencyPercent.toFixed(1)}%
+                  <div className={`text-3xl font-bold ${(result.modeFreeMetrics?.efficiencyPercent ?? 0) >= 0 ? 'text-purple-600' : 'text-red-600'}`}>
+                    {(result.modeFreeMetrics?.efficiencyPercent ?? 0) > 0 ? '+' : ''}{result.modeFreeMetrics?.efficiencyPercent?.toFixed(1) ?? 'N/A'}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
                     ΔQ - 0.2×dT (quality vs length tradeoff)

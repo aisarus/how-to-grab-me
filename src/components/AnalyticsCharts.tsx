@@ -31,10 +31,10 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
     .reverse()
     .map((r, idx) => ({
       index: idx + 1,
-      rgi: r.reasoning_gain_index ?? Math.abs(r.improvement_percentage),
+      rgi: r.reasoning_gain_index ?? Math.abs(r.improvement_percentage ?? 0),
       qualityGain: r.quality_gain_percentage ?? 0,
-      compression: r.compression_percentage ?? (100 * (1 - r.optimized_tokens / r.original_tokens)),
-      costPerPrompt: parseFloat((r.optimized_tokens * TOKEN_COST * 100).toFixed(2)),
+      compression: r.compression_percentage ?? (100 * (1 - (r.optimized_tokens ?? 0) / (r.original_tokens ?? 1))),
+      costPerPrompt: parseFloat(((r.optimized_tokens ?? 0) * TOKEN_COST * 100).toFixed(2)),
       iterations: r.iterations,
       date: new Date(r.created_at).toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' }),
     }));
@@ -63,11 +63,11 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
   const parameterData: { [key: string]: { totalImprovement: number; count: number } } = {};
   
   results.forEach((r) => {
-    const key = `a:${r.a_parameter.toFixed(2)} b:${r.b_parameter.toFixed(2)}`;
+    const key = `a:${(r.a_parameter ?? 0).toFixed(2)} b:${(r.b_parameter ?? 0).toFixed(2)}`;
     if (!parameterData[key]) {
       parameterData[key] = { totalImprovement: 0, count: 0 };
     }
-    parameterData[key].totalImprovement += Math.abs(r.improvement_percentage);
+    parameterData[key].totalImprovement += Math.abs(r.improvement_percentage ?? 0);
     parameterData[key].count++;
   });
 
@@ -203,7 +203,7 @@ export const AnalyticsCharts = ({ results }: AnalyticsChartsProps) => {
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '8px'
                 }} 
-                formatter={(value: number) => [`${value.toFixed(1)}%`, 'Среднее улучшение']}
+                formatter={(value: number) => [`${value?.toFixed(1) ?? 'N/A'}%`, 'Среднее улучшение']}
               />
               <Legend />
               <Bar 

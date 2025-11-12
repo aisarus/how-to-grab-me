@@ -153,7 +153,7 @@ export function PromptCarouselModal({
                           </CardHeader>
                           <CardContent>
                             <div className="text-2xl font-bold text-primary">
-                              {result.improvement_percentage.toFixed(1)}%
+                              {(result.improvement_percentage ?? 0).toFixed(1)}%
                             </div>
                           </CardContent>
                         </Card>
