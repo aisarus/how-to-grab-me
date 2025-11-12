@@ -64,15 +64,22 @@ export type Database = {
           accepted: boolean | null
           accepted_iter: number | null
           b_parameter: number | null
+          compactness_percentage: number | null
           compression_percentage: number | null
           convergence_threshold: number | null
           cost_cents: number | null
           cost_variance_cents: number | null
           created_at: string
+          delta_q: number | null
+          delta_t: number | null
+          efficiency_percentage: number | null
+          efficiency_score: number | null
           erikson_stage: number | null
           id: string
           improvement_percentage: number | null
           iterations: number | null
+          judge_votes: Json | null
+          lambda_tradeoff: number | null
           new_quality_score: number | null
           old_quality_score: number | null
           optimized_prompt: string
@@ -92,15 +99,22 @@ export type Database = {
           accepted?: boolean | null
           accepted_iter?: number | null
           b_parameter?: number | null
+          compactness_percentage?: number | null
           compression_percentage?: number | null
           convergence_threshold?: number | null
           cost_cents?: number | null
           cost_variance_cents?: number | null
           created_at?: string
+          delta_q?: number | null
+          delta_t?: number | null
+          efficiency_percentage?: number | null
+          efficiency_score?: number | null
           erikson_stage?: number | null
           id?: string
           improvement_percentage?: number | null
           iterations?: number | null
+          judge_votes?: Json | null
+          lambda_tradeoff?: number | null
           new_quality_score?: number | null
           old_quality_score?: number | null
           optimized_prompt: string
@@ -120,15 +134,22 @@ export type Database = {
           accepted?: boolean | null
           accepted_iter?: number | null
           b_parameter?: number | null
+          compactness_percentage?: number | null
           compression_percentage?: number | null
           convergence_threshold?: number | null
           cost_cents?: number | null
           cost_variance_cents?: number | null
           created_at?: string
+          delta_q?: number | null
+          delta_t?: number | null
+          efficiency_percentage?: number | null
+          efficiency_score?: number | null
           erikson_stage?: number | null
           id?: string
           improvement_percentage?: number | null
           iterations?: number | null
+          judge_votes?: Json | null
+          lambda_tradeoff?: number | null
           new_quality_score?: number | null
           old_quality_score?: number | null
           optimized_prompt?: string

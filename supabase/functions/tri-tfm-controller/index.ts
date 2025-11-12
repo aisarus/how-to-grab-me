@@ -22,12 +22,16 @@ interface TFMConfig {
   proposerCriticOnly: boolean;
 }
 
-interface QualityMetrics {
-  oldScore: number;
-  newScore: number;
-  compression: number;
-  qualityGain: number;
-  qualityImprovement: number;
+interface ModeFreeMetrics {
+  deltaQ: number;
+  deltaT: number;
+  qualityGainPercent: number;
+  compactnessPercent: number;
+  rgi: number;
+  rgiPercent: number;
+  efficiency: number;
+  efficiencyPercent: number;
+  judgeVotes: number[];
 }
 
 interface TFMResponse {
@@ -40,7 +44,7 @@ interface TFMResponse {
     finalTokens: number;
     percentageSaved: number;
   };
-  qualityMetrics: QualityMetrics;
+  modeFreeMetrics: ModeFreeMetrics;
   promptImprovement?: {
     originalPrompt: string;
     improvedPrompt: string;
@@ -95,9 +99,7 @@ serve(async (req) => {
 
     console.log('Starting TRI/TFM controller with config:', tfmConfig);
 
-    // Evaluate initial quality
-    console.log('Evaluating initial prompt quality...');
-    const oldScore = await evaluatePromptQuality(prompt);
+    // No need to evaluate initial quality anymore - we'll do pairwise comparison at the end
 
     let promptImprovement = undefined;
     let workingPrompt = prompt;
@@ -121,10 +123,6 @@ serve(async (req) => {
       let lastImprovement: { originalPrompt: string; improvedPrompt: string; improvements: string[] } | undefined = undefined;
       const pcStart = Date.now();
 
-      // Evaluate initial quality
-      console.log('Evaluating initial prompt quality...');
-      const oldScore = await evaluatePromptQuality(prompt);
-
       while (pcIteration < tfmConfig.maxIterations) {
         pcIteration++;
         const improved = await improvePrompt(pcCurrent);
@@ -137,16 +135,17 @@ serve(async (req) => {
         }
       }
 
-      // Evaluate final quality
-      console.log('Evaluating final prompt quality...');
-      const newScore = await evaluatePromptQuality(pcCurrent);
+      // Pairwise comparison: OLD vs NEW
+      console.log('Performing pairwise comparison...');
+      const judgeVotes = await pairwiseComparePromptsWithVotes(prompt, pcCurrent);
+      const deltaQ = judgeVotes.reduce((sum, v) => sum + v, 0) / judgeVotes.length;
 
       const initialTokens = estimateTokens(prompt);
       const finalTokens = estimateTokens(pcCurrent);
       const percentageSaved = ((initialTokens - finalTokens) / initialTokens) * 100;
       const ttaSec = (Date.now() - pcStart) / 1000;
 
-      const qualityMetrics = calculateQualityMetrics(initialTokens, finalTokens, oldScore, newScore);
+      const modeFreeMetrics = calculateModeFreeMetrics(initialTokens, finalTokens, deltaQ, judgeVotes);
 
       const TOKEN_COST = 0.000002;
       const costCents = (finalTokens * TOKEN_COST) * 100;
@@ -167,7 +166,7 @@ serve(async (req) => {
           finalTokens,
           percentageSaved: Math.round(percentageSaved * 100) / 100,
         },
-        qualityMetrics,
+        modeFreeMetrics,
         promptImprovement: lastImprovement,
         telemetry: {
           accepted: pcIteration < tfmConfig.maxIterations,
@@ -240,11 +239,12 @@ serve(async (req) => {
     const endTime = Date.now();
     const ttaSec = (endTime - startTime) / 1000;
 
-    // Evaluate final quality
-    console.log('Evaluating final prompt quality...');
-    const newScore = await evaluatePromptQuality(currentText);
+    // Pairwise comparison: original prompt vs final text
+    console.log('Performing pairwise comparison...');
+    const judgeVotes = await pairwiseComparePromptsWithVotes(prompt, currentText);
+    const deltaQ = judgeVotes.reduce((sum, v) => sum + v, 0) / judgeVotes.length;
 
-    const qualityMetrics = calculateQualityMetrics(initialTokens, finalTokens, oldScore, newScore);
+    const modeFreeMetrics = calculateModeFreeMetrics(originalTokens, finalTokens, deltaQ, judgeVotes);
 
     // Calculate cost metrics (using $0.000002 per token as example rate)
     const TOKEN_COST = 0.000002;
@@ -267,7 +267,7 @@ serve(async (req) => {
         finalTokens,
         percentageSaved: Math.round(percentageSaved * 100) / 100,
       },
-      qualityMetrics,
+      modeFreeMetrics,
       promptImprovement,
       telemetry: {
         accepted: converged,
@@ -307,7 +307,7 @@ serve(async (req) => {
   }
 });
 
-async function evaluatePromptQuality(prompt: string): Promise<number> {
+async function pairwiseComparePromptsWithVotes(oldPrompt: string, newPrompt: string): Promise<number[]> {
   const response = await fetch(AI_GATEWAY_URL, {
     method: 'POST',
     headers: {
@@ -319,29 +319,46 @@ async function evaluatePromptQuality(prompt: string): Promise<number> {
       messages: [
         {
           role: 'system',
-          content: `You are an EFMNB quality evaluator. Evaluate prompt quality on 4 dimensions:
+          content: `You are a pairwise prompt quality judge. Compare OLD vs NEW prompts across 4 EFMNB dimensions:
 
-1. CLARITY (0-25): How clear and unambiguous is the request?
-2. STRUCTURE (0-25): How well organized and logically structured?
-3. CONSTRAINTS (0-25): How well does it prevent hallucinations and guide output?
-4. FACTUALITY (0-25): How grounded in specific, verifiable requirements?
+1. CLARITY: How clear and unambiguous
+2. STRUCTURE: Organization and logical flow  
+3. CONSTRAINTS: Preventing hallucinations, guiding output
+4. FACTUALITY: Grounded in verifiable requirements
 
-Return ONLY a JSON object with the total score:
+For each dimension, vote:
++1.0  = NEW is significantly better
++0.66 = NEW is moderately better
++0.33 = NEW is slightly better
+0     = Equal quality
+-0.33 = OLD is slightly better
+-0.66 = OLD is moderately better
+-1.0  = OLD is significantly better
+
+Return ONLY a JSON object with votes array:
 {
-  "score": <number 0-100>
-}`
+  "votes": [<vote1>, <vote2>, <vote3>, <vote4>]
+}
+
+Example: {"votes": [0.66, 0.33, 0.0, 1.0]}`
         },
         {
           role: 'user',
-          content: `Evaluate this prompt:\n${prompt}`
+          content: `Compare these prompts:
+
+OLD PROMPT:
+${oldPrompt}
+
+NEW PROMPT:
+${newPrompt}`
         }
       ],
     }),
   });
 
   if (!response.ok) {
-    console.error('Quality evaluation failed, using default score 50');
-    return 50;
+    console.error('Pairwise comparison failed, using neutral votes');
+    return [0, 0, 0, 0];
   }
 
   const data = await response.json();
@@ -350,43 +367,50 @@ Return ONLY a JSON object with the total score:
   try {
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : content);
-    const score = Math.max(0, Math.min(100, parsed.score || 50));
-    console.log(`Quality score: ${score}`);
-    return score;
+    const votes = parsed.votes || [0, 0, 0, 0];
+    
+    console.log(`Pairwise comparison votes: ${JSON.stringify(votes)}`);
+    return votes;
   } catch (error) {
-    console.error('Failed to parse quality score:', error);
-    return 50;
+    console.error('Failed to parse comparison result:', error);
+    return [0, 0, 0, 0];
   }
 }
 
-function calculateQualityMetrics(
-  initialTokens: number,
-  finalTokens: number,
-  oldScore: number,
-  newScore: number
-): QualityMetrics {
-  const epsilon = 0.01;
+function calculateModeFreeMetrics(
+  Ti: number,
+  Tf: number,
+  deltaQ: number,
+  judgeVotes: number[],
+  lambda: number = 0.2
+): ModeFreeMetrics {
+  // dT = (Tf - Ti) / max(Ti, 1)
+  const deltaT = (Tf - Ti) / Math.max(Ti, 1);
   
-  // Compression: 100 * (1 - FinalTokens / InitialTokens)
-  const compression = 100 * (1 - finalTokens / initialTokens);
+  // Compactness% = -100 * dT
+  const compactnessPercent = -100 * deltaT;
   
-  // QualityGain: 100 * (NewScore - OldScore) / max(OldScore, ε)
-  const qualityGain = 100 * (newScore - oldScore) / Math.max(oldScore, epsilon);
+  // QG% = 100 * ΔQ
+  const qualityGainPercent = 100 * deltaQ;
   
-  // Reasoning Gain Index (RGI): (NewScore - OldScore) / max((FinalTokens - InitialTokens), ε)
-  // Measures quality improvement per additional token
-  const tokenDelta = Math.max(finalTokens - initialTokens, epsilon);
-  const reasoningGainIndex = (newScore - oldScore) / tokenDelta;
+  // RGI = ΔQ / max(|dT|, 1e-6)
+  const rgi = deltaQ / Math.max(Math.abs(deltaT), 1e-6);
+  const rgiPercent = 100 * rgi;
   
-  // Clamp all values to [-100, +100]
-  const clamp = (val: number) => Math.max(-100, Math.min(100, val));
+  // Efficiency = ΔQ - λ * dT
+  const efficiency = deltaQ - lambda * deltaT;
+  const efficiencyPercent = 100 * efficiency;
   
   return {
-    oldScore: Math.round(oldScore * 100) / 100,
-    newScore: Math.round(newScore * 100) / 100,
-    compression: Math.round(clamp(compression) * 100) / 100,
-    qualityGain: Math.round(clamp(qualityGain) * 100) / 100,
-    qualityImprovement: Math.round(reasoningGainIndex * 100) / 100, // Now using RGI formula
+    deltaQ: Math.round(deltaQ * 10000) / 10000,
+    deltaT: Math.round(deltaT * 10000) / 10000,
+    qualityGainPercent: Math.round(qualityGainPercent * 100) / 100,
+    compactnessPercent: Math.round(compactnessPercent * 100) / 100,
+    rgi: Math.round(rgi * 10000) / 10000,
+    rgiPercent: Math.round(rgiPercent * 100) / 100,
+    efficiency: Math.round(efficiency * 10000) / 10000,
+    efficiencyPercent: Math.round(efficiencyPercent * 100) / 100,
+    judgeVotes,
   };
 }
 

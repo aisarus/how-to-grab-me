@@ -10,7 +10,7 @@ const corsHeaders = {
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 
-async function evaluatePromptQuality(prompt: string): Promise<number> {
+async function pairwiseComparePromptsWithVotes(oldPrompt: string, newPrompt: string): Promise<number[]> {
   try {
     const response = await fetch(AI_GATEWAY_URL, {
       method: 'POST',
@@ -23,29 +23,46 @@ async function evaluatePromptQuality(prompt: string): Promise<number> {
         messages: [
           {
             role: 'system',
-            content: `You are an EFMNB quality evaluator. Evaluate prompt quality on 4 dimensions:
+            content: `You are a pairwise prompt quality judge. Compare OLD vs NEW prompts across 4 EFMNB dimensions:
 
-1. CLARITY (0-25): How clear and unambiguous is the request?
-2. STRUCTURE (0-25): How well organized and logically structured?
-3. CONSTRAINTS (0-25): How well does it prevent hallucinations and guide output?
-4. FACTUALITY (0-25): How grounded in specific, verifiable requirements?
+1. CLARITY: How clear and unambiguous
+2. STRUCTURE: Organization and logical flow  
+3. CONSTRAINTS: Preventing hallucinations, guiding output
+4. FACTUALITY: Grounded in verifiable requirements
 
-Return ONLY a JSON object with the total score:
+For each dimension, vote:
++1.0  = NEW is significantly better
++0.66 = NEW is moderately better
++0.33 = NEW is slightly better
+0     = Equal quality
+-0.33 = OLD is slightly better
+-0.66 = OLD is moderately better
+-1.0  = OLD is significantly better
+
+Return ONLY a JSON object with votes array:
 {
-  "score": <number 0-100>
-}`
+  "votes": [<vote1>, <vote2>, <vote3>, <vote4>]
+}
+
+Example: {"votes": [0.66, 0.33, 0.0, 1.0]}`
           },
           {
             role: 'user',
-            content: `Evaluate this prompt:\n${prompt}`
+            content: `Compare these prompts:
+
+OLD PROMPT:
+${oldPrompt}
+
+NEW PROMPT:
+${newPrompt}`
           }
         ],
       }),
     });
 
     if (!response.ok) {
-      console.error('Quality evaluation failed, using default score 50');
-      return 50;
+      console.error('Pairwise comparison failed, using neutral votes');
+      return [0, 0, 0, 0];
     }
 
     const data = await response.json();
@@ -53,40 +70,59 @@ Return ONLY a JSON object with the total score:
     
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : content);
-    const score = Math.max(0, Math.min(100, parsed.score || 50));
-    return score;
+    const votes = parsed.votes || [0, 0, 0, 0];
+    
+    return votes;
   } catch (error) {
-    console.error('Failed to evaluate quality:', error);
-    return 50;
+    console.error('Failed to perform pairwise comparison:', error);
+    return [0, 0, 0, 0];
   }
 }
 
-function calculateQualityMetrics(
-  initialTokens: number,
-  finalTokens: number,
-  oldScore: number,
-  newScore: number
+function calculateModeFreeMetrics(
+  Ti: number,
+  Tf: number,
+  judgeVotes: number[],
+  lambda: number = 0.2
 ): {
-  compression: number;
-  qualityGain: number;
-  qualityImprovement: number;
+  deltaQ: number;
+  deltaT: number;
+  qualityGainPercent: number;
+  compactnessPercent: number;
+  rgi: number;
+  rgiPercent: number;
+  efficiency: number;
+  efficiencyPercent: number;
 } {
-  const epsilon = 0.01;
+  // ΔQ = mean(judge_votes)
+  const deltaQ = judgeVotes.reduce((sum, v) => sum + v, 0) / judgeVotes.length;
   
-  const compression = 100 * (1 - finalTokens / initialTokens);
-  const qualityGain = 100 * (newScore - oldScore) / Math.max(oldScore, epsilon);
+  // dT = (Tf - Ti) / max(Ti, 1)
+  const deltaT = (Tf - Ti) / Math.max(Ti, 1);
   
-  // Reasoning Gain Index (RGI): (NewScore - OldScore) / max((FinalTokens - InitialTokens), ε)
-  // Measures quality improvement per additional token
-  const tokenDelta = Math.max(finalTokens - initialTokens, epsilon);
-  const reasoningGainIndex = (newScore - oldScore) / tokenDelta;
+  // Compactness% = -100 * dT
+  const compactnessPercent = -100 * deltaT;
   
-  const clamp = (val: number) => Math.max(-100, Math.min(100, val));
+  // QG% = 100 * ΔQ
+  const qualityGainPercent = 100 * deltaQ;
+  
+  // RGI = ΔQ / max(|dT|, 1e-6)
+  const rgi = deltaQ / Math.max(Math.abs(deltaT), 1e-6);
+  const rgiPercent = 100 * rgi;
+  
+  // Efficiency = ΔQ - λ * dT
+  const efficiency = deltaQ - lambda * deltaT;
+  const efficiencyPercent = 100 * efficiency;
   
   return {
-    compression: Math.round(clamp(compression) * 100) / 100,
-    qualityGain: Math.round(clamp(qualityGain) * 100) / 100,
-    qualityImprovement: Math.round(reasoningGainIndex * 100) / 100, // Now using RGI formula
+    deltaQ: Math.round(deltaQ * 10000) / 10000,
+    deltaT: Math.round(deltaT * 10000) / 10000,
+    qualityGainPercent: Math.round(qualityGainPercent * 100) / 100,
+    compactnessPercent: Math.round(compactnessPercent * 100) / 100,
+    rgi: Math.round(rgi * 10000) / 10000,
+    rgiPercent: Math.round(rgiPercent * 100) / 100,
+    efficiency: Math.round(efficiency * 10000) / 10000,
+    efficiencyPercent: Math.round(efficiencyPercent * 100) / 100,
   };
 }
 
@@ -102,11 +138,11 @@ serve(async (req) => {
 
     console.log('Starting quality metrics recalculation...');
 
-    // Fetch all results that don't have quality metrics yet
+    // Fetch all results that don't have new mode-free metrics yet
     const { data: results, error: fetchError } = await supabase
       .from('optimization_results')
       .select('*')
-      .or('old_quality_score.is.null,new_quality_score.is.null,reasoning_gain_index.is.null')
+      .or('delta_q.is.null,delta_t.is.null,efficiency_score.is.null')
       .order('created_at', { ascending: false })
       .limit(100); // Process 100 at a time
 
@@ -133,27 +169,32 @@ serve(async (req) => {
       try {
         console.log(`Processing result ${result.id}...`);
 
-        // Evaluate original and optimized prompts
-        const oldScore = await evaluatePromptQuality(result.original_prompt);
-        const newScore = await evaluatePromptQuality(result.optimized_prompt);
+        // Pairwise comparison
+        const judgeVotes = await pairwiseComparePromptsWithVotes(
+          result.original_prompt,
+          result.optimized_prompt
+        );
 
-        // Calculate metrics
-        const metrics = calculateQualityMetrics(
+        // Calculate mode-free metrics
+        const metrics = calculateModeFreeMetrics(
           result.original_tokens,
           result.optimized_tokens,
-          oldScore,
-          newScore
+          judgeVotes,
+          result.lambda_tradeoff || 0.2
         );
 
         // Update the result
         const { error: updateError } = await supabase
           .from('optimization_results')
           .update({
-            old_quality_score: oldScore,
-            new_quality_score: newScore,
-            compression_percentage: metrics.compression,
-            quality_gain_percentage: metrics.qualityGain,
-            reasoning_gain_index: metrics.qualityImprovement,
+            judge_votes: judgeVotes,
+            delta_q: metrics.deltaQ,
+            delta_t: metrics.deltaT,
+            quality_gain_percentage: metrics.qualityGainPercent,
+            compactness_percentage: metrics.compactnessPercent,
+            reasoning_gain_index: metrics.rgiPercent,
+            efficiency_score: metrics.efficiency,
+            efficiency_percentage: metrics.efficiencyPercent,
           })
           .eq('id', result.id);
 
@@ -162,7 +203,7 @@ serve(async (req) => {
           errors++;
         } else {
           processed++;
-          console.log(`✓ Updated result ${result.id} (RGI: ${metrics.qualityImprovement}%)`);
+          console.log(`✓ Updated result ${result.id} (ΔQ: ${metrics.deltaQ.toFixed(4)}, RGI: ${metrics.rgiPercent.toFixed(2)}%, Eff: ${metrics.efficiencyPercent.toFixed(2)}%)`);
         }
 
         // Small delay to avoid rate limits

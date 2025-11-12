@@ -211,11 +211,16 @@ export const TFMController = () => {
           cost_cents: data.telemetry.cost_cents,
           cost_variance_cents: data.telemetry.cost_variance_cents,
           tokens_breakdown: data.telemetry.tokens_breakdown,
-          old_quality_score: data.qualityMetrics.oldScore,
-          new_quality_score: data.qualityMetrics.newScore,
-          compression_percentage: data.qualityMetrics.compression,
-          quality_gain_percentage: data.qualityMetrics.qualityGain,
-          reasoning_gain_index: data.qualityMetrics.qualityImprovement,
+          // Mode-free metrics
+          judge_votes: data.modeFreeMetrics.judgeVotes,
+          delta_q: data.modeFreeMetrics.deltaQ,
+          delta_t: data.modeFreeMetrics.deltaT,
+          quality_gain_percentage: data.modeFreeMetrics.qualityGainPercent,
+          compactness_percentage: data.modeFreeMetrics.compactnessPercent,
+          reasoning_gain_index: data.modeFreeMetrics.rgiPercent,
+          efficiency_score: data.modeFreeMetrics.efficiency,
+          efficiency_percentage: data.modeFreeMetrics.efficiencyPercent,
+          lambda_tradeoff: 0.2,
         })
         .select()
         .single();
@@ -228,7 +233,7 @@ export const TFMController = () => {
 
       toast({
         title: "Optimization completed",
-        description: `Quality Improvement: ${data.qualityMetrics.qualityImprovement.toFixed(1)}% (${data.iterations} iterations)`,
+        description: `RGI: ${data.modeFreeMetrics.rgiPercent.toFixed(2)}%, Efficiency: ${data.modeFreeMetrics.efficiencyPercent.toFixed(2)}% (${data.iterations} iterations)`,
       });
     } catch (error) {
       console.error('Error:', error);

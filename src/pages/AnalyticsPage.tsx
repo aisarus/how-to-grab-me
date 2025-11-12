@@ -45,11 +45,20 @@ interface OptimizationResult {
     refine: number;
     final: number;
   } | null;
+  // Mode-free metrics
+  judge_votes?: number[] | null;
+  delta_q?: number | null;
+  delta_t?: number | null;
+  quality_gain_percentage?: number | null;
+  compactness_percentage?: number | null;
+  reasoning_gain_index?: number | null;
+  efficiency_score?: number | null;
+  efficiency_percentage?: number | null;
+  lambda_tradeoff?: number | null;
+  // Legacy metrics (deprecated)
   old_quality_score?: number | null;
   new_quality_score?: number | null;
   compression_percentage?: number | null;
-  quality_gain_percentage?: number | null;
-  reasoning_gain_index?: number | null;
 }
 
 export default function AnalyticsPage() {
@@ -91,6 +100,7 @@ export default function AnalyticsPage() {
       const typedData = (data || []).map(item => ({
         ...item,
         tokens_breakdown: item.tokens_breakdown as { orig: number; refine: number; final: number } | null,
+        judge_votes: Array.isArray(item.judge_votes) ? item.judge_votes as number[] : null,
       }));
       
       setResults(typedData);
@@ -126,7 +136,10 @@ export default function AnalyticsPage() {
 
     if (filteredResults.length === 0) return {
       totalImproved: 0,
-      avgQualityImprovement: 0,
+      avgQualityGain: 0,
+      avgCompactness: 0,
+      avgRGI: 0,
+      avgEfficiency: 0,
       totalTokensInvested: 0,
       avgCostPerPrompt: 0,
       successRate: 0,
@@ -134,43 +147,50 @@ export default function AnalyticsPage() {
       needsRecalculation: false,
     };
 
-    // Количество улучшенных промптов
     const totalImproved = filteredResults.length;
     
-    // Reasoning Gain Index метрики
+    // Mode-free metrics
+    const qgScores = filteredResults
+      .filter(r => r.quality_gain_percentage !== null && r.quality_gain_percentage !== undefined)
+      .map(r => r.quality_gain_percentage!);
+    
+    const compScores = filteredResults
+      .filter(r => r.compactness_percentage !== null && r.compactness_percentage !== undefined)
+      .map(r => r.compactness_percentage!);
+    
     const rgiScores = filteredResults
       .filter(r => r.reasoning_gain_index !== null && r.reasoning_gain_index !== undefined)
-      .map(r => r.reasoning_gain_index!)
-      .sort((a, b) => a - b);
+      .map(r => r.reasoning_gain_index!);
+    
+    const effScores = filteredResults
+      .filter(r => r.efficiency_percentage !== null && r.efficiency_percentage !== undefined)
+      .map(r => r.efficiency_percentage!);
     
     const needsRecalculation = rgiScores.length === 0 && filteredResults.length > 0;
     
-    // Среднее арифметическое RGI
-    let averageRGI = 0;
-    if (rgiScores.length > 0) {
-      averageRGI = rgiScores.reduce((sum, score) => sum + score, 0) / rgiScores.length;
-    }
+    // Calculate averages
+    const avgQualityGain = qgScores.length > 0
+      ? qgScores.reduce((sum, score) => sum + score, 0) / qgScores.length
+      : 0;
     
-    // Медиана RGI
-    let medianRGI = 0;
-    if (rgiScores.length > 0) {
-      const mid = Math.floor(rgiScores.length / 2);
-      medianRGI = rgiScores.length % 2 === 0
-        ? (rgiScores[mid - 1] + rgiScores[mid]) / 2
-        : rgiScores[mid];
-    } else {
-      // Fallback to old calculation if new metrics not available
-      medianRGI = filteredResults.reduce((sum, r) => {
-        return sum + Math.abs(r.improvement_percentage);
-      }, 0) / filteredResults.length;
-    }
+    const avgCompactness = compScores.length > 0
+      ? compScores.reduce((sum, score) => sum + score, 0) / compScores.length
+      : 0;
     
-    // Общее количество токенов, потраченных на улучшение (optimized tokens)
+    const avgRGI = rgiScores.length > 0
+      ? rgiScores.reduce((sum, score) => sum + score, 0) / rgiScores.length
+      : 0;
+    
+    const avgEfficiency = effScores.length > 0
+      ? effScores.reduce((sum, score) => sum + score, 0) / effScores.length
+      : 0;
+    
+    // Total tokens invested (optimized tokens)
     const totalTokensInvested = filteredResults.reduce((sum, r) => {
       return sum + r.optimized_tokens;
     }, 0);
     
-    // Средняя стоимость за промпт
+    // Average cost per prompt
     const costValues = filteredResults
       .filter(r => r.cost_cents !== null && r.cost_cents > 0)
       .map(r => r.cost_cents!);
@@ -179,20 +199,22 @@ export default function AnalyticsPage() {
       ? costValues.reduce((sum, c) => sum + c, 0) / costValues.length
       : (totalTokensInvested * 0.000002 * 100) / filteredResults.length;
     
-    // Success rate - процент принятых результатов
+    // Success rate - % of accepted results
     const acceptedResults = filteredResults.filter(r => r.accepted === true);
     const successRate = filteredResults.length > 0 ? ((acceptedResults.length / filteredResults.length) * 100) : 0;
     
-    // Среднее количество итераций для улучшения
+    // Average iterations
     const avgIterations = filteredResults.reduce((sum, r) => {
       return sum + r.iterations;
     }, 0) / filteredResults.length;
 
     return {
-      totalImproved: totalImproved,
-      averageRGI: averageRGI,
-      avgQualityImprovement: medianRGI.toFixed(1),
-      totalTokensInvested: totalTokensInvested,
+      totalImproved,
+      avgQualityGain: avgQualityGain.toFixed(2),
+      avgCompactness: avgCompactness.toFixed(2),
+      avgRGI: avgRGI.toFixed(2),
+      avgEfficiency: avgEfficiency.toFixed(2),
+      totalTokensInvested,
       avgCostPerPrompt: avgCostPerPrompt.toFixed(2),
       successRate: successRate.toFixed(1),
       avgIterations: avgIterations.toFixed(1),
@@ -468,14 +490,20 @@ export default function AnalyticsPage() {
                   },
                   kpis: {
                     successRate: `${stats.successRate}%`,
-                    avgQualityImprovement: `${stats.avgQualityImprovement}%`,
+                    avgQualityGain: `${stats.avgQualityGain}%`,
+                    avgCompactness: `${stats.avgCompactness}%`,
+                    avgRGI: `${stats.avgRGI}%`,
+                    avgEfficiency: `${stats.avgEfficiency}%`,
                     avgCostPerPrompt: `${stats.avgCostPerPrompt}¢`,
                     avgIterations: `${stats.avgIterations}`,
                     totalTokensInvested: `${stats.totalTokensInvested.toLocaleString()}`
                   },
                   metrics: {
                     successRate: parseFloat(String(stats.successRate)),
-                    avgQualityImprovement: parseFloat(String(stats.avgQualityImprovement)),
+                    avgQualityGain: parseFloat(String(stats.avgQualityGain)),
+                    avgCompactness: parseFloat(String(stats.avgCompactness)),
+                    avgRGI: parseFloat(String(stats.avgRGI)),
+                    avgEfficiency: parseFloat(String(stats.avgEfficiency)),
                     avgCostPerPrompt: parseFloat(String(stats.avgCostPerPrompt)),
                     avgIterations: parseFloat(String(stats.avgIterations)),
                     totalTokensInvested: stats.totalTokensInvested
@@ -535,12 +563,12 @@ export default function AnalyticsPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <TrendingUp className="w-4 h-4" />
-                {t('analytics.averageRGI')}
+                Quality Gain (QG%)
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{stats.averageRGI.toFixed(4)}%</div>
-              <p className="text-xs text-muted-foreground mt-1">{t('analytics.averageRGIDesc')}</p>
+              <div className="text-3xl font-bold">{stats.avgQualityGain}%</div>
+              <p className="text-xs text-muted-foreground mt-1">Average ΔQ × 100</p>
             </CardContent>
           </Card>
 
@@ -548,12 +576,38 @@ export default function AnalyticsPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <TrendingUp className="w-4 h-4" />
-                {t('analytics.qualityImprovement')}
+                Compactness%
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{stats.avgQualityImprovement}%</div>
-              <p className="text-xs text-muted-foreground mt-1">{t('analytics.avgQualityGain')}</p>
+              <div className="text-3xl font-bold">{stats.avgCompactness}%</div>
+              <p className="text-xs text-muted-foreground mt-1">-100 × dT (negative = more compact)</p>
+            </CardContent>
+          </Card>
+
+          <Card className="floating-card border-2 border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5" style={{ animationDelay: '0.2s' }}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-primary flex items-center gap-2">
+                <Award className="w-4 h-4" />
+                RGI%
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-primary">{stats.avgRGI}%</div>
+              <p className="text-xs text-muted-foreground mt-1">Reasoning Gain Index (100 × ΔQ / |dT|)</p>
+            </CardContent>
+          </Card>
+
+          <Card className="floating-card border-2 border-accent/20 bg-gradient-to-br from-accent/10 to-accent/5" style={{ animationDelay: '0.25s' }}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Trophy className="w-4 h-4" />
+                Efficiency%
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stats.avgEfficiency}%</div>
+              <p className="text-xs text-muted-foreground mt-1">100 × (ΔQ - λ × dT), λ=0.2</p>
             </CardContent>
           </Card>
 
