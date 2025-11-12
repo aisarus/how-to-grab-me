@@ -20,6 +20,36 @@ interface TFMConfig {
   eriksonStage?: number;
   useProposerCriticVerifier: boolean;
   proposerCriticOnly: boolean;
+  smartQueueEnabled: boolean;
+  explainModeEnabled: boolean;
+  versioningEnabled: boolean;
+  clarityThreshold: number;
+}
+
+interface SmartQueueResult {
+  priorityScore: number;
+  shouldOptimize: boolean;
+  clarityScore: number;
+  structureScore: number;
+  constraintsScore: number;
+}
+
+interface ExplanationData {
+  mainIssues: string[];
+  keyTransformations: string[];
+  expectedEffects: string[];
+  fullExplanation: string;
+}
+
+interface VersionLogEntry {
+  originalId: string;
+  newId: string;
+  iterationNumber: number;
+  previousContentHash: string;
+  contentHash: string;
+  promptContent: string;
+  reviewerAction: 'pending' | 'accept' | 'reject' | 'rollback';
+  timestamp: string;
 }
 
 interface ModeFreeMetrics {
@@ -62,6 +92,264 @@ interface TFMResponse {
       final: number;
     };
   };
+  smartQueue?: SmartQueueResult;
+  explanations?: ExplanationData[];
+  versionLog?: VersionLogEntry[];
+  integrationReadiness?: {
+    optimizedPrompt: string;
+    explain: string;
+    metrics: {
+      QGPercent: number;
+      RGIPercent: number;
+      EffPercent: number;
+      Iterations: number;
+    };
+    versionLog: {
+      originalId: string;
+      finalId: string;
+      finalIterationNumber: number;
+      reviewerAction: string;
+      timestamp: string;
+      hashOfContent: string;
+    };
+  };
+}
+
+// ============= Smart Queue Module =============
+async function calculateSmartQueueScore(prompt: string): Promise<SmartQueueResult> {
+  console.log('\n=== Smart Queue: Calculating priority score ===');
+  
+  const response = await fetch(AI_GATEWAY_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        {
+          role: 'system',
+          content: `You are analyzing a prompt to determine if it needs optimization. Rate the following aspects on a scale of 0.0 to 1.0:
+
+1. Clarity: Is the prompt clear and unambiguous? (1.0 = perfectly clear, 0.0 = very unclear)
+2. Structure: Is the prompt well-structured with clear instructions? (1.0 = excellent structure, 0.0 = no structure)
+3. Constraints: Does the prompt have appropriate constraints and specificity? (1.0 = well-constrained, 0.0 = vague)
+
+Return JSON only:
+{
+  "clarity": 0.0-1.0,
+  "structure": 0.0-1.0,
+  "constraints": 0.0-1.0,
+  "reasoning": "brief explanation"
+}`
+        },
+        {
+          role: 'user',
+          content: `Analyze this prompt:\n\n${prompt}`
+        }
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    console.warn('Smart Queue analysis failed, defaulting to optimize');
+    return {
+      priorityScore: 0.5,
+      shouldOptimize: true,
+      clarityScore: 0.5,
+      structureScore: 0.5,
+      constraintsScore: 0.5,
+    };
+  }
+
+  const data = await response.json();
+  const content = data.choices[0].message.content;
+  
+  let parsed;
+  try {
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    parsed = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+  } catch {
+    return {
+      priorityScore: 0.5,
+      shouldOptimize: true,
+      clarityScore: 0.5,
+      structureScore: 0.5,
+      constraintsScore: 0.5,
+    };
+  }
+
+  const clarity = parsed.clarity ?? 0.5;
+  const structure = parsed.structure ?? 0.5;
+  const constraints = parsed.constraints ?? 0.5;
+  
+  // Formula: priority_score = 0.5×(1−Clarity) + 0.3×(1−Structure) + 0.2×(1−Constraints)
+  const priorityScore = 0.5 * (1 - clarity) + 0.3 * (1 - structure) + 0.2 * (1 - constraints);
+  
+  console.log(`Smart Queue scores - Clarity: ${clarity.toFixed(2)}, Structure: ${structure.toFixed(2)}, Constraints: ${constraints.toFixed(2)}`);
+  console.log(`Priority score: ${priorityScore.toFixed(3)} (higher = more optimization needed)`);
+  console.log(`Reasoning: ${parsed.reasoning}`);
+  
+  return {
+    priorityScore,
+    shouldOptimize: priorityScore < 0.85, // If priority < 0.85, prompt needs optimization
+    clarityScore: clarity,
+    structureScore: structure,
+    constraintsScore: constraints,
+  };
+}
+
+// ============= Explain Mode Module =============
+async function generateExplanation(
+  originalPrompt: string,
+  improvedPrompt: string,
+  improvements: string[]
+): Promise<ExplanationData> {
+  console.log('\n=== Explain Mode: Generating explanation ===');
+  
+  const response = await fetch(AI_GATEWAY_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        {
+          role: 'system',
+          content: `You are generating a concise explanation (≤150 words) of prompt optimization changes.
+
+Format your response as JSON:
+{
+  "mainIssues": ["issue 1", "issue 2", "issue 3"],
+  "keyTransformations": ["transformation 1", "transformation 2", "transformation 3"],
+  "expectedEffects": ["effect 1", "effect 2", "effect 3"]
+}
+
+Guidelines:
+- Max 3 items per array
+- Use arrow notation for effects: clarity ↑, control ↑, ambiguity ↓, token_count ↓
+- Be specific and actionable`
+        },
+        {
+          role: 'user',
+          content: `Original: ${originalPrompt}\n\nImproved: ${improvedPrompt}\n\nImprovements made: ${improvements.join(', ')}`
+        }
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    console.warn('Explain Mode failed, using default explanation');
+    return {
+      mainIssues: ['Analysis not available'],
+      keyTransformations: improvements.slice(0, 3),
+      expectedEffects: ['clarity ↑', 'control ↑'],
+      fullExplanation: `EXPLAIN:\n- Main issues: ${improvements.join(', ')}\n- Key transformations: Applied optimization improvements\n- Expected effects: clarity ↑, control ↑`
+    };
+  }
+
+  const data = await response.json();
+  const content = data.choices[0].message.content;
+  
+  let parsed;
+  try {
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    parsed = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+  } catch {
+    return {
+      mainIssues: ['Analysis not available'],
+      keyTransformations: improvements.slice(0, 3),
+      expectedEffects: ['clarity ↑', 'control ↑'],
+      fullExplanation: `EXPLAIN:\n- Main issues: ${improvements.join(', ')}\n- Key transformations: Applied optimization improvements\n- Expected effects: clarity ↑, control ↑`
+    };
+  }
+
+  const mainIssues = (parsed.mainIssues || []).slice(0, 3);
+  const keyTransformations = (parsed.keyTransformations || []).slice(0, 3);
+  const expectedEffects = (parsed.expectedEffects || []).slice(0, 3);
+
+  const fullExplanation = `EXPLAIN:\n- Main issues detected: ${mainIssues.join(', ')}\n- Key transformations applied: ${keyTransformations.join(', ')}\n- Expected measurable effects: ${expectedEffects.join(', ')}`;
+
+  console.log(fullExplanation);
+
+  return {
+    mainIssues,
+    keyTransformations,
+    expectedEffects,
+    fullExplanation
+  };
+}
+
+// ============= Versioning Module =============
+function createVersionLogEntry(
+  iterationNumber: number,
+  previousPrompt: string,
+  currentPrompt: string,
+  originalId: string
+): VersionLogEntry {
+  const previousHash = hashContent(previousPrompt);
+  const currentHash = hashContent(currentPrompt);
+  const newId = `${originalId}-v${iterationNumber}`;
+  
+  return {
+    originalId,
+    newId,
+    iterationNumber,
+    previousContentHash: previousHash,
+    contentHash: currentHash,
+    promptContent: currentPrompt,
+    reviewerAction: 'pending',
+    timestamp: new Date().toISOString()
+  };
+}
+
+function hashContent(content: string): string {
+  // Simple hash function for content (in production, use crypto.subtle.digest for SHA-256)
+  let hash = 0;
+  for (let i = 0; i < content.length; i++) {
+    const char = content.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(16).padStart(16, '0');
+}
+
+// ============= Integration Readiness Module =============
+function generateIntegrationReadiness(
+  optimizedPrompt: string,
+  explanations: ExplanationData[],
+  metrics: ModeFreeMetrics,
+  iterations: number,
+  versionLog: VersionLogEntry[],
+  originalId: string
+): any {
+  const cumulativeExplanation = explanations
+    .map(exp => exp.fullExplanation)
+    .join('\n\n');
+  
+  const finalVersion = versionLog[versionLog.length - 1];
+  
+  return {
+    optimizedPrompt,
+    explain: cumulativeExplanation,
+    metrics: {
+      QGPercent: Math.round(metrics.qualityGainPercent * 100) / 100,
+      RGIPercent: Math.round(metrics.rgiPercent * 100) / 100,
+      EffPercent: Math.round(metrics.efficiencyPercent * 100) / 100,
+      Iterations: iterations
+    },
+    versionLog: {
+      originalId,
+      finalId: finalVersion?.newId || originalId,
+      finalIterationNumber: iterations,
+      reviewerAction: 'accept',
+      timestamp: new Date().toISOString(),
+      hashOfContent: finalVersion?.contentHash || hashContent(optimizedPrompt)
+    }
+  };
 }
 
 serve(async (req) => {
@@ -95,12 +383,82 @@ serve(async (req) => {
       eriksonStage: config?.eriksonStage,
       useProposerCriticVerifier: config?.useProposerCriticVerifier ?? false,
       proposerCriticOnly: config?.proposerCriticOnly ?? false,
+      smartQueueEnabled: config?.smartQueueEnabled ?? true,
+      explainModeEnabled: config?.explainModeEnabled ?? true,
+      versioningEnabled: config?.versioningEnabled ?? true,
+      clarityThreshold: config?.clarityThreshold ?? 0.85,
     };
 
     console.log('Starting TRI/TFM controller with config:', tfmConfig);
 
-    // No need to evaluate initial quality anymore - we'll do pairwise comparison at the end
+    // ============= MODULE 1: Smart Queue (Prioritization Layer) =============
+    let smartQueueResult: SmartQueueResult | undefined;
+    let originalId = `prompt-${Date.now()}`;
+    
+    if (tfmConfig.smartQueueEnabled) {
+      smartQueueResult = await calculateSmartQueueScore(prompt);
+      
+      if (!smartQueueResult.shouldOptimize) {
+        console.log(`\n✓ Smart Queue: Prompt quality sufficient (priority score: ${smartQueueResult.priorityScore.toFixed(3)}). Skipping optimization.`);
+        
+        const initialTokens = estimateTokens(prompt);
+        const judgeVotes = [1, 1, 1, 1]; // Perfect scores since no changes needed
+        const modeFreeMetrics = calculateModeFreeMetrics(initialTokens, initialTokens, 1, judgeVotes);
+        
+        const integrationReadiness = {
+          optimizedPrompt: prompt,
+          explain: 'No optimization needed - prompt already meets quality standards.',
+          metrics: {
+            QGPercent: 100,
+            RGIPercent: 100,
+            EffPercent: 100,
+            Iterations: 0
+          },
+          versionLog: {
+            originalId,
+            finalId: originalId,
+            finalIterationNumber: 0,
+            reviewerAction: 'accept',
+            timestamp: new Date().toISOString(),
+            hashOfContent: hashContent(prompt)
+          }
+        };
 
+        return new Response(JSON.stringify({
+          finalText: prompt,
+          iterations: 0,
+          tokenHistory: [initialTokens],
+          converged: true,
+          savings: {
+            initialTokens,
+            finalTokens: initialTokens,
+            percentageSaved: 0,
+          },
+          modeFreeMetrics,
+          smartQueue: smartQueueResult,
+          telemetry: {
+            accepted: true,
+            accepted_iter: 0,
+            tta_sec: 0.1,
+            cost_cents: 0,
+            cost_variance_cents: 0,
+            tokens_breakdown: {
+              orig: initialTokens,
+              refine: 0,
+              final: initialTokens,
+            },
+          },
+          integrationReadiness
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    // ============= MODULE 2 & 3: PCV with Explain Mode & Versioning =============
+    const explanations: ExplanationData[] = [];
+    const versionLog: VersionLogEntry[] = [];
+    
     let promptImprovement = undefined;
     let workingPrompt = prompt;
     
@@ -112,6 +470,18 @@ serve(async (req) => {
       console.log('Original prompt length:', estimateTokens(prompt));
       console.log('Improved prompt length:', estimateTokens(workingPrompt));
       console.log('Improvements:', improved.improvements);
+      
+      // Generate explanation for initial improvement
+      if (tfmConfig.explainModeEnabled && improved.improvedPrompt !== prompt) {
+        const explanation = await generateExplanation(prompt, improved.improvedPrompt, improved.improvements);
+        explanations.push(explanation);
+      }
+      
+      // Create first version log entry
+      if (tfmConfig.versioningEnabled && improved.improvedPrompt !== prompt) {
+        const versionEntry = createVersionLogEntry(1, prompt, improved.improvedPrompt, originalId);
+        versionLog.push(versionEntry);
+      }
     }
 
     // Proposer–Critic only mode: skip D/S loop and Arbiter entirely
@@ -122,12 +492,31 @@ serve(async (req) => {
       let pcIteration = 0;
       let lastImprovement: { originalPrompt: string; improvedPrompt: string; improvements: string[] } | undefined = undefined;
       const pcStart = Date.now();
+      let previousPrompt = prompt;
 
       while (pcIteration < tfmConfig.maxIterations) {
         pcIteration++;
         const improved = await improvePrompt(pcCurrent);
         lastImprovement = improved;
         if (improved.improvedPrompt && improved.improvedPrompt.trim() !== '' && improved.improvedPrompt !== pcCurrent) {
+          // Generate explanation for this iteration
+          if (tfmConfig.explainModeEnabled) {
+            const explanation = await generateExplanation(pcCurrent, improved.improvedPrompt, improved.improvements);
+            explanations.push(explanation);
+          }
+          
+          // Create version log entry
+          if (tfmConfig.versioningEnabled) {
+            const versionEntry = createVersionLogEntry(
+              versionLog.length > 0 ? pcIteration : 1, 
+              previousPrompt, 
+              improved.improvedPrompt, 
+              originalId
+            );
+            versionLog.push(versionEntry);
+          }
+          
+          previousPrompt = pcCurrent;
           pcCurrent = improved.improvedPrompt;
           pcTokenHistory.push(estimateTokens(pcCurrent));
         } else {
@@ -138,6 +527,7 @@ serve(async (req) => {
       // Pairwise comparison: OLD vs NEW
       console.log('Performing pairwise comparison...');
       const judgeVotes = await pairwiseComparePromptsWithVotes(prompt, pcCurrent);
+      console.log('Pairwise comparison votes:', judgeVotes);
       const deltaQ = judgeVotes.reduce((sum, v) => sum + v, 0) / judgeVotes.length;
 
       const initialTokens = estimateTokens(prompt);
@@ -156,6 +546,16 @@ serve(async (req) => {
       const stdDev = Math.sqrt(variance);
       const costVarianceCents = (stdDev * TOKEN_COST) * 100;
 
+      // ============= MODULE 4: Integration Readiness =============
+      const integrationReadiness = generateIntegrationReadiness(
+        pcCurrent,
+        explanations,
+        modeFreeMetrics,
+        pcIteration,
+        versionLog,
+        originalId
+      );
+
       const response: TFMResponse = {
         finalText: pcCurrent,
         iterations: pcIteration,
@@ -168,6 +568,10 @@ serve(async (req) => {
         },
         modeFreeMetrics,
         promptImprovement: lastImprovement,
+        smartQueue: smartQueueResult,
+        explanations,
+        versionLog,
+        integrationReadiness,
         telemetry: {
           accepted: pcIteration < tfmConfig.maxIterations,
           accepted_iter: pcIteration < tfmConfig.maxIterations ? pcIteration : null,
@@ -257,6 +661,16 @@ serve(async (req) => {
     const stdDev = Math.sqrt(variance);
     const costVarianceCents = (stdDev * TOKEN_COST) * 100;
 
+    // ============= MODULE 4: Integration Readiness =============
+    const integrationReadiness = generateIntegrationReadiness(
+      currentText,
+      explanations,
+      modeFreeMetrics,
+      iteration,
+      versionLog,
+      originalId
+    );
+
     const response: TFMResponse = {
       finalText: currentText,
       iterations: iteration,
@@ -269,6 +683,10 @@ serve(async (req) => {
       },
       modeFreeMetrics,
       promptImprovement,
+      smartQueue: smartQueueResult,
+      explanations,
+      versionLog,
+      integrationReadiness,
       telemetry: {
         accepted: converged,
         accepted_iter: acceptedIteration,

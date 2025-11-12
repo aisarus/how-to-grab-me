@@ -70,11 +70,13 @@ export type Database = {
           cost_cents: number | null
           cost_variance_cents: number | null
           created_at: string
+          cumulative_explanation: string | null
           delta_q: number | null
           delta_t: number | null
           efficiency_percentage: number | null
           efficiency_score: number | null
           erikson_stage: number | null
+          explain_mode_enabled: boolean | null
           id: string
           improvement_percentage: number | null
           iterations: number | null
@@ -82,15 +84,19 @@ export type Database = {
           lambda_tradeoff: number | null
           new_quality_score: number | null
           old_quality_score: number | null
+          optimized_by_default: boolean | null
           optimized_prompt: string
           optimized_tokens: number | null
           original_prompt: string
           original_tokens: number | null
+          priority_score: number | null
           quality_gain_percentage: number | null
           reasoning_gain_index: number | null
+          smart_queue_enabled: boolean | null
           tokens_breakdown: Json | null
           tta_sec: number | null
           user_id: string
+          versioning_enabled: boolean | null
         }
         Insert: {
           a_parameter?: number | null
@@ -105,11 +111,13 @@ export type Database = {
           cost_cents?: number | null
           cost_variance_cents?: number | null
           created_at?: string
+          cumulative_explanation?: string | null
           delta_q?: number | null
           delta_t?: number | null
           efficiency_percentage?: number | null
           efficiency_score?: number | null
           erikson_stage?: number | null
+          explain_mode_enabled?: boolean | null
           id?: string
           improvement_percentage?: number | null
           iterations?: number | null
@@ -117,15 +125,19 @@ export type Database = {
           lambda_tradeoff?: number | null
           new_quality_score?: number | null
           old_quality_score?: number | null
+          optimized_by_default?: boolean | null
           optimized_prompt: string
           optimized_tokens?: number | null
           original_prompt: string
           original_tokens?: number | null
+          priority_score?: number | null
           quality_gain_percentage?: number | null
           reasoning_gain_index?: number | null
+          smart_queue_enabled?: boolean | null
           tokens_breakdown?: Json | null
           tta_sec?: number | null
           user_id: string
+          versioning_enabled?: boolean | null
         }
         Update: {
           a_parameter?: number | null
@@ -140,11 +152,13 @@ export type Database = {
           cost_cents?: number | null
           cost_variance_cents?: number | null
           created_at?: string
+          cumulative_explanation?: string | null
           delta_q?: number | null
           delta_t?: number | null
           efficiency_percentage?: number | null
           efficiency_score?: number | null
           erikson_stage?: number | null
+          explain_mode_enabled?: boolean | null
           id?: string
           improvement_percentage?: number | null
           iterations?: number | null
@@ -152,15 +166,19 @@ export type Database = {
           lambda_tradeoff?: number | null
           new_quality_score?: number | null
           old_quality_score?: number | null
+          optimized_by_default?: boolean | null
           optimized_prompt?: string
           optimized_tokens?: number | null
           original_prompt?: string
           original_tokens?: number | null
+          priority_score?: number | null
           quality_gain_percentage?: number | null
           reasoning_gain_index?: number | null
+          smart_queue_enabled?: boolean | null
           tokens_breakdown?: Json | null
           tta_sec?: number | null
           user_id?: string
+          versioning_enabled?: boolean | null
         }
         Relationships: []
       }
@@ -184,6 +202,107 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      prompt_explanations: {
+        Row: {
+          created_at: string | null
+          expected_effects: string[] | null
+          full_explanation: string
+          id: string
+          iteration_number: number
+          key_transformations: string[] | null
+          main_issues: string[] | null
+          optimization_result_id: string | null
+          version_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expected_effects?: string[] | null
+          full_explanation: string
+          id?: string
+          iteration_number: number
+          key_transformations?: string[] | null
+          main_issues?: string[] | null
+          optimization_result_id?: string | null
+          version_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expected_effects?: string[] | null
+          full_explanation?: string
+          id?: string
+          iteration_number?: number
+          key_transformations?: string[] | null
+          main_issues?: string[] | null
+          optimization_result_id?: string | null
+          version_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompt_explanations_optimization_result_id_fkey"
+            columns: ["optimization_result_id"]
+            isOneToOne: false
+            referencedRelation: "optimization_results"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prompt_explanations_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "prompt_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prompt_versions: {
+        Row: {
+          content_hash: string
+          created_at: string | null
+          id: string
+          iteration_number: number
+          new_id: string
+          optimization_result_id: string | null
+          original_id: string
+          previous_content_hash: string | null
+          prompt_content: string
+          reviewer_action: string | null
+          timestamp: string | null
+        }
+        Insert: {
+          content_hash: string
+          created_at?: string | null
+          id?: string
+          iteration_number: number
+          new_id: string
+          optimization_result_id?: string | null
+          original_id: string
+          previous_content_hash?: string | null
+          prompt_content: string
+          reviewer_action?: string | null
+          timestamp?: string | null
+        }
+        Update: {
+          content_hash?: string
+          created_at?: string | null
+          id?: string
+          iteration_number?: number
+          new_id?: string
+          optimization_result_id?: string | null
+          original_id?: string
+          previous_content_hash?: string | null
+          prompt_content?: string
+          reviewer_action?: string | null
+          timestamp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompt_versions_optimization_result_id_fkey"
+            columns: ["optimization_result_id"]
+            isOneToOne: false
+            referencedRelation: "optimization_results"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       shared_results: {
         Row: {
