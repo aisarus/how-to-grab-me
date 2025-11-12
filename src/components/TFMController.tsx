@@ -27,17 +27,33 @@ interface TFMResult {
     finalTokens: number;
     percentageSaved: number;
   };
-  qualityMetrics: {
-    oldScore: number;
-    newScore: number;
-    compression: number;
-    qualityGain: number;
-    qualityImprovement: number;
+  modeFreeMetrics: {
+    deltaQ: number;
+    deltaT: number;
+    qualityGainPercent: number;
+    compactnessPercent: number;
+    rgi: number;
+    rgiPercent: number;
+    efficiency: number;
+    efficiencyPercent: number;
+    judgeVotes: number[];
   };
   promptImprovement?: {
     originalPrompt: string;
     improvedPrompt: string;
     improvements: string[];
+  };
+  telemetry?: {
+    accepted: boolean;
+    accepted_iter: number | null;
+    tta_sec: number;
+    cost_cents: number;
+    cost_variance_cents: number;
+    tokens_breakdown: {
+      orig: number;
+      refine: number;
+      final: number;
+    };
   };
 }
 
@@ -1027,44 +1043,58 @@ export const TFMController = () => {
               <Card className="floating-card border-2 border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5" style={{ animationDelay: '0.3s' }}>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium flex items-center gap-2 text-primary">
-                    <TrendingDown className="w-4 h-4" />
-                    Quality Improvement
+                    <Brain className="w-4 h-4" />
+                    RGI (Reasoning Gain Index)
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-4xl font-bold ${result.qualityMetrics.qualityImprovement >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                    {result.qualityMetrics.qualityImprovement > 0 ? '+' : ''}{result.qualityMetrics.qualityImprovement.toFixed(1)}%
+                  <div className={`text-4xl font-bold ${result.modeFreeMetrics.rgiPercent >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                    {result.modeFreeMetrics.rgiPercent > 0 ? '+' : ''}{result.modeFreeMetrics.rgiPercent.toFixed(1)}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Combined metric (0.6×quality + 0.4×compression)
+                    Quality improvement per unit length change
                   </p>
                 </CardContent>
               </Card>
 
               <Card className="floating-card border-2" style={{ animationDelay: '0.4s' }}>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Quality Gain</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Quality Gain (QG%)</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-3xl font-bold ${result.qualityMetrics.qualityGain >= 0 ? 'text-green-600' : 'text-amber-600'}`}>
-                    {result.qualityMetrics.qualityGain > 0 ? '+' : ''}{result.qualityMetrics.qualityGain.toFixed(1)}%
+                  <div className={`text-3xl font-bold ${result.modeFreeMetrics.qualityGainPercent >= 0 ? 'text-green-600' : 'text-amber-600'}`}>
+                    {result.modeFreeMetrics.qualityGainPercent > 0 ? '+' : ''}{result.modeFreeMetrics.qualityGainPercent.toFixed(1)}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    EFMNB score: {result.qualityMetrics.oldScore.toFixed(1)} → {result.qualityMetrics.newScore.toFixed(1)}
+                    Mean pairwise comparison score
                   </p>
                 </CardContent>
               </Card>
 
               <Card className="floating-card border-2" style={{ animationDelay: '0.5s' }}>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Compression</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Compactness%</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-3xl font-bold ${result.qualityMetrics.compression >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                    {result.qualityMetrics.compression > 0 ? '+' : ''}{result.qualityMetrics.compression.toFixed(1)}%
+                  <div className={`text-3xl font-bold ${result.modeFreeMetrics.compactnessPercent >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                    {result.modeFreeMetrics.compactnessPercent > 0 ? '+' : ''}{result.modeFreeMetrics.compactnessPercent.toFixed(1)}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
                     Tokens: {result.savings.initialTokens} → {result.savings.finalTokens}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="floating-card border-2" style={{ animationDelay: '0.6s' }}>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Efficiency (Eff%)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className={`text-3xl font-bold ${result.modeFreeMetrics.efficiencyPercent >= 0 ? 'text-purple-600' : 'text-red-600'}`}>
+                    {result.modeFreeMetrics.efficiencyPercent > 0 ? '+' : ''}{result.modeFreeMetrics.efficiencyPercent.toFixed(1)}%
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    ΔQ - 0.2×dT (quality vs length tradeoff)
                   </p>
                 </CardContent>
               </Card>
