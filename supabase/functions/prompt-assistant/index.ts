@@ -20,10 +20,39 @@ serve(async (req) => {
   }
 
   try {
+    const MAX_MESSAGES = 100;
+    const MAX_MESSAGE_LENGTH = 50000; // 50KB per message
     const { messages, useEfmnb = true, useErikson = true, language = 'en' } = await req.json();
     
+    // Input validation
     if (!messages || !Array.isArray(messages)) {
-      throw new Error('Messages array is required');
+      return new Response(
+        JSON.stringify({ error: 'Invalid messages: must be a non-empty array' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (messages.length === 0 || messages.length > MAX_MESSAGES) {
+      return new Response(
+        JSON.stringify({ error: `Messages array must contain 1-${MAX_MESSAGES} messages` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    for (const msg of messages) {
+      if (!msg.content || typeof msg.content !== 'string') {
+        return new Response(
+          JSON.stringify({ error: 'Each message must have a content string' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      if (msg.content.length > MAX_MESSAGE_LENGTH) {
+        return new Response(
+          JSON.stringify({ error: `Message content exceeds maximum length of ${MAX_MESSAGE_LENGTH} characters` }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     if (!LOVABLE_API_KEY) {
