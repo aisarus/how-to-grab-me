@@ -45,13 +45,18 @@ export async function uploadDataRoomFile(
 ): Promise<UploadResponse> {
   const bucket = "data-room-documents";
 
+  // Get authenticated user
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("User not authenticated");
+
   const date = new Date();
   const yyyy = String(date.getFullYear());
   const mm = String(date.getMonth() + 1).padStart(2, "0");
   const dd = String(date.getDate()).padStart(2, "0");
 
   const safeName = sanitizeFileName(file.name || "file");
-  const key = `${options.folder ?? "uploads"}/${yyyy}/${mm}/${dd}/${crypto.randomUUID()}-${safeName}`;
+  // Include user ID in path for RLS policies
+  const key = `${user.id}/${options.folder ?? "uploads"}/${yyyy}/${mm}/${dd}/${crypto.randomUUID()}-${safeName}`;
 
   const { data, error } = await supabase.storage.from(bucket).upload(key, file, {
     cacheControl: "3600",
@@ -127,11 +132,20 @@ export async function uploadLink(
   url: string,
   metadata: DocumentMetadata
 ): Promise<DocumentRecord> {
-  // Валидация URL
+  // Validate URL protocol - only allow http/https
   try {
-    new URL(url);
-  } catch {
-    throw new Error("Invalid URL format");
+    const parsedUrl = new URL(url);
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+      throw new Error("Only HTTP and HTTPS URLs are allowed");
+    }
+    if (url.length > 2048) {
+      throw new Error("URL exceeds maximum length");
+    }
+  } catch (e) {
+    if (e instanceof TypeError) {
+      throw new Error("Invalid URL format");
+    }
+    throw e;
   }
 
   const { data: user } = await supabase.auth.getUser();
