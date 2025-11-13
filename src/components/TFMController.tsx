@@ -156,11 +156,8 @@ export const TFMController = () => {
     if (savedState) {
       try {
         const parsed = JSON.parse(savedState);
-        setPrompt(parsed.prompt || '');
+        // Only restore non-sensitive configuration and ID references
         setConfig(parsed.config || config);
-        if (parsed.result) setResult(parsed.result);
-        if (parsed.abTestWinner) setAbTestWinner(parsed.abTestWinner);
-        if (parsed.abTestNotes) setAbTestNotes(parsed.abTestNotes);
         if (parsed.lastResultId) setLastResultId(parsed.lastResultId);
       } catch (e) {
         console.error('Failed to restore state:', e);
@@ -168,18 +165,14 @@ export const TFMController = () => {
     }
   }, []);
 
-  // Save state to sessionStorage whenever it changes
+  // Save minimal state to sessionStorage (non-sensitive data only)
   useEffect(() => {
     const stateToSave = {
-      prompt,
-      config,
-      result,
-      abTestWinner,
-      abTestNotes,
-      lastResultId,
+      config, // Configuration parameters are non-sensitive
+      lastResultId, // ID reference only, not actual data
     };
     sessionStorage.setItem('tfm-controller-state', JSON.stringify(stateToSave));
-  }, [prompt, config, result, abTestWinner, abTestNotes, lastResultId]);
+  }, [config, lastResultId]);
 
   // Analyze prompt complexity when prompt changes
   useEffect(() => {
