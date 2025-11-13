@@ -11,6 +11,28 @@ export type UploadResponse = {
   signedUrl?: string; // если запросили подписанный URL
 };
 
+export type DocumentMetadata = {
+  name: string;
+  description?: string;
+  section_id: string;
+  version?: string;
+  restricted?: boolean;
+};
+
+export type DocumentRecord = {
+  id: string;
+  name: string;
+  description: string | null;
+  type: string;
+  path: string;
+  version: string;
+  section_id: string;
+  restricted: boolean;
+  storage_path: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 /**
  * Простейшая функция загрузки файла в хранилище Data Room.
  * - Загружает файл в bucket "data-room-documents"
@@ -53,4 +75,85 @@ export async function uploadDataRoomFile(
 
 function sanitizeFileName(name: string) {
   return name.trim().replace(/[^a-zA-Z0-9.\-_]/g, "_");
+}
+
+/**
+ * Загружает PDF файл в storage и сохраняет метаданные в data_room_documents
+ */
+export async function uploadPdf(
+  file: File,
+  metadata: DocumentMetadata
+): Promise<DocumentRecord> {
+  // Валидация типа файла
+  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+    throw new Error("Only PDF files are allowed");
+  }
+
+  // Загружаем файл в storage
+  const uploadResult = await uploadDataRoomFile(file, {
+    folder: "pdfs",
+    signedUrlSeconds: 3600,
+  });
+
+  // Сохраняем метаданные в базу данных
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) throw new Error("User not authenticated");
+
+  const client: any = supabase;
+  const { data, error } = await client
+    .from("data_room_documents")
+    .insert({
+      name: metadata.name,
+      description: metadata.description || null,
+      type: "pdf",
+      path: uploadResult.signedUrl || uploadResult.path,
+      storage_path: uploadResult.path,
+      version: metadata.version || "1.0",
+      section_id: metadata.section_id,
+      restricted: metadata.restricted || false,
+      created_by: user.user.id,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as unknown as DocumentRecord;
+}
+
+/**
+ * Сохраняет ссылку (URL) в data_room_documents без загрузки файла
+ */
+export async function uploadLink(
+  url: string,
+  metadata: DocumentMetadata
+): Promise<DocumentRecord> {
+  // Валидация URL
+  try {
+    new URL(url);
+  } catch {
+    throw new Error("Invalid URL format");
+  }
+
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) throw new Error("User not authenticated");
+
+  const client: any = supabase;
+  const { data, error } = await client
+    .from("data_room_documents")
+    .insert({
+      name: metadata.name,
+      description: metadata.description || null,
+      type: "link",
+      path: url,
+      storage_path: null, // ссылки не хранятся в storage
+      version: metadata.version || "1.0",
+      section_id: metadata.section_id,
+      restricted: metadata.restricted || false,
+      created_by: user.user.id,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as unknown as DocumentRecord;
 }
