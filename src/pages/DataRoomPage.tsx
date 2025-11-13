@@ -282,83 +282,143 @@ export default function DataRoomPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
-          {/* Summary Panel */}
-          <Card className="mb-8 border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="text-2xl mb-2">Quick Access - Key Documents</CardTitle>
-                  <CardDescription className="text-base">
-                    Essential materials for initial review and due diligence
-                  </CardDescription>
-                </div>
-                <div className="text-right text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2 justify-end mb-1">
-                    <Calendar className="w-4 h-4" />
-                    Last updated: Jan 15, 2025
-                  </div>
-                  <div className="flex items-center gap-2 justify-end">
-                    <FileText className="w-4 h-4" />
-                    {sections.reduce((acc, s) => acc + s.documents.length, 0)} documents
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Card className="border-border/40 hover:border-primary/40 transition-colors">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <FileText className="w-5 h-5 text-primary" />
-                      <Badge variant="secondary">PDF</Badge>
+          {/* Executive Summary */}
+          <div className="mb-12">
+            <Card className="border-primary/30 bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 shadow-lg">
+              <CardHeader className="pb-6">
+                <div className="flex flex-col gap-6">
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 rounded-lg bg-primary/20">
+                        <Building2 className="w-6 h-6 text-primary" />
+                      </div>
+                      <CardTitle className="text-3xl font-bold">Lovable PromptOps Platform</CardTitle>
                     </div>
-                    <CardTitle className="text-lg">One Pager</CardTitle>
-                    <CardDescription>Quick company overview</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button size="sm" className="w-full gap-2">
+                    <CardDescription className="text-lg text-foreground/80 max-w-3xl leading-relaxed">
+                      AI-powered prompt optimization platform reducing LLM costs by 40-60% while improving output quality. 
+                      Proprietary Proposer-Critic-Verifier (PCV) pipeline with 94% optimization success rate.
+                    </CardDescription>
+                  </div>
+
+                  {/* Key Metrics Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="p-4 rounded-lg bg-background/80 border border-border/50">
+                      <div className="flex items-center gap-2 mb-2">
+                        <TrendingUp className="w-4 h-4 text-primary" />
+                        <span className="text-xs text-muted-foreground uppercase tracking-wide">Cost Reduction</span>
+                      </div>
+                      <div className="text-2xl font-bold text-foreground">40-60%</div>
+                      <div className="text-xs text-muted-foreground mt-1">Average savings</div>
+                    </div>
+
+                    <div className="p-4 rounded-lg bg-background/80 border border-border/50">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Shield className="w-4 h-4 text-primary" />
+                        <span className="text-xs text-muted-foreground uppercase tracking-wide">Success Rate</span>
+                      </div>
+                      <div className="text-2xl font-bold text-foreground">94%</div>
+                      <div className="text-xs text-muted-foreground mt-1">Optimization quality</div>
+                    </div>
+
+                    <div className="p-4 rounded-lg bg-background/80 border border-border/50">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Clock className="w-4 h-4 text-primary" />
+                        <span className="text-xs text-muted-foreground uppercase tracking-wide">Processing</span>
+                      </div>
+                      <div className="text-2xl font-bold text-foreground">&lt;30s</div>
+                      <div className="text-xs text-muted-foreground mt-1">Average time</div>
+                    </div>
+
+                    <div className="p-4 rounded-lg bg-background/80 border border-border/50">
+                      <div className="flex items-center gap-2 mb-2">
+                        <DollarSign className="w-4 h-4 text-primary" />
+                        <span className="text-xs text-muted-foreground uppercase tracking-wide">Stage</span>
+                      </div>
+                      <div className="text-2xl font-bold text-foreground">MVP</div>
+                      <div className="text-xs text-muted-foreground mt-1">Seeking seed</div>
+                    </div>
+                  </div>
+
+                  {/* Key Highlights */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-lg bg-background/60 border border-border/40">
+                      <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                        <Lightbulb className="w-5 h-5 text-primary" />
+                        Key Innovation
+                      </h3>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li className="flex items-start gap-2">
+                          <ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                          <span>Proprietary PCV pipeline with multi-judge validation</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                          <span>Real-time optimization with smart queue prioritization</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                          <span>Built-in A/B testing and version control for prompts</span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="p-4 rounded-lg bg-background/60 border border-border/40">
+                      <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5 text-primary" />
+                        Market Opportunity
+                      </h3>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li className="flex items-start gap-2">
+                          <ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                          <span>$200B+ LLM market with 70% YoY growth (2024-2030)</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                          <span>Enterprise AI adoption at 89% with cost concerns rising</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                          <span>First-mover in automated prompt optimization category</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="flex flex-wrap gap-3 pt-2">
+                    <Button className="gap-2" size="lg">
                       <Download className="w-4 h-4" />
-                      Download
+                      Download Pitch Deck
                     </Button>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-border/40 hover:border-primary/40 transition-colors">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <LinkIcon className="w-5 h-5 text-primary" />
-                      <Badge variant="secondary">LINK</Badge>
-                    </div>
-                    <CardTitle className="text-lg">MVP Demo</CardTitle>
-                    <CardDescription>Live product demonstration</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button size="sm" className="w-full gap-2" variant="outline">
+                    <Button variant="outline" className="gap-2" size="lg">
                       <ExternalLink className="w-4 h-4" />
-                      Open Demo
+                      View Live Demo
                     </Button>
-                  </CardContent>
-                </Card>
+                    <Button variant="outline" className="gap-2" size="lg">
+                      <Mail className="w-4 h-4" />
+                      Contact Team
+                    </Button>
+                  </div>
 
-                <Card className="border-border/40 hover:border-primary/40 transition-colors">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <ImageIcon className="w-5 h-5 text-primary" />
-                      <Badge variant="secondary">PNG</Badge>
+                  {/* Meta Info */}
+                  <div className="flex items-center gap-6 text-xs text-muted-foreground pt-2 border-t border-border/30">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5" />
+                      Last updated: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </div>
-                    <CardTitle className="text-lg">Architecture</CardTitle>
-                    <CardDescription>System design diagram</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button size="sm" className="w-full gap-2" variant="outline">
-                      <ExternalLink className="w-4 h-4" />
-                      View
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-3.5 h-3.5" />
+                      {sections.reduce((acc, s) => acc + s.documents.length, 0)} documents available
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Lock className="w-3.5 h-3.5" />
+                      Confidential - NDA Required
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+            </Card>
+          </div>
 
           {/* Sections */}
           {sections.map((section, idx) => {
