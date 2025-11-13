@@ -446,16 +446,12 @@ export default function DataRoomPage() {
         </div>
       </main>
 
-      <UploadDocumentModal
+      <UploadDocumentModal 
         open={uploadModalOpen}
         onOpenChange={setUploadModalOpen}
         sectionId={selectedSectionId}
-        onUploadSuccess={() => {
-          console.log('Upload successful');
-        }}
+        onUploadSuccess={loadDocuments}
       />
     </div>
   );
-};
-
-export default DataRoomPage;
+}
