@@ -166,20 +166,78 @@ export default function DataRoomPage() {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleDocumentAction = async (doc: Document) => {
+  const handleDocumentAction = async (doc: Document, action: 'view' | 'download') => {
     if (doc.type === 'link') {
       window.open(doc.path, '_blank');
-    } else if (doc.type === 'markdown') {
+      return;
+    }
+
+    if (doc.type === 'markdown') {
       try {
         const response = await fetch(doc.path);
+        if (!response.ok) throw new Error('Failed to fetch document');
         const markdown = await response.text();
-        const newWindow = window.open('', '_blank');
-        if (newWindow) {
-          newWindow.document.write(`<html><head><title>${doc.name}</title><style>body{font-family:system-ui;max-width:900px;margin:40px auto;padding:20px;line-height:1.6}pre{background:#f5f5f5;padding:15px;border-radius:5px;white-space:pre-wrap}h1,h2{margin-top:24px;border-bottom:1px solid #ddd;padding-bottom:8px}table{border-collapse:collapse;width:100%;margin:20px 0}th,td{border:1px solid #ddd;padding:12px;text-align:left}th{background:#f5f5f5}</style></head><body><pre>${markdown}</pre></body></html>`);
+        
+        if (action === 'view') {
+          const newWindow = window.open('', '_blank');
+          if (newWindow) {
+            newWindow.document.write(`
+              <html>
+                <head>
+                  <title>${doc.name}</title>
+                  <meta charset="UTF-8">
+                  <style>
+                    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; line-height: 1.6; color: #333; }
+                    pre { background: #f8f9fa; padding: 20px; border-radius: 8px; white-space: pre-wrap; overflow-x: auto; border: 1px solid #e9ecef; }
+                    h1 { font-size: 2em; margin-top: 0; border-bottom: 2px solid #dee2e6; padding-bottom: 12px; }
+                    h2 { font-size: 1.5em; margin-top: 32px; border-bottom: 1px solid #dee2e6; padding-bottom: 8px; }
+                    h3 { font-size: 1.25em; margin-top: 24px; }
+                    table { border-collapse: collapse; width: 100%; margin: 24px 0; border: 1px solid #dee2e6; }
+                    th, td { border: 1px solid #dee2e6; padding: 12px 16px; text-align: left; }
+                    th { background: #f8f9fa; font-weight: 600; }
+                    tr:nth-child(even) { background: #f8f9fa; }
+                    code { background: #f8f9fa; padding: 2px 6px; border-radius: 4px; font-family: 'SF Mono', Monaco, Consolas, monospace; }
+                    ul, ol { margin: 16px 0; padding-left: 32px; }
+                    li { margin: 8px 0; }
+                    a { color: #0066cc; text-decoration: none; }
+                    a:hover { text-decoration: underline; }
+                    hr { border: none; border-top: 1px solid #dee2e6; margin: 32px 0; }
+                  </style>
+                </head>
+                <body><pre>${markdown}</pre></body>
+              </html>
+            `);
+            newWindow.document.close();
+          }
+        } else {
+          // Download
+          const blob = new Blob([markdown], { type: 'text/markdown' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${doc.name}.md`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
         }
       } catch (error) {
-        toast({ title: "Error", description: "Failed to load document.", variant: "destructive" });
+        console.error('Document load error:', error);
+        toast({ 
+          title: "Ошибка", 
+          description: "Не удалось загрузить документ. Проверьте консоль для подробностей.", 
+          variant: "destructive" 
+        });
       }
+    } else {
+      // For PDF and other files
+      const a = document.createElement('a');
+      a.href = doc.path;
+      a.download = doc.name;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
   };
 
@@ -366,21 +424,44 @@ export default function DataRoomPage() {
                         <CardContent>
                           <div className="flex gap-2">
                             {doc.type === 'link' ? (
-                              <Button size="sm" className="flex-1 gap-2" variant="outline">
+                              <Button 
+                                size="sm" 
+                                className="flex-1 gap-2" 
+                                variant="outline"
+                                onClick={() => handleDocumentAction(doc, 'view')}
+                              >
                                 <ExternalLink className="w-4 h-4" />
                                 Open Link
                               </Button>
-                            ) : (
+                            ) : doc.type === 'markdown' ? (
                               <>
-                                <Button size="sm" className="flex-1 gap-2">
-                                  <Download className="w-4 h-4" />
-                                  Download
-                                </Button>
-                                <Button size="sm" variant="outline" className="gap-2">
+                                <Button 
+                                  size="sm" 
+                                  className="flex-1 gap-2"
+                                  onClick={() => handleDocumentAction(doc, 'view')}
+                                >
                                   <ExternalLink className="w-4 h-4" />
                                   View
                                 </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="gap-2"
+                                  onClick={() => handleDocumentAction(doc, 'download')}
+                                >
+                                  <Download className="w-4 h-4" />
+                                  Download
+                                </Button>
                               </>
+                            ) : (
+                              <Button 
+                                size="sm" 
+                                className="flex-1 gap-2"
+                                onClick={() => handleDocumentAction(doc, 'download')}
+                              >
+                                <Download className="w-4 h-4" />
+                                Download
+                              </Button>
                             )}
                             <Button 
                               size="sm" 
