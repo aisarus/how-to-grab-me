@@ -116,16 +116,16 @@ export async function initializeDataRoom(): Promise<void> {
   const client: any = supabase;
   const { data: existing } = await client
     .from("data_room_documents")
-    .select("section_id, name")
+    .select("path")
     .eq("created_by", user.id);
 
-  const existingDocs = new Set(
-    existing?.map((doc) => `${doc.section_id}:${doc.name}`) || []
+  const existingPaths = new Set(
+    existing?.map((doc) => doc.path) || []
   );
 
-  // Insert only new documents
+  // Insert only new documents (check by path to avoid unique constraint violation)
   const documentsToInsert = INITIAL_DOCUMENTS.filter(
-    (doc) => !existingDocs.has(`${doc.section_id}:${doc.name}`)
+    (doc) => !existingPaths.has(doc.path)
   ).map((doc) => ({
     name: doc.name,
     description: doc.description,
