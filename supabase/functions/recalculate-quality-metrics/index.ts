@@ -169,6 +169,19 @@ serve(async (req) => {
       try {
         console.log(`Processing result ${result.id}...`);
 
+        // Validate prompt sizes before processing
+        const MAX_PROMPT_LENGTH = 100000;
+        if (result.original_prompt && result.original_prompt.length > MAX_PROMPT_LENGTH) {
+          console.warn(`Skipping result ${result.id}: original prompt too large`);
+          errors++;
+          continue;
+        }
+        if (result.optimized_prompt && result.optimized_prompt.length > MAX_PROMPT_LENGTH) {
+          console.warn(`Skipping result ${result.id}: optimized prompt too large`);
+          errors++;
+          continue;
+        }
+
         // Pairwise comparison
         const judgeVotes = await pairwiseComparePromptsWithVotes(
           result.original_prompt,
