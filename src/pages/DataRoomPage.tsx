@@ -121,10 +121,11 @@ export default function DataRoomPage() {
   const initIfNeeded = async () => {
     try {
       await initializeDataRoom(); // safe: inserts only missing docs
-      await loadDocuments();
     } catch (error) {
       console.error("Failed to initialize:", error);
+      // Continue loading documents even if init fails
     }
+    await loadDocuments();
   };
 
   const loadDocuments = async () => {
