@@ -358,7 +358,23 @@ serve(async (req) => {
   }
 
   try {
+    const MAX_PROMPT_LENGTH = 100000; // 100KB max
     const { prompt, config } = await req.json();
+
+    // Input validation
+    if (!prompt || typeof prompt !== 'string') {
+      return new Response(
+        JSON.stringify({ error: 'Invalid prompt: must be a non-empty string' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (prompt.length > MAX_PROMPT_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Prompt exceeds maximum length of ${MAX_PROMPT_LENGTH} characters` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     if (!prompt) {
       throw new Error('Prompt is required');
