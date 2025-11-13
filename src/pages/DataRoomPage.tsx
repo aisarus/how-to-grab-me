@@ -487,43 +487,6 @@ export default function DataRoomPage() {
             );
           })}
 
-          {/* Footer */}
-          <Card className="mt-12 border-border/40 bg-muted/30">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="w-5 h-5" />
-                Contact Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-                <div>
-                  <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-                    <Building2 className="w-4 h-4" />
-                    <span className="font-medium">Company</span>
-                  </div>
-                  <p className="text-foreground">Lovable PromptOps Inc.</p>
-                  <p className="text-muted-foreground">AI Infrastructure for Developers</p>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-                    <Mail className="w-4 h-4" />
-                    <span className="font-medium">Investor Relations</span>
-                  </div>
-                  <p className="text-foreground">investors@lovable-promptops.com</p>
-                  <p className="text-muted-foreground">Response within 24 hours</p>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-                    <Lock className="w-4 h-4" />
-                    <span className="font-medium">Data Room Access</span>
-                  </div>
-                  <p className="text-foreground">All documents confidential</p>
-                  <p className="text-muted-foreground">NDA required for restricted files</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </main>
 
