@@ -80,6 +80,26 @@ const INITIAL_DOCUMENTS: DocumentToCreate[] = [
     version: "v1.1",
     section_id: "technology",
   },
+  
+  // Financials Section
+  {
+    name: "Financial Projections",
+    description: "Early-stage financial overview and funding requirements",
+    type: "markdown",
+    path: "/data-room-docs/financial-projections.md",
+    version: "v1.0",
+    section_id: "financials",
+  },
+  
+  // Market Section
+  {
+    name: "Market Analysis",
+    description: "Market overview, competitive landscape, and target segments",
+    type: "markdown",
+    path: "/data-room-docs/market-analysis.md",
+    version: "v1.0",
+    section_id: "market",
+  },
 ];
 
 /**
