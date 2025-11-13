@@ -28,6 +28,14 @@ const INITIAL_DOCUMENTS: DocumentToCreate[] = [
     version: "v1.5",
     section_id: "overview",
   },
+  {
+    name: "MVP Status Report",
+    description: "Current development stage, implemented features, and limitations",
+    type: "markdown",
+    path: "/data-room-docs/mvp-status.md",
+    version: "v1.0",
+    section_id: "overview",
+  },
   
   // Product Section
   {
