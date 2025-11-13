@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { UserMenu } from '@/components/UserMenu';
+import { UploadDocumentModal } from '@/components/UploadDocumentModal';
 import { 
   FileText, 
   Download, 
@@ -22,7 +23,8 @@ import {
   Scale,
   Clock,
   ChevronRight,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Upload
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -152,6 +154,8 @@ const getTypeIcon = (type: string) => {
 
 const DataRoomPage = () => {
   const [activeSection, setActiveSection] = useState('overview');
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [selectedSectionId, setSelectedSectionId] = useState('');
 
   const scrollToSection = (id: string) => {
     setActiveSection(id);
@@ -357,6 +361,18 @@ const DataRoomPage = () => {
                                 </Button>
                               </>
                             )}
+                            <Button 
+                              size="sm" 
+                              variant="default"
+                              className="gap-2 bg-green-600 hover:bg-green-700 text-white"
+                              onClick={() => {
+                                setSelectedSectionId(section.id);
+                                setUploadModalOpen(true);
+                              }}
+                            >
+                              <Upload className="w-4 h-4" />
+                              Upload
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>
@@ -408,6 +424,15 @@ const DataRoomPage = () => {
           </Card>
         </div>
       </main>
+
+      <UploadDocumentModal
+        open={uploadModalOpen}
+        onOpenChange={setUploadModalOpen}
+        sectionId={selectedSectionId}
+        onUploadSuccess={() => {
+          console.log('Upload successful');
+        }}
+      />
     </div>
   );
 };
