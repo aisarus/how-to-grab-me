@@ -149,6 +149,19 @@ export default function DataRoomPage() {
         const existing = sectionMap.get(doc.section_id) || [];
         sectionMap.set(doc.section_id, [...existing, document]);
       });
+      // Ensure Executive Summary appears in Overview even if DB misses it
+      const overviewList = sectionMap.get('overview') || [];
+      if (!overviewList.some((d) => d.path === '/data-room-docs/executive-summary.md')) {
+        overviewList.unshift({
+          name: 'Executive Summary',
+          description: 'Honest assessment of project status, metrics, risks, and next steps',
+          type: 'markdown',
+          path: '/data-room-docs/executive-summary.md',
+          version: 'v1.0',
+          lastUpdated: new Date().toISOString().split('T')[0],
+        });
+        sectionMap.set('overview', overviewList);
+      }
 
       setSections(SECTION_CONFIG.map((config) => ({ ...config, documents: sectionMap.get(config.id) || [] })));
     } catch (error) {
