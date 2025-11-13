@@ -229,9 +229,14 @@ export const ComparisonModal = ({
 
         {/* Info */}
         <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
-          <p className="text-xs text-muted-foreground" dangerouslySetInnerHTML={{
-            __html: t('comparison.importantNote').replace('{tokenChange}', String(tokenChange > 0 ? tokenChange : 0))
-          }} />
+          <p className="text-xs text-muted-foreground">
+            {t('comparison.importantNote').split('{tokenChange}').map((part, i, arr) => (
+              <span key={i}>
+                {part}
+                {i < arr.length - 1 && <strong>{tokenChange > 0 ? tokenChange : 0}</strong>}
+              </span>
+            ))}
+          </p>
         </div>
       </DialogContent>
     </Dialog>
