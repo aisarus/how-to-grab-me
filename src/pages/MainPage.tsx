@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { TFMController } from '@/components/TFMController';
 import PromptAssistantPage from './PromptAssistantPage';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Sparkles, Bot } from 'lucide-react';
+import { Sparkles, Bot, Database } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const MainPage = () => {
   const { t } = useLanguage();
@@ -48,8 +50,8 @@ const MainPage = () => {
     >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         <div className="border-b glass-effect sticky top-0 z-10">
-          <div className="container mx-auto px-4 sm:px-6 py-4">
-            <TabsList className="w-full max-w-md mx-auto grid grid-cols-2 bg-transparent border border-border">
+          <div className="container mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+            <TabsList className="flex-1 max-w-md mx-auto grid grid-cols-2 bg-transparent border border-border">
               <TabsTrigger 
                 value="tfm" 
                 className="text-sm sm:text-base gap-2 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:rounded-none"
@@ -65,6 +67,12 @@ const MainPage = () => {
                 {t('common.assistant')}
               </TabsTrigger>
             </TabsList>
+            <Link to="/data-room">
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20 gap-2">
+                <Database className="w-4 h-4" />
+                <span className="hidden sm:inline">Data Room</span>
+              </Button>
+            </Link>
           </div>
         </div>
         
