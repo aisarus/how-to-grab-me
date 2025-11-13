@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { initializeDataRoom, checkDataRoomInitialization } from '@/lib/initializeDataRoom';
+import { initializeDataRoom } from '@/lib/initializeDataRoom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -120,12 +120,8 @@ export default function DataRoomPage() {
 
   const initIfNeeded = async () => {
     try {
-      const needsInit = await checkDataRoomInitialization();
-      if (needsInit) {
-        await initializeDataRoom();
-        await loadDocuments();
-        toast({ title: "Data Room Initialized", description: "Initial documents loaded." });
-      }
+      await initializeDataRoom(); // safe: inserts only missing docs
+      await loadDocuments();
     } catch (error) {
       console.error("Failed to initialize:", error);
     }
