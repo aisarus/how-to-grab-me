@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      data_room_documents: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          path: string
+          restricted: boolean | null
+          section_id: string
+          storage_path: string | null
+          type: string
+          updated_at: string | null
+          version: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          path: string
+          restricted?: boolean | null
+          section_id: string
+          storage_path?: string | null
+          type: string
+          updated_at?: string | null
+          version: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          path?: string
+          restricted?: boolean | null
+          section_id?: string
+          storage_path?: string | null
+          type?: string
+          updated_at?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
       favorite_configs: {
         Row: {
           a_parameter: number
@@ -353,20 +398,7 @@ export type Database = {
       }
     }
     Views: {
-      shared_results_public: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          expires_at: string | null
-          id: string | null
-          is_public: boolean | null
-          optimization_result_id: string | null
-          share_token: string | null
-          title: string | null
-          view_count: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       get_public_share: {
