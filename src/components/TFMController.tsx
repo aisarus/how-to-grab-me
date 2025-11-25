@@ -215,10 +215,21 @@ export const TFMController = () => {
           body: { prompt }
         });
 
-        if (error) throw error;
+        if (error) {
+          // Handle 402 Payment Required error specifically
+          if (error.message?.includes('402') || error.message?.includes('credits')) {
+            toast({
+              title: "Недостаточно кредитов",
+              description: "Пополните кредиты в Settings → Workspace → Usage",
+              variant: "destructive",
+            });
+          }
+          throw error;
+        }
         setSmartQueueResult(data);
       } catch (error) {
         console.error('Failed to check Smart Queue:', error);
+        setSmartQueueResult(null);
       }
     };
 
