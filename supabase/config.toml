@@ -1,1 +1,13 @@
 project_id = "lsgxrurkwnlxowedlmti"
+
+[functions.prompt-assistant]
+verify_jwt = true
+
+[functions.recalculate-quality-metrics]
+verify_jwt = true
+
+[functions.tri-tfm-controller]
+verify_jwt = true
+
+[functions.smart-queue-check]
+verify_jwt = true
