@@ -227,8 +227,8 @@ export const TFMController = () => {
         // Show toast only once if in mock mode
         if (data?.mockMode) {
           toast({
-            title: "Smart Queue (Mock режим)",
-            description: "Показаны тестовые данные. Пополните кредиты для точного анализа.",
+            title: t('smartQueue.mockTitle'),
+            description: t('smartQueue.mockDescription'),
             variant: "default",
           });
         }
@@ -245,8 +245,8 @@ export const TFMController = () => {
   const handleSubmit = async () => {
     if (!prompt.trim()) {
       toast({
-        title: "Error",
-        description: "Please enter text to optimize",
+        title: t('common.error'),
+        description: t('tfmController.enterTextToOptimize'),
         variant: "destructive",
       });
       return;
@@ -260,8 +260,8 @@ export const TFMController = () => {
 
     try {
       toast({
-        title: "Starting optimization",
-        description: "This may take a few minutes...",
+        title: t('tfmController.startingOptimization'),
+        description: t('tfmController.optimizationMayTake'),
       });
 
       const { data, error } = await supabase.functions.invoke('tri-tfm-controller', {
@@ -340,8 +340,8 @@ export const TFMController = () => {
       }
 
       toast({
-        title: "Optimization completed",
-        description: `RGI: ${data.modeFreeMetrics?.rgiPercent?.toFixed(2) ?? 'N/A'}%, Efficiency: ${data.modeFreeMetrics?.efficiencyPercent?.toFixed(2) ?? 'N/A'}% (${data.iterations} iterations)`,
+        title: t('tfmController.optimizationCompleted'),
+        description: `RGI: ${data.modeFreeMetrics?.rgiPercent?.toFixed(2) ?? 'N/A'}%, Efficiency: ${data.modeFreeMetrics?.efficiencyPercent?.toFixed(2) ?? 'N/A'}% (${data.iterations} ${t('tfmController.iterations').toLowerCase()})`,
       });
     } catch (error) {
       console.error('Error:', error);
@@ -349,13 +349,13 @@ export const TFMController = () => {
       // Check if error was due to abort
       if (error instanceof Error && error.name === 'AbortError') {
         toast({
-          title: "Optimization stopped",
-          description: "Process was interrupted by user",
+          title: t('tfmController.optimizationStopped'),
+          description: t('tfmController.processStopped'),
         });
       } else {
         toast({
-          title: "Error",
-          description: error instanceof Error ? error.message : "Failed to perform optimization",
+          title: t('common.error'),
+          description: error instanceof Error ? error.message : t('tfmController.errorOptimization'),
           variant: "destructive",
         });
       }
@@ -370,8 +370,8 @@ export const TFMController = () => {
       abortControllerRef.current = null;
       setLoading(false);
       toast({
-        title: "Optimization stopped",
-        description: "Process was interrupted",
+        title: t('tfmController.optimizationStopped'),
+        description: t('tfmController.processInterrupted'),
       });
     }
   };
@@ -386,13 +386,13 @@ export const TFMController = () => {
       setTimeout(() => setCopiedResult(false), 2000);
       
       toast({
-        title: "Copied",
-        description: "Optimized prompt copied to clipboard",
+        title: t('common.copied'),
+        description: t('tfmController.resultCopied'),
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to copy text",
+        title: t('common.error'),
+        description: t('common.failedToCopy'),
         variant: "destructive",
       });
     }
@@ -438,8 +438,8 @@ export const TFMController = () => {
       if (error1) throw error1;
 
       toast({
-        title: "Phase 1 Complete",
-        description: "Testing without EFMNB framing...",
+        title: t('tfmController.phase1Complete'),
+        description: t('tfmController.testingWithoutEFMNB'),
       });
 
       // Run without EFMNB
@@ -519,14 +519,14 @@ export const TFMController = () => {
       }
 
       toast({
-        title: "A/B Test Complete",
-        description: `Winner: ${winner === 'withEFMNB' ? 'With EFMNB' : winner === 'withoutEFMNB' ? 'Without EFMNB' : 'Tie'}`,
+        title: t('tfmController.abTestComplete'),
+        description: `${t('tfmController.winner')}: ${winner === 'withEFMNB' ? t('tfmController.withEFMNB') : winner === 'withoutEFMNB' ? t('tfmController.withoutEFMNB') : t('tfmController.tie')}`,
       });
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to perform A/B test",
+        title: t('common.error'),
+        description: error instanceof Error ? error.message : t('tfmController.errorABTest'),
         variant: "destructive",
       });
     } finally {
@@ -667,10 +667,10 @@ export const TFMController = () => {
                             <CheckCircle2 className="w-4 h-4 text-green-500" />
                           )}
                           <span className="text-sm font-semibold">
-                            {smartQueueResult.shouldOptimize ? 'Рекомендуется оптимизация' : 'Промпт в порядке'}
+                            {smartQueueResult.shouldOptimize ? t('smartQueue.recommended') : t('smartQueue.notNeeded')}
                             {smartQueueResult.mockMode && (
                               <span className="ml-2 text-xs bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 px-2 py-0.5 rounded">
-                                MOCK
+                                {t('smartQueue.mockMode')}
                               </span>
                             )}
                           </span>
@@ -681,14 +681,14 @@ export const TFMController = () => {
                           smartQueueResult.priorityScore >= 50 ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300' :
                           'bg-red-500/20 text-red-700 dark:text-red-300'
                         }`}>
-                          Приоритет: {smartQueueResult.priorityScore}
+                          {t('smartQueue.priorityScore')}: {smartQueueResult.priorityScore}
                         </div>
                       </div>
 
                       <div className="grid grid-cols-3 gap-3 text-xs">
                         <div className="space-y-1">
                           <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Ясность</span>
+                            <span className="text-muted-foreground">{t('smartQueue.clarity')}</span>
                             <span className="font-medium">{smartQueueResult.clarityScore}</span>
                           </div>
                           <div className="h-2 bg-background rounded-full overflow-hidden">
@@ -703,7 +703,7 @@ export const TFMController = () => {
                         </div>
                         <div className="space-y-1">
                           <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Структура</span>
+                            <span className="text-muted-foreground">{t('smartQueue.structure')}</span>
                             <span className="font-medium">{smartQueueResult.structureScore}</span>
                           </div>
                           <div className="h-2 bg-background rounded-full overflow-hidden">
@@ -718,7 +718,7 @@ export const TFMController = () => {
                         </div>
                         <div className="space-y-1">
                           <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Ограничения</span>
+                            <span className="text-muted-foreground">{t('smartQueue.constraints')}</span>
                             <span className="font-medium">{smartQueueResult.constraintsScore}</span>
                           </div>
                           <div className="h-2 bg-background rounded-full overflow-hidden">
@@ -767,8 +767,8 @@ export const TFMController = () => {
                   const randomPrompt = randomPrompts[Math.floor(Math.random() * randomPrompts.length)];
                   setPrompt(randomPrompt);
                   toast({
-                    title: "Random prompt generated",
-                    description: "A simple prompt has been generated for optimization testing",
+                    title: t('tfmController.randomPromptGenerated'),
+                    description: t('tfmController.randomPromptDescription'),
                   });
                 }}
                 variant="outline"
@@ -1462,13 +1462,13 @@ export const TFMController = () => {
                           if (error) throw error;
 
                           toast({
-                            title: "A/B Test Saved",
-                            description: `Winner: ${abTestWinner}`,
+                            title: t('tfmController.abTestComplete'),
+                            description: `${t('tfmController.winner')}: ${abTestWinner}`,
                           });
                         } catch (error) {
                           toast({
-                            title: "Error",
-                            description: "Failed to save A/B test results",
+                            title: t('common.error'),
+                            description: t('tfmController.errorABTest'),
                             variant: "destructive",
                           });
                         }
