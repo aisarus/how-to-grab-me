@@ -13,6 +13,7 @@ interface SmartQueueResult {
   constraintsScore: number;
   priorityScore: number;
   recommendation: string;
+  mockMode?: boolean;
 }
 
 serve(async (req) => {
@@ -83,6 +84,26 @@ Return ONLY valid JSON, no explanations.`;
   if (!response.ok) {
     const errorText = await response.text();
     console.error('AI gateway error:', response.status, errorText);
+    
+    // Handle 402 Payment Required specifically
+    if (response.status === 402) {
+      // Return mock data when no credits
+      const textLength = prompt.length;
+      const mockScore = Math.min(100, Math.max(0, Math.round(50 + (textLength / 10))));
+      
+      return {
+        shouldOptimize: mockScore < 70,
+        clarityScore: Math.round(mockScore * 0.9),
+        structureScore: Math.round(mockScore * 0.95),
+        constraintsScore: Math.round(mockScore * 0.85),
+        priorityScore: mockScore,
+        recommendation: mockScore < 70 
+          ? 'Оптимизация рекомендуется для улучшения качества.'
+          : 'Промпт имеет хорошее качество.',
+        mockMode: true,
+      };
+    }
+    
     throw new Error(`AI gateway error: ${response.status}`);
   }
 

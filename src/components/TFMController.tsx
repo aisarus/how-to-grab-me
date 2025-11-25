@@ -46,6 +46,7 @@ interface SmartQueueResult {
   clarityScore: number;
   structureScore: number;
   constraintsScore: number;
+  mockMode?: boolean;
 }
 
 interface IntegrationReadinessData {
@@ -216,32 +217,21 @@ export const TFMController = () => {
         });
 
         if (error) {
-          // Handle 402 Payment Required error specifically
-          if (error.message?.includes('402') || error.message?.includes('credits')) {
-            // Show mock data for testing when no credits
-            const mockScore = Math.min(100, Math.max(0, Math.round(50 + (prompt.length / 10))));
-            setSmartQueueResult({
-              shouldOptimize: mockScore < 70,
-              clarityScore: Math.round(mockScore * 0.9),
-              structureScore: Math.round(mockScore * 0.95),
-              constraintsScore: Math.round(mockScore * 0.85),
-              priorityScore: mockScore,
-              recommendation: mockScore < 70 
-                ? 'Оптимизация рекомендуется для улучшения качества.'
-                : 'Промпт имеет хорошее качество.',
-            });
-            
-            toast({
-              title: "Smart Queue (Mock режим)",
-              description: "Показаны тестовые данные. Пополните кредиты для точного анализа.",
-              variant: "default",
-            });
-          } else {
-            throw error;
-          }
+          console.error('Smart Queue error:', error);
+          setSmartQueueResult(null);
           return;
         }
+
         setSmartQueueResult(data);
+        
+        // Show toast only once if in mock mode
+        if (data?.mockMode) {
+          toast({
+            title: "Smart Queue (Mock режим)",
+            description: "Показаны тестовые данные. Пополните кредиты для точного анализа.",
+            variant: "default",
+          });
+        }
       } catch (error) {
         console.error('Failed to check Smart Queue:', error);
         setSmartQueueResult(null);
@@ -678,6 +668,11 @@ export const TFMController = () => {
                           )}
                           <span className="text-sm font-semibold">
                             {smartQueueResult.shouldOptimize ? 'Рекомендуется оптимизация' : 'Промпт в порядке'}
+                            {smartQueueResult.mockMode && (
+                              <span className="ml-2 text-xs bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 px-2 py-0.5 rounded">
+                                MOCK
+                              </span>
+                            )}
                           </span>
                         </div>
                         <div className={`px-2 py-1 rounded-full text-xs font-bold ${
