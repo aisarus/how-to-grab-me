@@ -133,6 +133,7 @@ export const TFMController = () => {
   const [lastResultId, setLastResultId] = useState<string | null>(null);
   const [copiedResult, setCopiedResult] = useState(false);
   const [complexityAnalysis, setComplexityAnalysis] = useState<ComplexityScore | null>(null);
+  const [smartQueueResult, setSmartQueueResult] = useState<SmartQueueResult & { recommendation?: string } | null>(null);
   const [config, setConfig] = useState({
     a: 0.20,
     b: 0.35,
@@ -198,6 +199,30 @@ export const TFMController = () => {
     };
 
     const debounceTimer = setTimeout(analyzePrompt, 500);
+    return () => clearTimeout(debounceTimer);
+  }, [prompt]);
+
+  // Check Smart Queue when prompt changes
+  useEffect(() => {
+    const checkSmartQueue = async () => {
+      if (!prompt.trim() || prompt.length < 20) {
+        setSmartQueueResult(null);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase.functions.invoke('smart-queue-check', {
+          body: { prompt }
+        });
+
+        if (error) throw error;
+        setSmartQueueResult(data);
+      } catch (error) {
+        console.error('Failed to check Smart Queue:', error);
+      }
+    };
+
+    const debounceTimer = setTimeout(checkSmartQueue, 800);
     return () => clearTimeout(debounceTimer);
   }, [prompt]);
 
@@ -609,6 +634,90 @@ export const TFMController = () => {
                       <span className="ml-1 font-medium">{complexityAnalysis.factors.specificity}</span>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Smart Queue Analysis Display */}
+              {smartQueueResult && (
+                <div className={`p-4 rounded-lg border space-y-3 ${
+                  smartQueueResult.shouldOptimize 
+                    ? 'bg-orange-50 dark:bg-orange-950/20 border-orange-300 dark:border-orange-700' 
+                    : 'bg-green-50 dark:bg-green-950/20 border-green-300 dark:border-green-700'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {smartQueueResult.shouldOptimize ? (
+                        <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                      ) : (
+                        <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+                      )}
+                      <span className="text-sm font-semibold">
+                        Smart Queue: {smartQueueResult.shouldOptimize ? 'Рекомендуется оптимизация' : 'Промпт в порядке'}
+                      </span>
+                    </div>
+                    <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      smartQueueResult.priorityScore >= 85 ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' :
+                      smartQueueResult.priorityScore >= 70 ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' :
+                      smartQueueResult.priorityScore >= 50 ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300' :
+                      'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
+                    }`}>
+                      Приоритет: {smartQueueResult.priorityScore}/100
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">Ясность</span>
+                        <span className="text-xs font-medium">{smartQueueResult.clarityScore}</span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full transition-all ${
+                            smartQueueResult.clarityScore >= 70 ? 'bg-green-500' : 
+                            smartQueueResult.clarityScore >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                          }`}
+                          style={{ width: `${smartQueueResult.clarityScore}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">Структура</span>
+                        <span className="text-xs font-medium">{smartQueueResult.structureScore}</span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full transition-all ${
+                            smartQueueResult.structureScore >= 70 ? 'bg-green-500' : 
+                            smartQueueResult.structureScore >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                          }`}
+                          style={{ width: `${smartQueueResult.structureScore}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">Ограничения</span>
+                        <span className="text-xs font-medium">{smartQueueResult.constraintsScore}</span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full transition-all ${
+                            smartQueueResult.constraintsScore >= 70 ? 'bg-green-500' : 
+                            smartQueueResult.constraintsScore >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                          }`}
+                          style={{ width: `${smartQueueResult.constraintsScore}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {smartQueueResult.recommendation && (
+                    <p className="text-xs text-muted-foreground italic border-t border-border/50 pt-2">
+                      💡 {smartQueueResult.recommendation}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
