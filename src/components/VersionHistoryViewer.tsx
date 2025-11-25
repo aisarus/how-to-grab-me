@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { GitBranch, CheckCircle2, XCircle, RotateCcw, Clock, Hash } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface VersionLogEntry {
   originalId: string;
@@ -31,6 +32,7 @@ export const VersionHistoryViewer = ({
   onRollback 
 }: VersionHistoryViewerProps) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [localVersionLog, setLocalVersionLog] = useState(versionLog);
 
   if (versionLog.length === 0) {
@@ -44,8 +46,8 @@ export const VersionHistoryViewer = ({
       )
     );
     toast({
-      title: "Version Accepted",
-      description: `Version ${versionId} has been accepted.`,
+      title: t('versionHistory.versionAccepted'),
+      description: `${t('versionHistory.versionAcceptedDesc')} ${versionId}`,
     });
     onAccept?.(versionId);
   };
@@ -57,8 +59,8 @@ export const VersionHistoryViewer = ({
       )
     );
     toast({
-      title: "Version Rejected",
-      description: `Version ${versionId} will be excluded from final output.`,
+      title: t('versionHistory.versionRejected'),
+      description: `${versionId} ${t('versionHistory.versionRejectedDesc')}`,
       variant: "destructive",
     });
     onReject?.(versionId);
@@ -71,8 +73,8 @@ export const VersionHistoryViewer = ({
       )
     );
     toast({
-      title: "Rollback Initiated",
-      description: `Rolling back to version ${versionId}. A new version will be created.`,
+      title: t('versionHistory.rollbackInitiated'),
+      description: `${t('versionHistory.rollbackDesc')} ${versionId}.`,
     });
     onRollback?.(versionId);
   };
@@ -80,13 +82,13 @@ export const VersionHistoryViewer = ({
   const getActionBadge = (action: string) => {
     switch (action) {
       case 'accept':
-        return <Badge className="bg-green-500/20 text-green-700 border-green-500/30">Accepted</Badge>;
+        return <Badge className="bg-green-500/20 text-green-700 border-green-500/30">{t('versionHistory.accepted')}</Badge>;
       case 'reject':
-        return <Badge className="bg-red-500/20 text-red-700 border-red-500/30">Rejected</Badge>;
+        return <Badge className="bg-red-500/20 text-red-700 border-red-500/30">{t('versionHistory.rejected')}</Badge>;
       case 'rollback':
-        return <Badge className="bg-blue-500/20 text-blue-700 border-blue-500/30">Rolled Back</Badge>;
+        return <Badge className="bg-blue-500/20 text-blue-700 border-blue-500/30">{t('versionHistory.rolledBack')}</Badge>;
       default:
-        return <Badge variant="outline">Pending</Badge>;
+        return <Badge variant="outline">{t('versionHistory.pending')}</Badge>;
     }
   };
 
@@ -95,10 +97,10 @@ export const VersionHistoryViewer = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <GitBranch className="h-5 w-5 text-primary" />
-          Version History & Review System
+          {t('versionHistory.title')}
         </CardTitle>
         <CardDescription>
-          Track prompt iterations with accept/reject/rollback controls
+          {t('versionHistory.description')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -120,7 +122,7 @@ export const VersionHistoryViewer = ({
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Clock className="h-3 w-3" />
-                        <span className="text-xs">Timestamp</span>
+                        <span className="text-xs">{t('versionHistory.timestamp')}</span>
                       </div>
                       <p className="font-mono text-xs">
                         {new Date(version.timestamp).toLocaleString()}
@@ -129,7 +131,7 @@ export const VersionHistoryViewer = ({
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Hash className="h-3 w-3" />
-                        <span className="text-xs">Content Hash</span>
+                        <span className="text-xs">{t('versionHistory.contentHash')}</span>
                       </div>
                       <p className="font-mono text-xs truncate" title={version.contentHash}>
                         {version.contentHash.substring(0, 16)}...
@@ -138,7 +140,7 @@ export const VersionHistoryViewer = ({
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground">Prompt Content:</p>
+                    <p className="text-xs font-medium text-muted-foreground">{t('versionHistory.promptContent')}</p>
                     <div className="p-3 bg-muted/50 rounded-lg max-h-32 overflow-y-auto">
                       <p className="text-sm whitespace-pre-wrap">{version.promptContent}</p>
                     </div>
@@ -146,7 +148,7 @@ export const VersionHistoryViewer = ({
 
                   {version.previousContentHash && (
                     <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground">Previous Hash:</p>
+                      <p className="text-xs font-medium text-muted-foreground">{t('versionHistory.previousHash')}</p>
                       <p className="font-mono text-xs text-muted-foreground">
                         {version.previousContentHash}
                       </p>
@@ -162,7 +164,7 @@ export const VersionHistoryViewer = ({
                         onClick={() => handleAccept(version.newId, index)}
                       >
                         <CheckCircle2 className="h-4 w-4 mr-2" />
-                        Accept
+                        {t('versionHistory.accept')}
                       </Button>
                       <Button
                         size="sm"
@@ -171,7 +173,7 @@ export const VersionHistoryViewer = ({
                         onClick={() => handleReject(version.newId, index)}
                       >
                         <XCircle className="h-4 w-4 mr-2" />
-                        Reject
+                        {t('versionHistory.reject')}
                       </Button>
                     </div>
                   )}
@@ -184,7 +186,7 @@ export const VersionHistoryViewer = ({
                       onClick={() => handleRollback(version.newId, index)}
                     >
                       <RotateCcw className="h-4 w-4 mr-2" />
-                      Rollback to This Version
+                      {t('versionHistory.rollback')}
                     </Button>
                   )}
                 </div>
@@ -195,9 +197,7 @@ export const VersionHistoryViewer = ({
 
         <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/20">
           <p className="text-xs text-muted-foreground">
-            <strong>State Management:</strong> Accept marks a version for final output. 
-            Reject excludes it from cumulative explanations. Rollback creates a new version (v{localVersionLog.length + 1}) 
-            with the selected content.
+            <strong>{t('versionHistory.stateNote')}</strong>
           </p>
         </div>
       </CardContent>

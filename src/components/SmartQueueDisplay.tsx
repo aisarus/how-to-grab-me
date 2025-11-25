@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Shield, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SmartQueueResult {
   priorityScore: number;
@@ -9,6 +10,7 @@ interface SmartQueueResult {
   clarityScore: number;
   structureScore: number;
   constraintsScore: number;
+  mockMode?: boolean;
 }
 
 interface SmartQueueDisplayProps {
@@ -16,6 +18,7 @@ interface SmartQueueDisplayProps {
 }
 
 export const SmartQueueDisplay = ({ result }: SmartQueueDisplayProps) => {
+  const { t } = useLanguage();
   const getScoreColor = (score: number) => {
     if (score >= 0.8) return 'text-green-500';
     if (score >= 0.5) return 'text-yellow-500';
@@ -32,18 +35,18 @@ export const SmartQueueDisplay = ({ result }: SmartQueueDisplayProps) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Shield className="h-5 w-5 text-primary" />
-          Smart Queue Analysis
+          {t('smartQueue.title')}
         </CardTitle>
         <CardDescription>
-          Automatic prioritization based on prompt quality metrics
+          {t('smartQueue.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <p className="text-sm font-medium">Priority Score</p>
+            <p className="text-sm font-medium">{t('smartQueue.priorityScore')}</p>
             <p className="text-xs text-muted-foreground">
-              Formula: 0.5×(1−Clarity) + 0.3×(1−Structure) + 0.2×(1−Constraints)
+              {t('smartQueue.formula')}
             </p>
           </div>
           <Badge className={getPriorityColor(result.priorityScore ?? 0)} variant="outline">
@@ -56,9 +59,9 @@ export const SmartQueueDisplay = ({ result }: SmartQueueDisplayProps) => {
             <>
               <AlertTriangle className="h-5 w-5 text-yellow-600" />
               <div className="flex-1">
-                <p className="text-sm font-medium">Optimization Required</p>
+                <p className="text-sm font-medium">{t('smartQueue.optimizationRequired')}</p>
                 <p className="text-xs text-muted-foreground">
-                  Priority score below 0.85 threshold - routing to PCV
+                  {t('smartQueue.routingToPCV')}
                 </p>
               </div>
             </>
@@ -66,9 +69,9 @@ export const SmartQueueDisplay = ({ result }: SmartQueueDisplayProps) => {
             <>
               <CheckCircle2 className="h-5 w-5 text-green-600" />
               <div className="flex-1">
-                <p className="text-sm font-medium">Optimization Skipped</p>
+                <p className="text-sm font-medium">{t('smartQueue.optimizationSkipped')}</p>
                 <p className="text-xs text-muted-foreground">
-                  Prompt quality sufficient - marked as optimized_by_default
+                  {t('smartQueue.sufficientQuality')}
                 </p>
               </div>
             </>
@@ -78,7 +81,7 @@ export const SmartQueueDisplay = ({ result }: SmartQueueDisplayProps) => {
         <div className="space-y-3">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span>Clarity</span>
+              <span>{t('smartQueue.clarity')}</span>
               <span className={getScoreColor(result.clarityScore ?? 0)}>
                 {((result.clarityScore ?? 0) * 100).toFixed(0)}%
               </span>
@@ -88,7 +91,7 @@ export const SmartQueueDisplay = ({ result }: SmartQueueDisplayProps) => {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span>Structure</span>
+              <span>{t('smartQueue.structure')}</span>
               <span className={getScoreColor(result.structureScore ?? 0)}>
                 {((result.structureScore ?? 0) * 100).toFixed(0)}%
               </span>
@@ -98,7 +101,7 @@ export const SmartQueueDisplay = ({ result }: SmartQueueDisplayProps) => {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span>Constraints</span>
+              <span>{t('smartQueue.constraints')}</span>
               <span className={getScoreColor(result.constraintsScore ?? 0)}>
                 {((result.constraintsScore ?? 0) * 100).toFixed(0)}%
               </span>
