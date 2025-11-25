@@ -218,13 +218,28 @@ export const TFMController = () => {
         if (error) {
           // Handle 402 Payment Required error specifically
           if (error.message?.includes('402') || error.message?.includes('credits')) {
-            toast({
-              title: "Недостаточно кредитов",
-              description: "Пополните кредиты в Settings → Workspace → Usage",
-              variant: "destructive",
+            // Show mock data for testing when no credits
+            const mockScore = Math.min(100, Math.max(0, Math.round(50 + (prompt.length / 10))));
+            setSmartQueueResult({
+              shouldOptimize: mockScore < 70,
+              clarityScore: Math.round(mockScore * 0.9),
+              structureScore: Math.round(mockScore * 0.95),
+              constraintsScore: Math.round(mockScore * 0.85),
+              priorityScore: mockScore,
+              recommendation: mockScore < 70 
+                ? 'Оптимизация рекомендуется для улучшения качества.'
+                : 'Промпт имеет хорошее качество.',
             });
+            
+            toast({
+              title: "Smart Queue (Mock режим)",
+              description: "Показаны тестовые данные. Пополните кредиты для точного анализа.",
+              variant: "default",
+            });
+          } else {
+            throw error;
           }
-          throw error;
+          return;
         }
         setSmartQueueResult(data);
       } catch (error) {
@@ -235,7 +250,7 @@ export const TFMController = () => {
 
     const debounceTimer = setTimeout(checkSmartQueue, 800);
     return () => clearTimeout(debounceTimer);
-  }, [prompt]);
+  }, [prompt, toast]);
 
   const handleSubmit = async () => {
     if (!prompt.trim()) {
