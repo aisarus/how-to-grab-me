@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Shield, MessageSquare, GitBranch, Package } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ModuleControlsProps {
   smartQueueEnabled: boolean;
@@ -20,15 +21,17 @@ export const ModuleControls = ({
   onExplainModeToggle,
   onVersioningToggle,
 }: ModuleControlsProps) => {
+  const { t } = useLanguage();
+  
   return (
     <Card className="border-primary/20">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Package className="h-5 w-5 text-primary" />
-          PromptOps Modules
+          {t('modules.title')}
         </CardTitle>
         <CardDescription>
-          Control which optimization modules are active
+          {t('modules.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -37,10 +40,10 @@ export const ModuleControls = ({
             <Shield className="h-4 w-4 text-muted-foreground" />
             <div className="space-y-0.5">
               <Label htmlFor="smart-queue" className="text-sm font-medium">
-                Smart Queue
+                {t('modules.smartQueue')}
               </Label>
               <p className="text-xs text-muted-foreground">
-                Auto-detect if prompts need optimization (priority score ≥ 0.85 skips)
+                {t('modules.smartQueueDesc')}
               </p>
             </div>
           </div>
@@ -56,10 +59,10 @@ export const ModuleControls = ({
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
             <div className="space-y-0.5">
               <Label htmlFor="explain-mode" className="text-sm font-medium">
-                Explain Mode
+                {t('modules.explainMode')}
               </Label>
               <p className="text-xs text-muted-foreground">
-                Generate explanations (≤150 words) for each optimization iteration
+                {t('modules.explainModeDesc')}
               </p>
             </div>
           </div>
@@ -75,10 +78,10 @@ export const ModuleControls = ({
             <GitBranch className="h-4 w-4 text-muted-foreground" />
             <div className="space-y-0.5">
               <Label htmlFor="versioning" className="text-sm font-medium">
-                Versioning & Review
+                {t('modules.versioning')}
               </Label>
               <p className="text-xs text-muted-foreground">
-                Track prompt versions with accept/reject/rollback capabilities
+                {t('modules.versioningDesc')}
               </p>
             </div>
           </div>

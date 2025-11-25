@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Package, Copy, Check, Download, Code } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface IntegrationReadinessData {
   optimizedPrompt: string;
@@ -30,6 +31,7 @@ interface IntegrationReadinessOutputProps {
 export const IntegrationReadinessOutput = ({ data }: IntegrationReadinessOutputProps) => {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const jsonOutput = JSON.stringify(data, null, 2);
 
@@ -38,14 +40,14 @@ export const IntegrationReadinessOutput = ({ data }: IntegrationReadinessOutputP
       await navigator.clipboard.writeText(jsonOutput);
       setCopied(true);
       toast({
-        title: "Copied to Clipboard",
-        description: "Integration Readiness JSON copied successfully.",
+        title: t('integration.copied'),
+        description: t('integration.copiedSuccess'),
       });
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       toast({
-        title: "Copy Failed",
-        description: "Unable to copy to clipboard.",
+        title: t('integration.copyFailed'),
+        description: t('integration.copiedFailed'),
         variant: "destructive",
       });
     }
@@ -63,8 +65,8 @@ export const IntegrationReadinessOutput = ({ data }: IntegrationReadinessOutputP
     URL.revokeObjectURL(url);
     
     toast({
-      title: "Downloaded",
-      description: "Integration Readiness JSON downloaded successfully.",
+      title: t('integration.downloaded'),
+      description: t('integration.downloadSuccess'),
     });
   };
 
@@ -73,10 +75,10 @@ export const IntegrationReadinessOutput = ({ data }: IntegrationReadinessOutputP
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Package className="h-5 w-5 text-primary" />
-          Integration Readiness: API + IDE Output
+          {t('integration.title')}
         </CardTitle>
         <CardDescription>
-          Standardized JSON for CI/CD pipelines and IDE plugins
+          {t('integration.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -90,12 +92,12 @@ export const IntegrationReadinessOutput = ({ data }: IntegrationReadinessOutputP
             {copied ? (
               <>
                 <Check className="h-4 w-4 mr-2" />
-                Copied!
+                {t('integration.copied')}
               </>
             ) : (
               <>
                 <Copy className="h-4 w-4 mr-2" />
-                Copy JSON
+                {t('integration.copyJson')}
               </>
             )}
           </Button>
@@ -106,7 +108,7 @@ export const IntegrationReadinessOutput = ({ data }: IntegrationReadinessOutputP
             onClick={handleDownload}
           >
             <Download className="h-4 w-4 mr-2" />
-            Download
+            {t('integration.download')}
           </Button>
         </div>
 
@@ -120,10 +122,10 @@ export const IntegrationReadinessOutput = ({ data }: IntegrationReadinessOutputP
         </div>
 
         <div className="space-y-3 p-4 bg-primary/5 rounded-lg border border-primary/20">
-          <p className="text-sm font-medium">Integration Examples:</p>
+          <p className="text-sm font-medium">{t('integration.examples')}</p>
           
           <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">CI/CD Pipeline:</p>
+            <p className="text-xs font-medium text-muted-foreground">{t('integration.cicdPipeline')}</p>
             <code className="block p-2 bg-muted/50 rounded text-xs">
               {`# Quality gate check
 if [ $(jq -r '.metrics.QGPercent' output.json) -lt 80 ]; then
@@ -134,7 +136,7 @@ fi`}
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">IDE Plugin (VSCode):</p>
+            <p className="text-xs font-medium text-muted-foreground">{t('integration.idePlugin')}</p>
             <code className="block p-2 bg-muted/50 rounded text-xs">
               {`// Parse JSON and show inline tooltip
 const explain = data.explain;
@@ -143,7 +145,7 @@ editor.showInformationMessage(explain);`}
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Artifact Verification:</p>
+            <p className="text-xs font-medium text-muted-foreground">{t('integration.artifactVerification')}</p>
             <code className="block p-2 bg-muted/50 rounded text-xs">
               {`# Verify content integrity
 sha256sum -c <<< "${data.versionLog.hashOfContent} prompt.txt"`}
@@ -153,9 +155,7 @@ sha256sum -c <<< "${data.versionLog.hashOfContent} prompt.txt"`}
 
         <div className="p-3 bg-muted/50 rounded-lg">
           <p className="text-xs text-muted-foreground">
-            <strong>Machine Readability:</strong> All fields use consistent types (numbers for metrics, 
-            ISO 8601 for timestamps). The 'explain' field concatenates all accepted iteration explanations 
-            with '\n' separators. Version log includes immutable content hashes for audit trails.
+            <strong>{t('integration.machineReadability')}</strong>
           </p>
         </div>
       </CardContent>
