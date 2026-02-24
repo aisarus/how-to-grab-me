@@ -9,6 +9,30 @@ const corsHeaders = {
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 
+// Retry wrapper with exponential backoff for rate limiting
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries = 3,
+  baseDelay = 2000
+): Promise<Response> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const response = await fetch(url, options);
+    
+    if (response.status === 429 && attempt < maxRetries) {
+      const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
+      console.warn(`Rate limited (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${Math.round(delay)}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      continue;
+    }
+    
+    return response;
+  }
+  
+  // Should never reach here, but just in case
+  return fetch(url, options);
+}
+
 interface TFMConfig {
   a: number;
   b: number;
@@ -119,7 +143,7 @@ interface TFMResponse {
 async function calculateSmartQueueScore(prompt: string): Promise<SmartQueueResult> {
   console.log('\n=== Smart Queue: Calculating priority score ===');
   
-  const response = await fetch(AI_GATEWAY_URL, {
+  const response = await fetchWithRetry(AI_GATEWAY_URL, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -208,7 +232,7 @@ async function generateExplanation(
 ): Promise<ExplanationData> {
   console.log('\n=== Explain Mode: Generating explanation ===');
   
-  const response = await fetch(AI_GATEWAY_URL, {
+  const response = await fetchWithRetry(AI_GATEWAY_URL, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -731,6 +755,18 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in TRI/TFM controller:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    // Check if it's a rate limit error and return 429
+    if (errorMessage.includes('rate_limited') || errorMessage.includes('rate limited')) {
+      return new Response(
+        JSON.stringify({ error: 'Сервис временно перегружен. Пожалуйста, подождите несколько секунд и попробуйте снова.' }),
+        {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+    
     return new Response(
       JSON.stringify({ error: errorMessage }),
       {
@@ -742,7 +778,7 @@ serve(async (req) => {
 });
 
 async function pairwiseComparePromptsWithVotes(oldPrompt: string, newPrompt: string): Promise<number[]> {
-  const response = await fetch(AI_GATEWAY_URL, {
+  const response = await fetchWithRetry(AI_GATEWAY_URL, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -883,7 +919,7 @@ Key principles:
 
 Keep the expansion moderate - aim for 20-30% more content.`;
 
-  const response = await fetch(AI_GATEWAY_URL, {
+  const response = await fetchWithRetry(AI_GATEWAY_URL, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -936,7 +972,7 @@ Key principles:
 This creates mature, focused text filtered through psychosocial development theory.`;
   }
 
-  const response = await fetch(AI_GATEWAY_URL, {
+  const response = await fetchWithRetry(AI_GATEWAY_URL, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -966,7 +1002,7 @@ async function improvePrompt(prompt: string): Promise<{
   improvements: string[];
 }> {
   
-  const proposerResponse = await fetch(AI_GATEWAY_URL, {
+  const proposerResponse = await fetchWithRetry(AI_GATEWAY_URL, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -1022,7 +1058,7 @@ Return JSON:
     };
   }
 
-  const criticResponse = await fetch(AI_GATEWAY_URL, {
+  const criticResponse = await fetchWithRetry(AI_GATEWAY_URL, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${LOVABLE_API_KEY}`,
