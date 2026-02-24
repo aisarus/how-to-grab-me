@@ -119,7 +119,7 @@ Adapt your improvement suggestions based on the task type, providing domain-spec
       systemPrompt += `\n\nApply Erikson's psychological model for deeper understanding of context and user needs.`;
     }
 
-    systemPrompt += `\n\nRespond in ${languageName}. Be friendly and constructive.`;
+    systemPrompt += `\n\nIMPORTANT: Always respond in the same language that the user writes their prompt in. If the user writes in English, respond in English. If in Russian, respond in Russian. If in Hebrew, respond in Hebrew. Match the user's language exactly. Be friendly and constructive.`;
 
     const response = await fetch(AI_GATEWAY_URL, {
       method: 'POST',
