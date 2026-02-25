@@ -188,7 +188,7 @@ Return JSON only:
   }
 
   const data = await response.json();
-  const content = data.choices[0].message.content;
+  const content = data?.choices?.[0]?.message?.content;
   
   let parsed;
   try {
@@ -276,7 +276,7 @@ Guidelines:
   }
 
   const data = await response.json();
-  const content = data.choices[0].message.content;
+  const content = data?.choices?.[0]?.message?.content;
   
   let parsed;
   try {
@@ -832,7 +832,7 @@ ${newPrompt}`
   }
 
   const data = await response.json();
-  const content = data.choices[0].message.content;
+  const content = data?.choices?.[0]?.message?.content;
   
   try {
     const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -940,7 +940,11 @@ Keep the expansion moderate - aim for 20-30% more content.`;
   }
 
   const data = await response.json();
-  return data.choices[0].message.content;
+  const content = data?.choices?.[0]?.message?.content;
+  if (!content) {
+    throw new Error(`D Block returned empty response: ${JSON.stringify(data)}`);
+  }
+  return content;
 }
 
 async function callSBlock(text: string, eriksonStage?: number): Promise<string> {
@@ -993,7 +997,11 @@ This creates mature, focused text filtered through psychosocial development theo
   }
 
   const data = await response.json();
-  return data.choices[0].message.content;
+  const content = data?.choices?.[0]?.message?.content;
+  if (!content) {
+    throw new Error(`S Block returned empty response: ${JSON.stringify(data)}`);
+  }
+  return content;
 }
 
 async function improvePrompt(prompt: string): Promise<{
@@ -1044,7 +1052,15 @@ Return JSON:
   }
 
   const proposerData = await proposerResponse.json();
-  const proposerOutput = proposerData.choices[0].message.content;
+  const proposerOutput = proposerData?.choices?.[0]?.message?.content;
+  if (!proposerOutput) {
+    console.error('Proposer returned empty response:', JSON.stringify(proposerData));
+    return {
+      originalPrompt: prompt,
+      improvedPrompt: prompt,
+      improvements: ['Proposer returned empty response - using original'],
+    };
+  }
   
   let parsed;
   try {
@@ -1093,7 +1109,7 @@ Return JSON:
   });
 
   const criticData = await criticResponse.json();
-  const criticOutput = criticData.choices[0].message.content;
+  const criticOutput = criticData?.choices?.[0]?.message?.content;
   
   let criticResult;
   try {
