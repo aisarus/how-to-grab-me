@@ -13,15 +13,24 @@ const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 async function fetchWithRetry(
   url: string,
   options: RequestInit,
-  maxRetries = 3,
-  baseDelay = 2000
+  maxRetries = 4,
+  baseDelay = 3000
 ): Promise<Response> {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     const response = await fetch(url, options);
     
-    if (response.status === 429 && attempt < maxRetries) {
-      const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
-      console.warn(`Rate limited (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${Math.round(delay)}ms...`);
+    // Retry on both 429 and 402 (rate limit responses)
+    if ((response.status === 429 || response.status === 402) && attempt < maxRetries) {
+      // Respect Retry-After header if present
+      const retryAfter = response.headers.get('Retry-After');
+      let delay: number;
+      if (retryAfter) {
+        const parsed = parseInt(retryAfter, 10);
+        delay = !isNaN(parsed) ? parsed * 1000 : baseDelay * Math.pow(2, attempt);
+      } else {
+        delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
+      }
+      console.warn(`Rate limited ${response.status} (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${Math.round(delay)}ms...`);
       await new Promise(resolve => setTimeout(resolve, delay));
       continue;
     }
