@@ -349,6 +349,9 @@ export const TFMController = () => {
         setLastResultId(insertedData.id);
       }
 
+      // Deduct credit after successful optimization
+      await deductCredit();
+
       toast({
         title: t('tfmController.optimizationCompleted'),
         description: `RGI: ${data.modeFreeMetrics?.rgiPercent?.toFixed(2) ?? 'N/A'}%, Efficiency: ${data.modeFreeMetrics?.efficiencyPercent?.toFixed(2) ?? 'N/A'}% (${data.iterations} ${t('tfmController.iterations').toLowerCase()})`,
