@@ -257,6 +257,11 @@ export const TFMController = () => {
       return;
     }
 
+    if (!hasCredits) {
+      setShowOutOfCredits(true);
+      return;
+    }
+
     setLoading(true);
     setResult(null);
 
