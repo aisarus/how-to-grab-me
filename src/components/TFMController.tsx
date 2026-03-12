@@ -21,6 +21,9 @@ import { SmartQueueDisplay } from './SmartQueueDisplay';
 import { ExplanationViewer } from './ExplanationViewer';
 import { VersionHistoryViewer } from './VersionHistoryViewer';
 import { IntegrationReadinessOutput } from './IntegrationReadinessOutput';
+import { useCredits } from '@/hooks/useCredits';
+import { CreditsCounter } from './CreditsCounter';
+import { OutOfCreditsModal } from './OutOfCreditsModal';
 
 interface ExplanationData {
   mainIssues: string[];
@@ -151,6 +154,8 @@ export const TFMController = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const abortControllerRef = useRef<AbortController | null>(null);
+  const { credits, hasCredits, isMaker, deductCredit, fetchCredits, activateMakerMode } = useCredits();
+  const [showOutOfCredits, setShowOutOfCredits] = useState(false);
 
   // Restore state from sessionStorage on mount
   useEffect(() => {
@@ -252,6 +257,11 @@ export const TFMController = () => {
       return;
     }
 
+    if (!hasCredits) {
+      setShowOutOfCredits(true);
+      return;
+    }
+
     setLoading(true);
     setResult(null);
 
@@ -338,6 +348,9 @@ export const TFMController = () => {
       } else if (insertedData) {
         setLastResultId(insertedData.id);
       }
+
+      // Deduct credit after successful optimization
+      await deductCredit();
 
       toast({
         title: t('tfmController.optimizationCompleted'),
@@ -554,7 +567,8 @@ export const TFMController = () => {
                 </p>
               </div>
             </div>
-            <div className="flex gap-1 sm:gap-2 flex-shrink-0">
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+              <CreditsCounter credits={credits} isMaker={isMaker} />
               <LanguageSwitcher />
               <Button 
                 variant="outline" 
@@ -782,7 +796,7 @@ export const TFMController = () => {
             <div className="flex gap-2">
               <Button 
                 onClick={handleSubmit} 
-                disabled={loading || !prompt.trim()}
+                disabled={loading || !prompt.trim() || (!hasCredits && !isMaker)}
                 className="flex-1 h-12 text-base gradient-primary hover:opacity-90 transition-opacity shadow-glow"
               >
                 {loading ? (
@@ -1510,6 +1524,11 @@ export const TFMController = () => {
         )}
         </div>
       </div>
+      <OutOfCreditsModal 
+        open={showOutOfCredits} 
+        onOpenChange={setShowOutOfCredits} 
+        onActivateMaker={activateMakerMode}
+      />
     </div>
   );
 };
