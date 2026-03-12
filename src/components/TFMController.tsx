@@ -1524,6 +1524,11 @@ export const TFMController = () => {
         )}
         </div>
       </div>
+      <OutOfCreditsModal 
+        open={showOutOfCredits} 
+        onOpenChange={setShowOutOfCredits} 
+        onActivateMaker={activateMakerMode}
+      />
     </div>
   );
 };
