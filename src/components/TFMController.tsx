@@ -21,6 +21,9 @@ import { SmartQueueDisplay } from './SmartQueueDisplay';
 import { ExplanationViewer } from './ExplanationViewer';
 import { VersionHistoryViewer } from './VersionHistoryViewer';
 import { IntegrationReadinessOutput } from './IntegrationReadinessOutput';
+import { useCredits } from '@/hooks/useCredits';
+import { CreditsCounter } from './CreditsCounter';
+import { OutOfCreditsModal } from './OutOfCreditsModal';
 
 interface ExplanationData {
   mainIssues: string[];
