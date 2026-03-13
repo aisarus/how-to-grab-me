@@ -318,7 +318,9 @@ export const TFMController = () => {
       if (error) throw error;
 
       setResult(data);
-      consumeFreeUse();
+      if (!hasAccess) {
+        consumeFreeUse();
+      }
       setAbTestWinner(null);
       setAbTestNotes('');
 
