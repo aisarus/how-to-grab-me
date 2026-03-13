@@ -852,10 +852,10 @@ export const TFMController = () => {
         <FavoriteConfigs currentConfig={config} onLoadConfig={handleLoadConfig} />
 
         {/* Configuration Card */}
-        <Card className="floating-card border shadow-md" style={{ animationDelay: '0.3s' }}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Settings className="w-5 h-5 text-primary" />
+        <Card className="floating-card border shadow-md">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-base font-semibold">
+              <Settings className="w-4 h-4 text-primary" />
               Advanced Settings
             </CardTitle>
           </CardHeader>
