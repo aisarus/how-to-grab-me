@@ -1248,6 +1248,14 @@ export const TFMController = () => {
               />
             </div>
 
+            {/* Iteration Log */}
+            <IterationLog
+              iterations={result.iterations}
+              converged={result.converged}
+              scoreDelta={result.modeFreeMetrics?.deltaQ}
+              explanations={result.explanations}
+              modeFreeMetrics={result.modeFreeMetrics}
+            />
             {/* PromptOps Module Outputs */}
             {result.smartQueue && (
               <div style={{ animationDelay: '0.9s' }}>
