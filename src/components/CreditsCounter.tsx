@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Coins, Infinity, ShoppingCart, KeyRound } from 'lucide-react';
+import { Key, Infinity, ShoppingCart, KeyRound, Check, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   Popover,
@@ -11,21 +11,29 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 
 interface CreditsCounterProps {
-  credits: number | null;
+  hasLifetimeAccess: boolean;
+  customApiKey: string | null;
   isMaker: boolean;
   onActivateMaker?: (password: string) => boolean;
+  onSaveApiKey?: (key: string) => Promise<boolean>;
+  onRemoveApiKey?: () => Promise<boolean>;
 }
 
-export const CreditsCounter = ({ credits, isMaker, onActivateMaker }: CreditsCounterProps) => {
+export const CreditsCounter = ({ 
+  hasLifetimeAccess, customApiKey, isMaker, 
+  onActivateMaker, onSaveApiKey, onRemoveApiKey 
+}: CreditsCounterProps) => {
   const [showMakerInput, setShowMakerInput] = useState(false);
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [makerPassword, setMakerPassword] = useState('');
+  const [apiKey, setApiKey] = useState('');
   const { toast } = useToast();
 
-  const isLow = credits !== null && credits <= 1;
+  const hasAccess = isMaker || hasLifetimeAccess || !!customApiKey;
 
   const handleMakerActivate = () => {
     if (onActivateMaker?.(makerPassword)) {
-      toast({ title: '🚀 Maker Mode', description: 'Unlimited credits enabled!' });
+      toast({ title: '🚀 Maker Mode', description: 'Unlimited access enabled!' });
       setShowMakerInput(false);
       setMakerPassword('');
     } else {
@@ -33,17 +41,34 @@ export const CreditsCounter = ({ credits, isMaker, onActivateMaker }: CreditsCou
     }
   };
 
-  const badgeContent = isMaker ? (
-    <>
-      <Infinity className="w-4 h-4 text-primary" />
-      <span className="text-xs font-semibold text-primary">∞</span>
-    </>
-  ) : (
-    <>
-      <Coins className="w-4 h-4" />
-      <span className="text-xs font-semibold">{credits ?? 0}</span>
-    </>
-  );
+  const handleSaveApiKey = async () => {
+    if (!apiKey.trim()) return;
+    const success = await onSaveApiKey?.(apiKey.trim());
+    if (success) {
+      toast({ title: '🔑 API Key saved', description: 'You can now use your own key.' });
+      setShowApiKeyInput(false);
+      setApiKey('');
+    } else {
+      toast({ title: 'Failed to save', variant: 'destructive' });
+    }
+  };
+
+  const handleRemoveApiKey = async () => {
+    const success = await onRemoveApiKey?.();
+    if (success) {
+      toast({ title: 'API Key removed' });
+    }
+  };
+
+  const statusIcon = isMaker ? (
+    <Infinity className="w-4 h-4 text-primary" />
+  ) : hasLifetimeAccess ? (
+    <Check className="w-4 h-4 text-emerald-400" />
+  ) : customApiKey ? (
+    <Key className="w-4 h-4 text-amber-400" />
+  ) : null;
+
+  const statusLabel = isMaker ? '∞' : hasLifetimeAccess ? 'PRO' : customApiKey ? 'BYOK' : 'FREE';
 
   return (
     <Popover>
@@ -52,55 +77,120 @@ export const CreditsCounter = ({ credits, isMaker, onActivateMaker }: CreditsCou
           <Badge
             variant="outline"
             className={`gap-1.5 px-3 py-1 cursor-pointer hover:opacity-80 transition-opacity ${
-              isMaker
-                ? 'border-primary/30 bg-primary/5'
-                : isLow
-                  ? 'border-destructive/30 bg-destructive/5 text-destructive'
-                  : 'border-primary/30 bg-primary/5 text-primary'
+              hasAccess
+                ? 'border-primary/30 bg-primary/5 text-primary'
+                : 'border-muted-foreground/30 bg-muted/5 text-muted-foreground'
             }`}
           >
-            {badgeContent}
+            {statusIcon}
+            <span className="text-xs font-semibold">{statusLabel}</span>
           </Badge>
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-64 p-2" align="end">
-        <div className="space-y-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start gap-2"
-            onClick={() => window.open('https://your-lemonsqueezy-link.com', '_blank')}
-          >
-            <ShoppingCart className="w-4 h-4" />
-            Buy Credits
-          </Button>
+      <PopoverContent className="w-72 p-3" align="end">
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider px-1">Access</p>
 
-          {!isMaker && (
-            !showMakerInput ? (
+          {/* Lifetime Purchase */}
+          {!hasLifetimeAccess && !isMaker && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start gap-2"
+              onClick={() => window.open('https://your-lemonsqueezy-link.com', '_blank')}
+            >
+              <ShoppingCart className="w-4 h-4" />
+              Buy Lifetime Access — $29
+            </Button>
+          )}
+
+          {hasLifetimeAccess && (
+            <div className="flex items-center gap-2 px-3 py-2 text-sm text-emerald-400">
+              <Check className="w-4 h-4" />
+              Lifetime Access Active
+            </div>
+          )}
+
+          {/* BYOK */}
+          {!customApiKey ? (
+            !showApiKeyInput ? (
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full justify-start gap-2 text-muted-foreground"
-                onClick={() => setShowMakerInput(true)}
+                className="w-full justify-start gap-2"
+                onClick={() => setShowApiKeyInput(true)}
               >
-                <KeyRound className="w-4 h-4" />
-                Maker Access
+                <Key className="w-4 h-4" />
+                Bring Your Own Key
               </Button>
             ) : (
-              <div className="flex gap-1 p-1">
+              <div className="space-y-1.5 p-1">
                 <Input
                   type="password"
-                  placeholder="Password"
-                  value={makerPassword}
-                  onChange={(e) => setMakerPassword(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleMakerActivate()}
+                  placeholder="OpenAI API Key (sk-...)"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSaveApiKey()}
                   className="h-8 text-xs"
                 />
-                <Button size="sm" className="h-8" onClick={handleMakerActivate}>
-                  OK
-                </Button>
+                <div className="flex gap-1">
+                  <Button size="sm" className="h-7 flex-1 text-xs" onClick={handleSaveApiKey}>
+                    Save Key
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => { setShowApiKeyInput(false); setApiKey(''); }}>
+                    Cancel
+                  </Button>
+                </div>
               </div>
             )
+          ) : (
+            <div className="flex items-center justify-between px-3 py-2">
+              <div className="flex items-center gap-2 text-sm text-amber-400">
+                <Key className="w-4 h-4" />
+                <span className="text-xs">Key: •••{customApiKey.slice(-4)}</span>
+              </div>
+              <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive" onClick={handleRemoveApiKey}>
+                <X className="w-3 h-3" />
+              </Button>
+            </div>
+          )}
+
+          {/* Maker Access */}
+          {!isMaker && (
+            <div className="border-t border-border pt-2 mt-2">
+              {!showMakerInput ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start gap-2 text-muted-foreground/50 text-xs"
+                  onClick={() => setShowMakerInput(true)}
+                >
+                  <KeyRound className="w-3 h-3" />
+                  Maker Access
+                </Button>
+              ) : (
+                <div className="flex gap-1 p-1">
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    value={makerPassword}
+                    onChange={(e) => setMakerPassword(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleMakerActivate()}
+                    className="h-7 text-xs"
+                  />
+                  <Button size="sm" className="h-7 text-xs" onClick={handleMakerActivate}>
+                    OK
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {isMaker && (
+            <div className="flex items-center gap-2 px-3 py-2 text-sm text-primary">
+              <Infinity className="w-4 h-4" />
+              Maker Mode Active
+            </div>
           )}
         </div>
       </PopoverContent>

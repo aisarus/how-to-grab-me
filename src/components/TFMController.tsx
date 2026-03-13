@@ -154,7 +154,7 @@ export const TFMController = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const abortControllerRef = useRef<AbortController | null>(null);
-  const { credits, hasCredits, isMaker, deductCredit, fetchCredits, activateMakerMode } = useCredits();
+  const { hasAccess, hasLifetimeAccess, customApiKey, isMaker, saveCustomApiKey, removeCustomApiKey, fetchCredits, activateMakerMode } = useCredits();
   const [showOutOfCredits, setShowOutOfCredits] = useState(false);
 
   // Restore state from sessionStorage on mount
@@ -257,7 +257,7 @@ export const TFMController = () => {
       return;
     }
 
-    if (!hasCredits) {
+    if (!hasAccess) {
       setShowOutOfCredits(true);
       return;
     }
@@ -286,7 +286,8 @@ export const TFMController = () => {
             useEFMNB: config.useEFMNB,
             proposerCriticOnly: config.proposerCriticOnly,
             eriksonStage: complexityAnalysis?.eriksonStage,
-          }
+          },
+          ...(customApiKey ? { customApiKey } : {}),
         }
       });
 
@@ -349,8 +350,7 @@ export const TFMController = () => {
         setLastResultId(insertedData.id);
       }
 
-      // Deduct credit after successful optimization
-      await deductCredit();
+      // No credit deduction needed — lifetime access or BYOK model
 
       toast({
         title: t('tfmController.optimizationCompleted'),
@@ -568,7 +568,7 @@ export const TFMController = () => {
               </div>
             </div>
             <nav className="flex items-center gap-1 flex-shrink-0">
-              <CreditsCounter credits={credits} isMaker={isMaker} onActivateMaker={activateMakerMode} />
+              <CreditsCounter hasLifetimeAccess={hasLifetimeAccess} customApiKey={customApiKey} isMaker={isMaker} onActivateMaker={activateMakerMode} onSaveApiKey={saveCustomApiKey} onRemoveApiKey={removeCustomApiKey} />
               <div className="w-px h-5 bg-border mx-1 hidden sm:block" />
               <LanguageSwitcher />
               <Button 
@@ -796,7 +796,7 @@ export const TFMController = () => {
             <div className="flex gap-2">
               <Button 
                 onClick={handleSubmit} 
-                disabled={loading || !prompt.trim() || (!hasCredits && !isMaker)}
+                disabled={loading || !prompt.trim() || !hasAccess}
                 className="flex-1 h-12 text-base gradient-primary hover:opacity-90 transition-opacity shadow-glow"
               >
                 {loading ? (
@@ -1528,6 +1528,7 @@ export const TFMController = () => {
         open={showOutOfCredits} 
         onOpenChange={setShowOutOfCredits} 
         onActivateMaker={activateMakerMode}
+        onSaveApiKey={saveCustomApiKey}
       />
     </div>
   );

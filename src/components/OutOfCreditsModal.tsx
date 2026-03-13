@@ -9,35 +9,44 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Sparkles, Zap, Lock } from 'lucide-react';
+import { Sparkles, Zap, Lock, Key } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface OutOfCreditsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onActivateMaker: (password: string) => boolean;
+  onSaveApiKey: (key: string) => Promise<boolean>;
 }
 
-export const OutOfCreditsModal = ({ open, onOpenChange, onActivateMaker }: OutOfCreditsModalProps) => {
+export const OutOfCreditsModal = ({ open, onOpenChange, onActivateMaker, onSaveApiKey }: OutOfCreditsModalProps) => {
   const [showMakerInput, setShowMakerInput] = useState(false);
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [makerPassword, setMakerPassword] = useState('');
+  const [apiKey, setApiKey] = useState('');
   const { toast } = useToast();
 
   const handleMakerActivate = () => {
     if (onActivateMaker(makerPassword)) {
-      toast({
-        title: '🚀 Maker Mode Activated',
-        description: 'Unlimited credits enabled. Build without limits!',
-      });
+      toast({ title: '🚀 Maker Mode Activated', description: 'Unlimited access enabled!' });
       onOpenChange(false);
       setShowMakerInput(false);
       setMakerPassword('');
     } else {
-      toast({
-        title: 'Invalid password',
-        description: 'Access denied.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Invalid password', description: 'Access denied.', variant: 'destructive' });
+    }
+  };
+
+  const handleSaveApiKey = async () => {
+    if (!apiKey.trim()) return;
+    const success = await onSaveApiKey(apiKey.trim());
+    if (success) {
+      toast({ title: '🔑 API Key saved', description: 'You can now use the optimizer with your own key.' });
+      onOpenChange(false);
+      setShowApiKeyInput(false);
+      setApiKey('');
+    } else {
+      toast({ title: 'Failed to save key', variant: 'destructive' });
     }
   };
 
@@ -45,41 +54,77 @@ export const OutOfCreditsModal = ({ open, onOpenChange, onActivateMaker }: OutOf
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center shadow-lg">
-            <Zap className="w-8 h-8 text-white" />
+          <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg">
+            <Zap className="w-8 h-8 text-primary-foreground" />
           </div>
           <DialogTitle className="text-2xl font-bold">
-            You're out of credits
+            Unlock Full Access
           </DialogTitle>
           <DialogDescription className="text-base">
-            Upgrade to continue optimizing your AI pipelines. Get more credits and unlock the full power of prompt optimization.
+            Choose how you want to use the optimizer — buy lifetime access or bring your own API key.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4 space-y-4">
+        <div className="py-4 space-y-3">
+          {/* Lifetime Purchase */}
           <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-4 space-y-3">
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
-              <span className="font-semibold text-lg">100 Credits</span>
+              <span className="font-semibold text-lg">Lifetime Access</span>
             </div>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>✓ 100 prompt optimizations</li>
-              <li>✓ Full PCA loop with all modules</li>
+              <li>✓ Unlimited prompt optimizations</li>
+              <li>✓ All modules & features</li>
               <li>✓ Priority processing</li>
+              <li>✓ One-time payment, forever</li>
             </ul>
-            <div className="text-3xl font-bold text-primary">$15</div>
+            <div className="text-3xl font-bold text-primary">$29</div>
+            <Button
+              className="w-full h-11 text-base gradient-primary hover:opacity-90 shadow-glow"
+              onClick={() => window.open('https://your-lemonsqueezy-link.com', '_blank')}
+            >
+              <Sparkles className="mr-2 h-5 w-5" />
+              Buy Lifetime Access
+            </Button>
+          </div>
+
+          {/* BYOK */}
+          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Key className="w-5 h-5 text-amber-400" />
+              <span className="font-semibold">Bring Your Own Key</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Use your own OpenAI API key. You pay OpenAI directly for usage.
+            </p>
+            {!showApiKeyInput ? (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowApiKeyInput(true)}
+              >
+                <Key className="mr-2 h-4 w-4" />
+                Enter API Key
+              </Button>
+            ) : (
+              <div className="space-y-2">
+                <Input
+                  type="password"
+                  placeholder="sk-..."
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSaveApiKey()}
+                />
+                <div className="flex gap-2">
+                  <Button className="flex-1" onClick={handleSaveApiKey}>Save & Activate</Button>
+                  <Button variant="ghost" onClick={() => { setShowApiKeyInput(false); setApiKey(''); }}>Cancel</Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        <DialogFooter className="flex flex-col gap-2 sm:flex-col">
-          <Button 
-            className="w-full h-12 text-base gradient-primary hover:opacity-90 shadow-glow"
-            onClick={() => window.open('https://your-lemonsqueezy-link.com', '_blank')}
-          >
-            <Sparkles className="mr-2 h-5 w-5" />
-            Buy 100 Credits for $15
-          </Button>
-          
+        <DialogFooter className="flex flex-col sm:flex-col">
           {!showMakerInput ? (
             <button
               onClick={() => setShowMakerInput(true)}

@@ -6,6 +6,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+let ACTIVE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+let ACTIVE_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
+let ACTIVE_MODEL = 'google/gemini-2.5-flash';
+
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 
@@ -152,14 +156,14 @@ interface TFMResponse {
 async function calculateSmartQueueScore(prompt: string): Promise<SmartQueueResult> {
   console.log('\n=== Smart Queue: Calculating priority score ===');
   
-  const response = await fetchWithRetry(AI_GATEWAY_URL, {
+  const response = await fetchWithRetry(ACTIVE_GATEWAY_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Authorization': `Bearer ${ACTIVE_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: ACTIVE_MODEL,
       messages: [
         {
           role: 'system',
@@ -241,14 +245,14 @@ async function generateExplanation(
 ): Promise<ExplanationData> {
   console.log('\n=== Explain Mode: Generating explanation ===');
   
-  const response = await fetchWithRetry(AI_GATEWAY_URL, {
+  const response = await fetchWithRetry(ACTIVE_GATEWAY_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Authorization': `Bearer ${ACTIVE_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: ACTIVE_MODEL,
       messages: [
         {
           role: 'system',
@@ -392,7 +396,7 @@ serve(async (req) => {
 
   try {
     const MAX_PROMPT_LENGTH = 100000; // 100KB max
-    const { prompt, config } = await req.json();
+    const { prompt, config, customApiKey } = await req.json();
 
     // Input validation
     if (!prompt || typeof prompt !== 'string') {
@@ -413,11 +417,21 @@ serve(async (req) => {
       throw new Error('Prompt is required');
     }
 
-    if (!LOVABLE_API_KEY) {
-      console.error('LOVABLE_API_KEY not configured');
+    // Determine which API key and URL to use
+    const useCustomKey = customApiKey && typeof customApiKey === 'string' && customApiKey.startsWith('sk-');
+    ACTIVE_API_KEY = useCustomKey ? customApiKey : LOVABLE_API_KEY;
+    ACTIVE_GATEWAY_URL = useCustomKey ? 'https://api.openai.com/v1/chat/completions' : AI_GATEWAY_URL;
+    ACTIVE_MODEL = useCustomKey ? 'gpt-4o' : 'google/gemini-2.5-flash';
+
+    if (!ACTIVE_API_KEY) {
+      console.error('No API key available');
       return new Response(
         JSON.stringify({ error: 'AI service not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Using ${useCustomKey ? 'custom OpenAI' : 'Lovable AI'} key`);
       );
     }
 
@@ -787,14 +801,14 @@ serve(async (req) => {
 });
 
 async function pairwiseComparePromptsWithVotes(oldPrompt: string, newPrompt: string): Promise<number[]> {
-  const response = await fetchWithRetry(AI_GATEWAY_URL, {
+  const response = await fetchWithRetry(ACTIVE_GATEWAY_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Authorization': `Bearer ${ACTIVE_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: ACTIVE_MODEL,
       messages: [
         {
           role: 'system',
@@ -928,14 +942,14 @@ Key principles:
 
 Keep the expansion moderate - aim for 20-30% more content.`;
 
-  const response = await fetchWithRetry(AI_GATEWAY_URL, {
+  const response = await fetchWithRetry(ACTIVE_GATEWAY_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Authorization': `Bearer ${ACTIVE_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: ACTIVE_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: text }
@@ -985,14 +999,14 @@ Key principles:
 This creates mature, focused text filtered through psychosocial development theory.`;
   }
 
-  const response = await fetchWithRetry(AI_GATEWAY_URL, {
+  const response = await fetchWithRetry(ACTIVE_GATEWAY_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Authorization': `Bearer ${ACTIVE_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: ACTIVE_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: text }
@@ -1019,14 +1033,14 @@ async function improvePrompt(prompt: string): Promise<{
   improvements: string[];
 }> {
   
-  const proposerResponse = await fetchWithRetry(AI_GATEWAY_URL, {
+  const proposerResponse = await fetchWithRetry(ACTIVE_GATEWAY_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Authorization': `Bearer ${ACTIVE_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: ACTIVE_MODEL,
       messages: [
         {
           role: 'system',
@@ -1083,14 +1097,14 @@ Return JSON:
     };
   }
 
-  const criticResponse = await fetchWithRetry(AI_GATEWAY_URL, {
+  const criticResponse = await fetchWithRetry(ACTIVE_GATEWAY_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Authorization': `Bearer ${ACTIVE_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: ACTIVE_MODEL,
       messages: [
         {
           role: 'system',

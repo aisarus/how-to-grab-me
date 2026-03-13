@@ -231,7 +231,9 @@ export type Database = {
         Row: {
           created_at: string
           credits: number
+          custom_api_key: string | null
           email: string
+          has_lifetime_access: boolean
           id: string
           is_maker: boolean
           updated_at: string
@@ -239,7 +241,9 @@ export type Database = {
         Insert: {
           created_at?: string
           credits?: number
+          custom_api_key?: string | null
           email: string
+          has_lifetime_access?: boolean
           id: string
           is_maker?: boolean
           updated_at?: string
@@ -247,7 +251,9 @@ export type Database = {
         Update: {
           created_at?: string
           credits?: number
+          custom_api_key?: string | null
           email?: string
+          has_lifetime_access?: boolean
           id?: string
           is_maker?: boolean
           updated_at?: string
