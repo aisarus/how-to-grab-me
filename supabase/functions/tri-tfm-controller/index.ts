@@ -91,38 +91,7 @@ async function fetchWithRetry(
   return fetch(actualUrl, actualOptions);
 }
 
-// Retry wrapper with exponential backoff for rate limiting
-async function fetchWithRetry(
-  url: string,
-  options: RequestInit,
-  maxRetries = 4,
-  baseDelay = 3000
-): Promise<Response> {
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    const response = await fetch(url, options);
-    
-    // Retry on both 429 and 402 (rate limit responses)
-    if ((response.status === 429 || response.status === 402) && attempt < maxRetries) {
-      // Respect Retry-After header if present
-      const retryAfter = response.headers.get('Retry-After');
-      let delay: number;
-      if (retryAfter) {
-        const parsed = parseInt(retryAfter, 10);
-        delay = !isNaN(parsed) ? parsed * 1000 : baseDelay * Math.pow(2, attempt);
-      } else {
-        delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
-      }
-      console.warn(`Rate limited ${response.status} (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${Math.round(delay)}ms...`);
-      await new Promise(resolve => setTimeout(resolve, delay));
-      continue;
-    }
-    
-    return response;
-  }
-  
-  // Should never reach here, but just in case
-  return fetch(url, options);
-}
+
 
 interface TFMConfig {
   a: number;
