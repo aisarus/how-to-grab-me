@@ -647,13 +647,13 @@ export const TFMController = () => {
                       </div>
                       
                       <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="col-span-2 pb-2 border-b border-border/50">
-                          <span className="text-muted-foreground">Task Type:</span>
+                        <div className="col-span-2 pb-2 border-b border-border/50 flex flex-wrap gap-x-3 gap-y-1">
+                          <span><span className="text-muted-foreground">Task Type:</span>
                           <span className="ml-1 font-medium">
                             {complexityAnalysis.taskType === 'creative' ? 'Creative' : 'Technical'}
-                          </span>
-                          <span className="ml-2 text-muted-foreground">Erikson Stage:</span>
-                          <span className="ml-1 font-medium">{complexityAnalysis.eriksonStage}</span>
+                          </span></span>
+                          <span><span className="text-muted-foreground">Erikson Stage:</span>
+                          <span className="ml-1 font-medium">{complexityAnalysis.eriksonStage}</span></span>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Length:</span>
