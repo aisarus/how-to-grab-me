@@ -1037,9 +1037,9 @@ export const TFMController = () => {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card>}
 
-        {/* PromptOps Module Controls */}
+        {/* PromptOps Module Controls - Pro only */}
         <ModuleControls
           smartQueueEnabled={config.smartQueueEnabled}
           explainModeEnabled={config.explainModeEnabled}
