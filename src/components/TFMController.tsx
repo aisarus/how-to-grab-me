@@ -572,32 +572,32 @@ export const TFMController = () => {
                 </span>
               </div>
             </div>
-            <nav className="flex items-center gap-1 flex-shrink-0">
+            <nav className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
               <CreditsCounter hasLifetimeAccess={hasLifetimeAccess} customApiKey={customApiKey} apiProvider={apiProvider} isMaker={isMaker} onActivateMaker={activateMakerMode} onSaveApiKey={saveCustomApiKey} onRemoveApiKey={removeCustomApiKey} />
-              <div className="w-px h-5 bg-border mx-1 hidden sm:block" />
+              <div className="w-px h-5 bg-border mx-0.5 sm:mx-1 hidden sm:block" />
               <LanguageSwitcher />
               <Button 
                 variant="ghost" 
-                size="sm" 
-                className="gap-1.5 text-muted-foreground hover:text-foreground"
+                size="icon" 
+                className="h-8 w-8 sm:h-9 sm:w-auto sm:px-3 text-muted-foreground hover:text-foreground"
                 onClick={() => navigate('/assistant')}
               >
                 <MessageSquare className="w-4 h-4" />
-                <span className="hidden lg:inline text-xs">{t('common.assistant')}</span>
+                <span className="hidden lg:inline text-xs ml-1.5">{t('common.assistant')}</span>
               </Button>
               <Button 
                 variant="ghost" 
-                size="sm" 
-                className="gap-1.5 text-muted-foreground hover:text-foreground"
+                size="icon" 
+                className="h-8 w-8 sm:h-9 sm:w-auto sm:px-3 text-muted-foreground hover:text-foreground"
                 onClick={() => navigate('/analytics')}
               >
                 <BarChart3 className="w-4 h-4" />
-                <span className="hidden lg:inline text-xs">{t('common.analytics')}</span>
+                <span className="hidden lg:inline text-xs ml-1.5">{t('common.analytics')}</span>
               </Button>
               <Button 
                 variant="ghost" 
-                size="sm" 
-                className="gap-1.5 text-muted-foreground hover:text-foreground"
+                size="icon" 
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
                 onClick={async () => {
                   await supabase.auth.signOut();
                   navigate('/auth');
@@ -629,8 +629,8 @@ export const TFMController = () => {
                 placeholder={t('tfmController.inputPlaceholder')}
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                rows={8}
-                className="resize-none font-mono text-sm"
+                rows={5}
+                className="resize-none font-mono text-xs sm:text-sm min-h-[120px] sm:min-h-[180px]"
               />
               
               {/* Combined Analysis Display */}
@@ -647,13 +647,13 @@ export const TFMController = () => {
                       </div>
                       
                       <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="col-span-2 pb-2 border-b border-border/50">
-                          <span className="text-muted-foreground">Task Type:</span>
+                        <div className="col-span-2 pb-2 border-b border-border/50 flex flex-wrap gap-x-3 gap-y-1">
+                          <span><span className="text-muted-foreground">Task Type:</span>
                           <span className="ml-1 font-medium">
                             {complexityAnalysis.taskType === 'creative' ? 'Creative' : 'Technical'}
-                          </span>
-                          <span className="ml-2 text-muted-foreground">Erikson Stage:</span>
-                          <span className="ml-1 font-medium">{complexityAnalysis.eriksonStage}</span>
+                          </span></span>
+                          <span><span className="text-muted-foreground">Erikson Stage:</span>
+                          <span className="ml-1 font-medium">{complexityAnalysis.eriksonStage}</span></span>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Length:</span>
@@ -704,7 +704,7 @@ export const TFMController = () => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-3 text-xs">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                         <div className="space-y-1">
                           <div className="flex items-center justify-between">
                             <span className="text-muted-foreground">{t('smartQueue.clarity')}</span>
@@ -798,54 +798,57 @@ export const TFMController = () => {
               </Button>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button 
                 onClick={handleSubmit} 
                 disabled={loading || !prompt.trim()}
-                className="flex-1 h-12 text-base gradient-primary hover:opacity-90 transition-opacity shadow-glow"
+                className="flex-1 h-11 sm:h-12 text-sm sm:text-base gradient-primary hover:opacity-90 transition-opacity shadow-glow"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
                     Optimizing...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="mr-2 h-5 w-5" />
+                    <Sparkles className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                     Optimize Prompt
                   </>
                 )}
               </Button>
               
-              <Button 
-                onClick={runABTest} 
-                disabled={loading || !prompt.trim()}
-                variant="outline"
-                className="h-12 px-6 border-2 border-primary/30 hover:bg-primary/10"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Testing...
-                  </>
-                ) : (
-                  <>
-                    <Trophy className="mr-2 h-5 w-5" />
-                    A/B Test
-                  </>
-                )}
-              </Button>
-              
-              {loading && (
-                <Button
-                  onClick={handleStop}
-                  variant="destructive"
-                  className="h-12 px-6"
+              <div className="flex gap-2">
+                <Button 
+                  onClick={runABTest} 
+                  disabled={loading || !prompt.trim()}
+                  variant="outline"
+                  className="flex-1 sm:flex-none h-11 sm:h-12 px-4 sm:px-6 border-2 border-primary/30 hover:bg-primary/10 text-sm"
                 >
-                  <StopCircle className="mr-2 h-5 w-5" />
-                  Stop
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                      <span className="hidden sm:inline">Testing...</span>
+                      <span className="sm:hidden">Test</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trophy className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                      A/B Test
+                    </>
+                  )}
                 </Button>
-              )}
+                
+                {loading && (
+                  <Button
+                    onClick={handleStop}
+                    variant="destructive"
+                    className="h-11 sm:h-12 px-4 sm:px-6"
+                  >
+                    <StopCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    Stop
+                  </Button>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -1201,7 +1204,7 @@ export const TFMController = () => {
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-2 justify-end">
+            <div className="flex flex-wrap gap-2 justify-end">
               <ComparisonModal
                 originalPrompt={prompt}
                 optimizedPrompt={result.finalText}
@@ -1231,13 +1234,13 @@ export const TFMController = () => {
             </div>
 
             {/* Metrics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               <Card className="floating-card border-2" style={{ animationDelay: '0.2s' }}>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Iterations</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-bold">{result.iterations}</div>
+                  <div className="text-2xl sm:text-4xl font-bold">{result.iterations}</div>
                   <div className="flex items-center gap-1 mt-2">
                     {result.converged ? (
                       <>
@@ -1259,7 +1262,7 @@ export const TFMController = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-4xl font-bold ${(result.modeFreeMetrics?.rgiPercent ?? 0) >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                  <div className={`text-2xl sm:text-4xl font-bold ${(result.modeFreeMetrics?.rgiPercent ?? 0) >= 0 ? 'text-primary' : 'text-destructive'}`}>
                     {(result.modeFreeMetrics?.rgiPercent ?? 0) > 0 ? '+' : ''}{result.modeFreeMetrics?.rgiPercent?.toFixed(1) ?? 'N/A'}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
@@ -1273,7 +1276,7 @@ export const TFMController = () => {
                   <CardTitle className="text-sm font-medium text-muted-foreground">Quality Gain (QG%)</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-3xl font-bold ${(result.modeFreeMetrics?.qualityGainPercent ?? 0) >= 0 ? 'text-green-600' : 'text-amber-600'}`}>
+                  <div className={`text-xl sm:text-3xl font-bold ${(result.modeFreeMetrics?.qualityGainPercent ?? 0) >= 0 ? 'text-green-600' : 'text-amber-600'}`}>
                     {(result.modeFreeMetrics?.qualityGainPercent ?? 0) > 0 ? '+' : ''}{result.modeFreeMetrics?.qualityGainPercent?.toFixed(1) ?? 'N/A'}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
@@ -1287,7 +1290,7 @@ export const TFMController = () => {
                   <CardTitle className="text-sm font-medium text-muted-foreground">Compactness%</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-3xl font-bold ${(result.modeFreeMetrics?.compactnessPercent ?? 0) >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                  <div className={`text-xl sm:text-3xl font-bold ${(result.modeFreeMetrics?.compactnessPercent ?? 0) >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
                     {(result.modeFreeMetrics?.compactnessPercent ?? 0) > 0 ? '+' : ''}{result.modeFreeMetrics?.compactnessPercent?.toFixed(1) ?? 'N/A'}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
@@ -1301,7 +1304,7 @@ export const TFMController = () => {
                   <CardTitle className="text-sm font-medium text-muted-foreground">Efficiency (Eff%)</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-3xl font-bold ${(result.modeFreeMetrics?.efficiencyPercent ?? 0) >= 0 ? 'text-purple-600' : 'text-red-600'}`}>
+                  <div className={`text-xl sm:text-3xl font-bold ${(result.modeFreeMetrics?.efficiencyPercent ?? 0) >= 0 ? 'text-purple-600' : 'text-red-600'}`}>
                     {(result.modeFreeMetrics?.efficiencyPercent ?? 0) > 0 ? '+' : ''}{result.modeFreeMetrics?.efficiencyPercent?.toFixed(1) ?? 'N/A'}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
@@ -1452,7 +1455,7 @@ export const TFMController = () => {
                 </div>
 
                 {/* Tie Option */}
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button
                     variant={abTestWinner === 'tie' ? 'default' : 'outline'}
                     size="sm"
@@ -1467,7 +1470,7 @@ export const TFMController = () => {
                     <Button
                       variant="default"
                       size="sm"
-                      className="ml-auto gradient-primary"
+                      className="sm:ml-auto gradient-primary"
                       onClick={async () => {
                         try {
                           const { error } = await supabase
