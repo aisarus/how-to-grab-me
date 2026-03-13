@@ -14,61 +14,81 @@ let ACTIVE_PROVIDER = 'lovable';
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 
-// Unified AI call that adapts to different provider APIs
-async function callAI(messages: Array<{role: string, content: string}>): Promise<string> {
-  if (ACTIVE_PROVIDER === 'anthropic') {
-    // Anthropic uses a different API format
-    const systemMsg = messages.find(m => m.role === 'system');
-    const nonSystemMsgs = messages.filter(m => m.role !== 'system');
+// Unified fetch that adapts request/response for Anthropic's different API format
+// All call sites use OpenAI-compatible format; this transparently converts for Anthropic
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries = 4,
+  baseDelay = 3000
+): Promise<Response> {
+  let actualUrl = url;
+  let actualOptions = options;
+
+  // If using Anthropic, convert OpenAI format to Anthropic format
+  if (ACTIVE_PROVIDER === 'anthropic' && options.body) {
+    const body = JSON.parse(options.body as string);
+    const systemMsg = body.messages?.find((m: any) => m.role === 'system');
+    const nonSystemMsgs = body.messages?.filter((m: any) => m.role !== 'system') || [];
     
-    const body: any = {
+    const anthropicBody: any = {
       model: ACTIVE_MODEL,
       max_tokens: 4096,
       messages: nonSystemMsgs,
     };
     if (systemMsg) {
-      body.system = systemMsg.content;
+      anthropicBody.system = systemMsg.content;
     }
 
-    const response = await fetchWithRetry(ACTIVE_GATEWAY_URL, {
-      method: 'POST',
+    actualOptions = {
+      ...options,
       headers: {
         'x-api-key': ACTIVE_API_KEY!,
         'anthropic-version': '2023-06-01',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Anthropic API error ${response.status}: ${errText}`);
-    }
-
-    const data = await response.json();
-    return data.content?.[0]?.text || '';
-  } else {
-    // OpenAI-compatible format (OpenAI, Google, Lovable gateway)
-    const response = await fetchWithRetry(ACTIVE_GATEWAY_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${ACTIVE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: ACTIVE_MODEL,
-        messages,
-      }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`AI API error ${response.status}: ${errText}`);
-    }
-
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || '';
+      body: JSON.stringify(anthropicBody),
+    };
   }
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const response = await fetch(actualUrl, actualOptions);
+    
+    if ((response.status === 429 || response.status === 402) && attempt < maxRetries) {
+      const retryAfter = response.headers.get('Retry-After');
+      let delay: number;
+      if (retryAfter) {
+        const parsed = parseInt(retryAfter, 10);
+        delay = !isNaN(parsed) ? parsed * 1000 : baseDelay * Math.pow(2, attempt);
+      } else {
+        delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
+      }
+      console.warn(`Rate limited ${response.status} (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${Math.round(delay)}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      continue;
+    }
+    
+    // If Anthropic, convert response to OpenAI-compatible format
+    if (ACTIVE_PROVIDER === 'anthropic' && response.ok) {
+      const anthropicData = await response.json();
+      const openaiCompatible = {
+        choices: [{
+          message: {
+            content: anthropicData.content?.[0]?.text || '',
+            role: 'assistant',
+          }
+        }]
+      };
+      return new Response(JSON.stringify(openaiCompatible), {
+        status: response.status,
+        headers: response.headers,
+      });
+    }
+    
+    return response;
+  }
+  
+  return fetch(actualUrl, actualOptions);
 }
 
 // Retry wrapper with exponential backoff for rate limiting
