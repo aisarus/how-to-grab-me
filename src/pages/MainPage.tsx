@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { TFMController } from '@/components/TFMController';
 import PromptAssistantPage from './PromptAssistantPage';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Sparkles, Bot, Database } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Sparkles, Bot } from 'lucide-react';
 
 const MainPage = () => {
   const { t } = useLanguage();
