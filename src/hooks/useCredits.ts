@@ -21,12 +21,16 @@ export const useCredits = () => {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('credits')
+      .select('credits, is_maker')
       .eq('id', user.id)
       .single();
 
     if (!error && data) {
       setCredits((data as any).credits ?? 3);
+      if ((data as any).is_maker) {
+        setIsMaker(true);
+        localStorage.setItem(MAKER_KEY, 'true');
+      }
     }
     setLoading(false);
   }, []);

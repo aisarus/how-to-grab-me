@@ -233,6 +233,7 @@ export type Database = {
           credits: number
           email: string
           id: string
+          is_maker: boolean
           updated_at: string
         }
         Insert: {
@@ -240,6 +241,7 @@ export type Database = {
           credits?: number
           email: string
           id: string
+          is_maker?: boolean
           updated_at?: string
         }
         Update: {
@@ -247,6 +249,7 @@ export type Database = {
           credits?: number
           email?: string
           id?: string
+          is_maker?: boolean
           updated_at?: string
         }
         Relationships: []
