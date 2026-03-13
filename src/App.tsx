@@ -12,6 +12,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import PromptAssistantPage from "./pages/PromptAssistantPage";
 import DataRoomPage from "./pages/DataRoomPage";
 import { Starfield } from "./components/Starfield";
+import { ProductHuntBanner } from "./components/ProductHuntBanner";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <TooltipProvider>
+        <ProductHuntBanner />
         <Starfield />
         <Toaster />
         <Sonner />
