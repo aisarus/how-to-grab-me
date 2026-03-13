@@ -303,6 +303,7 @@ export const TFMController = () => {
       if (error) throw error;
 
       setResult(data);
+      consumeFreeUse();
       setAbTestWinner(null);
       setAbTestNotes('');
 
