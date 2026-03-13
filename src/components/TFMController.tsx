@@ -907,8 +907,8 @@ export const TFMController = () => {
           </CardContent>
         </Card>
 
-        {/* Pipeline Spider Visualizer */}
-        {loading && <PipelineSpiderVisualizer maxIterations={config.maxIterations} />}
+        {/* Pipeline Spider Visualizer - Pro only */}
+        {isProMode && loading && <PipelineSpiderVisualizer maxIterations={config.maxIterations} />}
 
         {/* Favorite Configs */}
         <FavoriteConfigs currentConfig={config} onLoadConfig={handleLoadConfig} />
