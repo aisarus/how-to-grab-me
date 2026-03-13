@@ -149,10 +149,10 @@ export default function AuthPage() {
             </div>
           </div>
           <CardTitle className="text-2xl text-center">
-            {isLogin ? t('auth.signIn') : t('auth.signUp')}
+            {isForgotPassword ? t('auth.resetPassword') : isLogin ? t('auth.signIn') : t('auth.signUp')}
           </CardTitle>
           <CardDescription className="text-center">
-            {isLogin ? t('auth.welcome') : t('auth.welcome')}
+            {isForgotPassword ? t('auth.forgotPasswordDesc') : t('auth.welcome')}
           </CardDescription>
         </CardHeader>
         <CardContent>
