@@ -1535,6 +1535,11 @@ export const TFMController = () => {
         onActivateMaker={activateMakerMode}
         onSaveApiKey={saveCustomApiKey}
       />
+      <ProLicenseModal
+        open={showProLicenseModal}
+        onOpenChange={setShowProLicenseModal}
+        onActivatePro={activatePro}
+      />
     </div>
   );
 };
