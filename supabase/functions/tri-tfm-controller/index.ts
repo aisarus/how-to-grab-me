@@ -234,11 +234,18 @@ interface TFMResponse {
 async function calculateSmartQueueScore(prompt: string): Promise<SmartQueueResult> {
   console.log('\n=== Smart Queue: Calculating priority score ===');
   
-  try {
-    const content = await callAI([
-      {
-        role: 'system',
-        content: `You are analyzing a prompt to determine if it needs optimization. Rate the following aspects on a scale of 0.0 to 1.0:
+  const response = await fetchWithRetry(ACTIVE_GATEWAY_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${ACTIVE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: ACTIVE_MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: `You are analyzing a prompt to determine if it needs optimization. Rate the following aspects on a scale of 0.0 to 1.0:
 
 1. Clarity: Is the prompt clear and unambiguous? (1.0 = perfectly clear, 0.0 = very unclear)
 2. Structure: Is the prompt well-structured with clear instructions? (1.0 = excellent structure, 0.0 = no structure)
@@ -251,12 +258,28 @@ Return JSON only:
   "constraints": 0.0-1.0,
   "reasoning": "brief explanation"
 }`
-      },
-      {
-        role: 'user',
-        content: `Analyze this prompt:\n\n${prompt}`
-      }
-    ]);
+        },
+        {
+          role: 'user',
+          content: `Analyze this prompt:\n\n${prompt}`
+        }
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    console.warn('Smart Queue analysis failed, defaulting to optimize');
+    return {
+      priorityScore: 0.5,
+      shouldOptimize: true,
+      clarityScore: 0.5,
+      structureScore: 0.5,
+      constraintsScore: 0.5,
+    };
+  }
+
+  const data = await response.json();
+  const content = data?.choices?.[0]?.message?.content;
   
   let parsed;
   try {
