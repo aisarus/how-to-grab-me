@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Zap, TrendingDown, Sparkles, Settings, BarChart3, CheckCircle2, Trophy, StopCircle, Copy, Check, LogOut, MessageSquare, Brain, Gauge, Target, AlertTriangle } from 'lucide-react';
+import { Loader2, Zap, TrendingDown, Sparkles, Settings, BarChart3, CheckCircle2, Trophy, StopCircle, Copy, Check, LogOut, MessageSquare, Brain, Gauge, Target, AlertTriangle, Monitor, Wrench } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Textarea as TextareaComponent } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -166,6 +166,15 @@ export const TFMController = () => {
   const [showOutOfCredits, setShowOutOfCredits] = useState(false);
   const { isPro, canOptimize, consumeFreeUse, activatePro } = usePaywall();
   const [showProLicenseModal, setShowProLicenseModal] = useState(false);
+  const [uiMode, setUiMode] = useState<'simple' | 'pro'>(() => {
+    return (localStorage.getItem('tfm-ui-mode') as 'simple' | 'pro') || 'simple';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('tfm-ui-mode', uiMode);
+  }, [uiMode]);
+
+  const isProMode = uiMode === 'pro';
 
   // Restore state from sessionStorage on mount
   useEffect(() => {
@@ -582,6 +591,31 @@ export const TFMController = () => {
               <CreditsCounter hasLifetimeAccess={hasLifetimeAccess} customApiKey={customApiKey} apiProvider={apiProvider} isMaker={isMaker} onActivateMaker={activateMakerMode} onSaveApiKey={saveCustomApiKey} onRemoveApiKey={removeCustomApiKey} />
               <div className="w-px h-5 bg-border mx-0.5 sm:mx-1 hidden sm:block" />
               <LanguageSwitcher />
+              {/* UI Mode Toggle */}
+              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-muted/50 border border-border">
+                <button
+                  onClick={() => setUiMode('simple')}
+                  className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    uiMode === 'simple' 
+                      ? 'bg-background text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Monitor className="w-3 h-3" />
+                  <span className="hidden sm:inline">Simple</span>
+                </button>
+                <button
+                  onClick={() => setUiMode('pro')}
+                  className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    uiMode === 'pro' 
+                      ? 'bg-background text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Wrench className="w-3 h-3" />
+                  <span className="hidden sm:inline">Pro</span>
+                </button>
+              </div>
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -769,8 +803,8 @@ export const TFMController = () => {
               )}
             </div>
 
-            {/* Prompt Diagnostics */}
-            {prompt.trim().length >= 20 && !loading && !result && (
+            {/* Prompt Diagnostics - Pro only */}
+            {isProMode && prompt.trim().length >= 20 && !loading && !result && (
               <PromptDiagnostics
                 prompt={prompt}
                 smartQueueScores={smartQueueResult ? {
@@ -873,14 +907,14 @@ export const TFMController = () => {
           </CardContent>
         </Card>
 
-        {/* Pipeline Spider Visualizer */}
-        {loading && <PipelineSpiderVisualizer maxIterations={config.maxIterations} />}
+        {/* Pipeline Spider Visualizer - Pro only */}
+        {isProMode && loading && <PipelineSpiderVisualizer maxIterations={config.maxIterations} />}
 
-        {/* Favorite Configs */}
-        <FavoriteConfigs currentConfig={config} onLoadConfig={handleLoadConfig} />
+        {/* Favorite Configs - Pro only */}
+        {isProMode && <FavoriteConfigs currentConfig={config} onLoadConfig={handleLoadConfig} />}
 
-        {/* Configuration Card */}
-        <Card className="floating-card border shadow-md">
+        {/* Configuration Card - Pro only */}
+        {isProMode && <Card className="floating-card border shadow-md">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-base font-semibold">
               <Settings className="w-4 h-4 text-primary" />
@@ -1003,17 +1037,17 @@ export const TFMController = () => {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card>}
 
-        {/* PromptOps Module Controls */}
-        <ModuleControls
+        {/* PromptOps Module Controls - Pro only */}
+        {isProMode && <ModuleControls
           smartQueueEnabled={config.smartQueueEnabled}
           explainModeEnabled={config.explainModeEnabled}
           versioningEnabled={config.versioningEnabled}
           onSmartQueueToggle={(enabled) => setConfig({ ...config, smartQueueEnabled: enabled })}
           onExplainModeToggle={(enabled) => setConfig({ ...config, explainModeEnabled: enabled })}
           onVersioningToggle={(enabled) => setConfig({ ...config, versioningEnabled: enabled })}
-        />
+        />}
 
         {/* A/B Test Results Section */}
         {abTestResults && (
@@ -1245,14 +1279,16 @@ export const TFMController = () => {
               />
             </div>
 
-            {/* Iteration Log */}
-            <IterationLog
-              iterations={result.iterations}
-              converged={result.converged}
-              scoreDelta={result.modeFreeMetrics?.deltaQ}
-              explanations={result.explanations}
-              modeFreeMetrics={result.modeFreeMetrics}
-            />
+            {/* Iteration Log - Pro only */}
+            {isProMode && (
+              <IterationLog
+                iterations={result.iterations}
+                converged={result.converged}
+                scoreDelta={result.modeFreeMetrics?.deltaQ}
+                explanations={result.explanations}
+                modeFreeMetrics={result.modeFreeMetrics}
+              />
+            )}
             {/* PromptOps Module Outputs */}
             {result.smartQueue && (
               <div style={{ animationDelay: '0.9s' }}>
@@ -1260,7 +1296,8 @@ export const TFMController = () => {
               </div>
             )}
 
-            {result.explanations && result.explanations.length > 0 && (
+            {/* ExplanationViewer - Pro only */}
+            {isProMode && result.explanations && result.explanations.length > 0 && (
               <div style={{ animationDelay: '1.0s' }}>
                 <ExplanationViewer explanations={result.explanations} />
               </div>
