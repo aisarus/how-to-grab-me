@@ -158,6 +158,8 @@ export const TFMController = () => {
   const abortControllerRef = useRef<AbortController | null>(null);
   const { hasAccess, hasLifetimeAccess, customApiKey, isMaker, saveCustomApiKey, removeCustomApiKey, fetchCredits, activateMakerMode } = useCredits();
   const [showOutOfCredits, setShowOutOfCredits] = useState(false);
+  const { isPro, canOptimize, consumeFreeUse, activatePro } = usePaywall();
+  const [showProLicenseModal, setShowProLicenseModal] = useState(false);
 
   // Restore state from sessionStorage on mount
   useEffect(() => {
