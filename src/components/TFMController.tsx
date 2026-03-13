@@ -26,7 +26,7 @@ import { CreditsCounter } from './CreditsCounter';
 import { OutOfCreditsModal } from './OutOfCreditsModal';
 import { usePaywall } from '@/hooks/usePaywall';
 import { ProLicenseModal } from './ProLicenseModal';
-import { SpiderLoadingAnimation } from './SpiderLoadingAnimation';
+import { PipelineSpiderVisualizer } from './PipelineSpiderVisualizer';
 
 interface ExplanationData {
   mainIssues: string[];
