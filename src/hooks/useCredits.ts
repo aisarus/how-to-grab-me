@@ -33,6 +33,7 @@ export const useCredits = () => {
     if (!error && data) {
       setHasLifetimeAccess((data as any).has_lifetime_access ?? false);
       setCustomApiKey((data as any).custom_api_key ?? null);
+      setApiProvider((data as any).api_provider ?? 'openai');
       if ((data as any).is_maker) {
         setIsMaker(true);
         localStorage.setItem(MAKER_KEY, 'true');
