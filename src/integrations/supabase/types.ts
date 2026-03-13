@@ -229,6 +229,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          api_provider: string | null
           created_at: string
           credits: number
           custom_api_key: string | null
@@ -239,6 +240,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          api_provider?: string | null
           created_at?: string
           credits?: number
           custom_api_key?: string | null
@@ -249,6 +251,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          api_provider?: string | null
           created_at?: string
           credits?: number
           custom_api_key?: string | null
