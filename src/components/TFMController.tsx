@@ -1304,7 +1304,7 @@ export const TFMController = () => {
                   <CardTitle className="text-sm font-medium text-muted-foreground">Efficiency (Eff%)</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-3xl font-bold ${(result.modeFreeMetrics?.efficiencyPercent ?? 0) >= 0 ? 'text-purple-600' : 'text-red-600'}`}>
+                  <div className={`text-xl sm:text-3xl font-bold ${(result.modeFreeMetrics?.efficiencyPercent ?? 0) >= 0 ? 'text-purple-600' : 'text-red-600'}`}>
                     {(result.modeFreeMetrics?.efficiencyPercent ?? 0) > 0 ? '+' : ''}{result.modeFreeMetrics?.efficiencyPercent?.toFixed(1) ?? 'N/A'}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
