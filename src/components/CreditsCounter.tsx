@@ -100,7 +100,7 @@ export const CreditsCounter = ({
               onClick={() => window.open('https://your-lemonsqueezy-link.com', '_blank')}
             >
               <ShoppingCart className="w-4 h-4" />
-              Buy Lifetime Access — $29
+              Buy Lifetime Access — $15
             </Button>
           )}
 
