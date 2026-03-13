@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 
 const FREE_USES_KEY = 'tfm_free_uses';
 const PRO_KEY = 'tfm_is_pro';
-const MAX_FREE_USES = 1;
+const MAX_FREE_USES = 3;
 
 export const usePaywall = () => {
   const [isPro, setIsPro] = useState(() => {
