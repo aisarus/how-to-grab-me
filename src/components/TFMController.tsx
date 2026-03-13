@@ -166,6 +166,15 @@ export const TFMController = () => {
   const [showOutOfCredits, setShowOutOfCredits] = useState(false);
   const { isPro, canOptimize, consumeFreeUse, activatePro } = usePaywall();
   const [showProLicenseModal, setShowProLicenseModal] = useState(false);
+  const [uiMode, setUiMode] = useState<'simple' | 'pro'>(() => {
+    return (localStorage.getItem('tfm-ui-mode') as 'simple' | 'pro') || 'simple';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('tfm-ui-mode', uiMode);
+  }, [uiMode]);
+
+  const isProMode = uiMode === 'pro';
 
   // Restore state from sessionStorage on mount
   useEffect(() => {
