@@ -26,7 +26,7 @@ import { CreditsCounter } from './CreditsCounter';
 import { OutOfCreditsModal } from './OutOfCreditsModal';
 import { usePaywall } from '@/hooks/usePaywall';
 import { ProLicenseModal } from './ProLicenseModal';
-import { SpiderLoadingAnimation } from './SpiderLoadingAnimation';
+import { PipelineSpiderVisualizer } from './PipelineSpiderVisualizer';
 
 interface ExplanationData {
   mainIssues: string[];
@@ -854,8 +854,8 @@ export const TFMController = () => {
           </CardContent>
         </Card>
 
-        {/* Spider Loading Animation */}
-        {loading && <SpiderLoadingAnimation />}
+        {/* Pipeline Spider Visualizer */}
+        {loading && <PipelineSpiderVisualizer maxIterations={config.maxIterations} />}
 
         {/* Prompt Templates */}
         <PromptTemplates onSelectTemplate={(template) => setPrompt(template)} />
