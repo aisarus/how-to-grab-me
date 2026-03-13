@@ -27,6 +27,11 @@ import { OutOfCreditsModal } from './OutOfCreditsModal';
 import { usePaywall } from '@/hooks/usePaywall';
 import { ProLicenseModal } from './ProLicenseModal';
 import { PipelineSpiderVisualizer } from './PipelineSpiderVisualizer';
+import { PromptDiagnostics, computeDiagnostics, getOverallScore, detectTaskCategory } from './PromptDiagnostics';
+import { PromptTransformation } from './PromptTransformation';
+import { IterationLog } from './IterationLog';
+import { ConvergenceIndicator } from './ConvergenceIndicator';
+import { OutputUtilities } from './OutputUtilities';
 
 interface ExplanationData {
   mainIssues: string[];
