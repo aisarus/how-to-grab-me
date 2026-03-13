@@ -261,8 +261,8 @@ export const TFMController = () => {
       return;
     }
 
-    if (!hasAccess) {
-      setShowOutOfCredits(true);
+    if (!canOptimize) {
+      setShowProLicenseModal(true);
       return;
     }
 
