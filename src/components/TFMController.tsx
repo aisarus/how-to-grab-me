@@ -154,7 +154,7 @@ export const TFMController = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const abortControllerRef = useRef<AbortController | null>(null);
-  const { credits, hasCredits, isMaker, deductCredit, fetchCredits, activateMakerMode } = useCredits();
+  const { hasAccess, hasLifetimeAccess, customApiKey, isMaker, saveCustomApiKey, removeCustomApiKey, fetchCredits, activateMakerMode } = useCredits();
   const [showOutOfCredits, setShowOutOfCredits] = useState(false);
 
   // Restore state from sessionStorage on mount
