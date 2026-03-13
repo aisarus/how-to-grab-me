@@ -185,7 +185,21 @@
     "failedToSignOut": "Не удалось выйти",
     "skip": "Пропустить",
     "continueWithoutAccount": "Продолжить без аккаунта",
-    "guestModeNote": "Вы можете использовать приложение без регистрации, но данные не будут сохранены"
+    "guestModeNote": "Вы можете использовать приложение без регистрации, но данные не будут сохранены",
+    "resetPassword": "Сброс пароля",
+    "enterNewPassword": "Введите новый пароль",
+    "newPassword": "Новый пароль",
+    "confirmPassword": "Подтвердите пароль",
+    "passwordsMismatch": "Пароли не совпадают",
+    "resetPasswordButton": "Сбросить пароль",
+    "resettingPassword": "Сброс...",
+    "passwordResetSuccess": "Пароль успешно сброшен!",
+    "passwordResetFailed": "Не удалось сбросить пароль",
+    "redirecting": "Перенаправление...",
+    "backToLogin": "Вернуться к входу",
+    "sendResetLink": "Отправить ссылку сброса",
+    "resetLinkSent": "Мы отправили вам ссылку для сброса пароля. Проверьте почту.",
+    "forgotPasswordDesc": "Введите email и мы отправим ссылку для сброса пароля"
   },
   "favorites": {
     "title": "Избранные конфигурации",

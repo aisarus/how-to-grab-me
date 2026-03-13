@@ -185,7 +185,21 @@
     "failedToSignOut": "Failed to sign out",
     "skip": "Skip",
     "continueWithoutAccount": "Continue without account",
-    "guestModeNote": "You can use the app without registration, but your data won't be saved"
+    "guestModeNote": "You can use the app without registration, but your data won't be saved",
+    "resetPassword": "Reset Password",
+    "enterNewPassword": "Enter your new password below",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "passwordsMismatch": "Passwords do not match",
+    "resetPasswordButton": "Reset Password",
+    "resettingPassword": "Resetting...",
+    "passwordResetSuccess": "Password reset successfully!",
+    "passwordResetFailed": "Failed to reset password",
+    "redirecting": "Redirecting...",
+    "backToLogin": "Back to login",
+    "sendResetLink": "Send Reset Link",
+    "resetLinkSent": "We sent you a password reset link. Please check your inbox.",
+    "forgotPasswordDesc": "Enter your email and we'll send you a reset link"
   },
   "favorites": {
     "title": "Favorite Configurations",

@@ -185,7 +185,21 @@
     "failedToSignOut": "נכשל ביציאה",
     "skip": "דלג",
     "continueWithoutAccount": "המשך ללא חשבון",
-    "guestModeNote": "אתה יכול להשתמש באפליקציה ללא הרשמה, אך הנתונים לא יישמרו"
+    "guestModeNote": "אתה יכול להשתמש באפליקציה ללא הרשמה, אך הנתונים לא יישמרו",
+    "resetPassword": "איפוס סיסמה",
+    "enterNewPassword": "הזן את הסיסמה החדשה שלך",
+    "newPassword": "סיסמה חדשה",
+    "confirmPassword": "אשר סיסמה",
+    "passwordsMismatch": "הסיסמאות אינן תואמות",
+    "resetPasswordButton": "אפס סיסמה",
+    "resettingPassword": "מאפס...",
+    "passwordResetSuccess": "הסיסמה אופסה בהצלחה!",
+    "passwordResetFailed": "איפוס הסיסמה נכשל",
+    "redirecting": "מפנה...",
+    "backToLogin": "חזרה לכניסה",
+    "sendResetLink": "שלח קישור איפוס",
+    "resetLinkSent": "שלחנו לך קישור לאיפוס סיסמה. בדוק את תיבת הדואר.",
+    "forgotPasswordDesc": "הזן את האימייל שלך ונשלח לך קישור לאיפוס"
   },
   "favorites": {
     "title": "תצורות מועדפות",
