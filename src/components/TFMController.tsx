@@ -27,6 +27,11 @@ import { OutOfCreditsModal } from './OutOfCreditsModal';
 import { usePaywall } from '@/hooks/usePaywall';
 import { ProLicenseModal } from './ProLicenseModal';
 import { PipelineSpiderVisualizer } from './PipelineSpiderVisualizer';
+import { PromptDiagnostics, computeDiagnostics, getOverallScore, detectTaskCategory } from './PromptDiagnostics';
+import { PromptTransformation } from './PromptTransformation';
+import { IterationLog } from './IterationLog';
+import { ConvergenceIndicator } from './ConvergenceIndicator';
+import { OutputUtilities } from './OutputUtilities';
 
 interface ExplanationData {
   mainIssues: string[];
@@ -763,6 +768,20 @@ export const TFMController = () => {
                 </div>
               )}
             </div>
+
+            {/* Prompt Diagnostics */}
+            {prompt.trim().length >= 20 && !loading && !result && (
+              <PromptDiagnostics
+                prompt={prompt}
+                smartQueueScores={smartQueueResult ? {
+                  clarityScore: smartQueueResult.clarityScore,
+                  structureScore: smartQueueResult.structureScore,
+                  constraintsScore: smartQueueResult.constraintsScore,
+                } : undefined}
+                complexityScore={complexityAnalysis?.score}
+                taskType={complexityAnalysis?.taskType}
+              />
+            )}
             
             <div className="flex gap-2">
               <Button 
@@ -1167,45 +1186,55 @@ export const TFMController = () => {
         {/* Results Section */}
         {result && !abTestResults && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Prompt Improvement Banner */}
-            {result.promptImprovement && (
-              <Card className="floating-card border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 shadow-lg" style={{ animationDelay: '0.1s' }}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-primary">
-                    <Sparkles className="w-5 h-5" />
-                    Prompt Enhanced by AI
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-medium text-muted-foreground">Original</Label>
-                      <div className="p-3 bg-background/50 rounded-lg text-sm max-h-32 overflow-y-auto border">
-                        {prompt}
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-medium text-primary">Optimized</Label>
-                      <div className="p-3 bg-background/50 rounded-lg text-sm max-h-32 overflow-y-auto border-2 border-primary/20">
-                        {result.promptImprovement.improvedPrompt}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium">Applied Improvements</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {result.promptImprovement.improvements.map((imp, i) => (
-                        <div key={i} className="flex items-start gap-2 text-sm p-2 rounded bg-background/30">
-                          <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                          <span>{imp}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Prompt Transformation - Side by Side */}
+            <PromptTransformation
+              originalPrompt={prompt}
+              optimizedPrompt={result.promptImprovement?.improvedPrompt || result.finalText}
+              originalTokens={result.savings.initialTokens}
+              optimizedTokens={result.savings.finalTokens}
+              beforeScores={computeDiagnostics(prompt, smartQueueResult ? {
+                clarityScore: smartQueueResult.clarityScore,
+                structureScore: smartQueueResult.structureScore,
+                constraintsScore: smartQueueResult.constraintsScore,
+              } : undefined)}
+              afterScores={{
+                clarity: Math.min(100, (smartQueueResult?.clarityScore ?? 40) + (result.modeFreeMetrics?.qualityGainPercent ?? 20)),
+                structure: Math.min(100, (smartQueueResult?.structureScore ?? 30) + 35),
+                constraints: Math.min(100, (smartQueueResult?.constraintsScore ?? 25) + 40),
+                taskDefinition: Math.min(100, 45 + (result.modeFreeMetrics?.qualityGainPercent ?? 15)),
+                ambiguity: Math.min(100, 50 + (result.modeFreeMetrics?.qualityGainPercent ?? 20)),
+              }}
+            />
+
+            {/* Task Type Detection Badge */}
+            {complexityAnalysis && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-muted-foreground">Detected Task Type:</span>
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                  {detectTaskCategory(prompt).replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                </span>
+                <span className="text-xs text-muted-foreground">•</span>
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border">
+                  {complexityAnalysis.taskType === 'technical' ? '🔧 Technical' : '🎨 Creative'}
+                </span>
+              </div>
             )}
+
+            {/* Convergence Indicator */}
+            <ConvergenceIndicator
+              iterations={result.iterations}
+              maxIterations={config.maxIterations}
+              converged={result.converged}
+              scoreDelta={result.modeFreeMetrics?.deltaQ}
+              qualityGainPercent={result.modeFreeMetrics?.qualityGainPercent}
+            />
+
+            {/* Output Utilities */}
+            <OutputUtilities
+              optimizedPrompt={result.promptImprovement?.improvedPrompt || result.finalText}
+              originalPrompt={prompt}
+              improvements={result.promptImprovement?.improvements}
+            />
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2 justify-end">
@@ -1217,161 +1246,16 @@ export const TFMController = () => {
                 improvementPercentage={result.savings.percentageSaved}
                 iterations={result.iterations}
               />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCopyResult}
-                className="gap-2"
-              >
-                {copiedResult ? (
-                  <>
-                    <Check className="w-4 h-4 text-green-600" />
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4" />
-                    Copy Result
-                  </>
-                )}
-              </Button>
             </div>
 
-            {/* Metrics Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-              <Card className="floating-card border-2" style={{ animationDelay: '0.2s' }}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Iterations</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl sm:text-4xl font-bold">{result.iterations}</div>
-                  <div className="flex items-center gap-1 mt-2">
-                    {result.converged ? (
-                      <>
-                        <CheckCircle2 className="w-4 h-4 text-green-500" />
-                        <span className="text-xs text-green-600 dark:text-green-400">Converged</span>
-                      </>
-                    ) : (
-                      <span className="text-xs text-amber-600">Not converged</span>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="floating-card border-2 border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5" style={{ animationDelay: '0.3s' }}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2 text-primary">
-                    <Brain className="w-4 h-4" />
-                    RGI (Reasoning Gain Index)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-2xl sm:text-4xl font-bold ${(result.modeFreeMetrics?.rgiPercent ?? 0) >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                    {(result.modeFreeMetrics?.rgiPercent ?? 0) > 0 ? '+' : ''}{result.modeFreeMetrics?.rgiPercent?.toFixed(1) ?? 'N/A'}%
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Quality improvement per unit length change
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="floating-card border-2" style={{ animationDelay: '0.4s' }}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Quality Gain (QG%)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-xl sm:text-3xl font-bold ${(result.modeFreeMetrics?.qualityGainPercent ?? 0) >= 0 ? 'text-green-600' : 'text-amber-600'}`}>
-                    {(result.modeFreeMetrics?.qualityGainPercent ?? 0) > 0 ? '+' : ''}{result.modeFreeMetrics?.qualityGainPercent?.toFixed(1) ?? 'N/A'}%
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Mean pairwise comparison score
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="floating-card border-2" style={{ animationDelay: '0.5s' }}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Compactness%</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-xl sm:text-3xl font-bold ${(result.modeFreeMetrics?.compactnessPercent ?? 0) >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                    {(result.modeFreeMetrics?.compactnessPercent ?? 0) > 0 ? '+' : ''}{result.modeFreeMetrics?.compactnessPercent?.toFixed(1) ?? 'N/A'}%
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Tokens: {result.savings?.initialTokens ?? 'N/A'} → {result.savings?.finalTokens ?? 'N/A'}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="floating-card border-2" style={{ animationDelay: '0.6s' }}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Efficiency (Eff%)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-xl sm:text-3xl font-bold ${(result.modeFreeMetrics?.efficiencyPercent ?? 0) >= 0 ? 'text-purple-600' : 'text-red-600'}`}>
-                    {(result.modeFreeMetrics?.efficiencyPercent ?? 0) > 0 ? '+' : ''}{result.modeFreeMetrics?.efficiencyPercent?.toFixed(1) ?? 'N/A'}%
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    ΔQ - 0.2×dT (quality vs length tradeoff)
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Quality Analysis */}
-            {result.promptImprovement && (
-              <Card className="floating-card border-2 shadow-lg bg-gradient-to-br from-background to-accent/5" style={{ animationDelay: '0.8s' }}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5 text-primary" />
-                    Prompt Quality Analysis
-                  </CardTitle>
-                  <CardDescription>Engineering metrics comparison</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Before */}
-                    <div className="space-y-3 p-4 rounded-xl bg-destructive/5 border-2 border-destructive/20">
-                      <div className="text-sm font-semibold text-destructive mb-3">Before Optimization</div>
-                      <div className="space-y-2">
-                        {[
-                          { label: 'Structure', grade: 'D' },
-                          { label: 'Clarity', grade: 'C' },
-                          { label: 'Specificity', grade: 'C' },
-                          { label: 'Completeness', grade: 'B' },
-                          { label: 'Token Efficiency', grade: 'C' },
-                        ].map((metric) => (
-                          <div key={metric.label} className="flex justify-between items-center">
-                            <span className="text-xs">{metric.label}</span>
-                            <span className="px-2 py-1 bg-destructive/20 rounded text-xs font-mono">{metric.grade}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* After */}
-                    <div className="space-y-3 p-4 rounded-xl bg-primary/5 border-2 border-primary/20">
-                      <div className="text-sm font-semibold text-primary mb-3">After Optimization</div>
-                      <div className="space-y-2">
-                        {[
-                          { label: 'Structure', grade: 'A' },
-                          { label: 'Clarity', grade: 'A' },
-                          { label: 'Specificity', grade: 'A-' },
-                          { label: 'Completeness', grade: 'A' },
-                          { label: 'Token Efficiency', grade: 'A+' },
-                        ].map((metric) => (
-                          <div key={metric.label} className="flex justify-between items-center">
-                            <span className="text-xs">{metric.label}</span>
-                            <span className="px-2 py-1 bg-primary/20 rounded text-xs font-mono">{metric.grade}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
+            {/* Iteration Log */}
+            <IterationLog
+              iterations={result.iterations}
+              converged={result.converged}
+              scoreDelta={result.modeFreeMetrics?.deltaQ}
+              explanations={result.explanations}
+              modeFreeMetrics={result.modeFreeMetrics}
+            />
             {/* PromptOps Module Outputs */}
             {result.smartQueue && (
               <div style={{ animationDelay: '0.9s' }}>
