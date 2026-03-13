@@ -1276,7 +1276,7 @@ export const TFMController = () => {
                   <CardTitle className="text-sm font-medium text-muted-foreground">Quality Gain (QG%)</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-3xl font-bold ${(result.modeFreeMetrics?.qualityGainPercent ?? 0) >= 0 ? 'text-green-600' : 'text-amber-600'}`}>
+                  <div className={`text-xl sm:text-3xl font-bold ${(result.modeFreeMetrics?.qualityGainPercent ?? 0) >= 0 ? 'text-green-600' : 'text-amber-600'}`}>
                     {(result.modeFreeMetrics?.qualityGainPercent ?? 0) > 0 ? '+' : ''}{result.modeFreeMetrics?.qualityGainPercent?.toFixed(1) ?? 'N/A'}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
