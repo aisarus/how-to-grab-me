@@ -24,6 +24,8 @@ import { IntegrationReadinessOutput } from './IntegrationReadinessOutput';
 import { useCredits } from '@/hooks/useCredits';
 import { CreditsCounter } from './CreditsCounter';
 import { OutOfCreditsModal } from './OutOfCreditsModal';
+import { usePaywall } from '@/hooks/usePaywall';
+import { ProLicenseModal } from './ProLicenseModal';
 
 interface ExplanationData {
   mainIssues: string[];
@@ -156,6 +158,8 @@ export const TFMController = () => {
   const abortControllerRef = useRef<AbortController | null>(null);
   const { hasAccess, hasLifetimeAccess, customApiKey, isMaker, saveCustomApiKey, removeCustomApiKey, fetchCredits, activateMakerMode } = useCredits();
   const [showOutOfCredits, setShowOutOfCredits] = useState(false);
+  const { isPro, canOptimize, consumeFreeUse, activatePro } = usePaywall();
+  const [showProLicenseModal, setShowProLicenseModal] = useState(false);
 
   // Restore state from sessionStorage on mount
   useEffect(() => {
@@ -257,8 +261,8 @@ export const TFMController = () => {
       return;
     }
 
-    if (!hasAccess) {
-      setShowOutOfCredits(true);
+    if (!canOptimize) {
+      setShowProLicenseModal(true);
       return;
     }
 
@@ -299,6 +303,7 @@ export const TFMController = () => {
       if (error) throw error;
 
       setResult(data);
+      consumeFreeUse();
       setAbTestWinner(null);
       setAbTestNotes('');
 
@@ -796,7 +801,7 @@ export const TFMController = () => {
             <div className="flex gap-2">
               <Button 
                 onClick={handleSubmit} 
-                disabled={loading || !prompt.trim() || !hasAccess}
+                disabled={loading || !prompt.trim()}
                 className="flex-1 h-12 text-base gradient-primary hover:opacity-90 transition-opacity shadow-glow"
               >
                 {loading ? (
@@ -1529,6 +1534,11 @@ export const TFMController = () => {
         onOpenChange={setShowOutOfCredits} 
         onActivateMaker={activateMakerMode}
         onSaveApiKey={saveCustomApiKey}
+      />
+      <ProLicenseModal
+        open={showProLicenseModal}
+        onOpenChange={setShowProLicenseModal}
+        onActivatePro={activatePro}
       />
     </div>
   );
