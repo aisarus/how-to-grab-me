@@ -9,9 +9,67 @@ const corsHeaders = {
 let ACTIVE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 let ACTIVE_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 let ACTIVE_MODEL = 'google/gemini-2.5-flash';
+let ACTIVE_PROVIDER = 'lovable';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
+
+// Unified AI call that adapts to different provider APIs
+async function callAI(messages: Array<{role: string, content: string}>): Promise<string> {
+  if (ACTIVE_PROVIDER === 'anthropic') {
+    // Anthropic uses a different API format
+    const systemMsg = messages.find(m => m.role === 'system');
+    const nonSystemMsgs = messages.filter(m => m.role !== 'system');
+    
+    const body: any = {
+      model: ACTIVE_MODEL,
+      max_tokens: 4096,
+      messages: nonSystemMsgs,
+    };
+    if (systemMsg) {
+      body.system = systemMsg.content;
+    }
+
+    const response = await fetchWithRetry(ACTIVE_GATEWAY_URL, {
+      method: 'POST',
+      headers: {
+        'x-api-key': ACTIVE_API_KEY!,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Anthropic API error ${response.status}: ${errText}`);
+    }
+
+    const data = await response.json();
+    return data.content?.[0]?.text || '';
+  } else {
+    // OpenAI-compatible format (OpenAI, Google, Lovable gateway)
+    const response = await fetchWithRetry(ACTIVE_GATEWAY_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${ACTIVE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: ACTIVE_MODEL,
+        messages,
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`AI API error ${response.status}: ${errText}`);
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || '';
+  }
+}
 
 // Retry wrapper with exponential backoff for rate limiting
 async function fetchWithRetry(
