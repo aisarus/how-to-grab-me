@@ -1040,14 +1040,14 @@ export const TFMController = () => {
         </Card>}
 
         {/* PromptOps Module Controls - Pro only */}
-        <ModuleControls
+        {isProMode && <ModuleControls
           smartQueueEnabled={config.smartQueueEnabled}
           explainModeEnabled={config.explainModeEnabled}
           versioningEnabled={config.versioningEnabled}
           onSmartQueueToggle={(enabled) => setConfig({ ...config, smartQueueEnabled: enabled })}
           onExplainModeToggle={(enabled) => setConfig({ ...config, explainModeEnabled: enabled })}
           onVersioningToggle={(enabled) => setConfig({ ...config, versioningEnabled: enabled })}
-        />
+        />}
 
         {/* A/B Test Results Section */}
         {abTestResults && (
