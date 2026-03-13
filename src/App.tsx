@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import MainPage from "./pages/MainPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import AuthPage from "./pages/AuthPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import PromptAssistantPage from "./pages/PromptAssistantPage";
 import DataRoomPage from "./pages/DataRoomPage";
 import { Starfield } from "./components/Starfield";
