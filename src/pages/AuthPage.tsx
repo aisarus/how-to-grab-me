@@ -19,6 +19,7 @@ const authSchema = z.object({
 export default function AuthPage() {
   const { t } = useLanguage();
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
