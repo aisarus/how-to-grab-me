@@ -782,6 +782,8 @@ export const TFMController = () => {
                 taskType={complexityAnalysis?.taskType}
               />
             )}
+            
+            <div className="flex gap-2">
               <Button 
                 onClick={() => {
                   const randomPrompts = [
