@@ -24,6 +24,8 @@ import { IntegrationReadinessOutput } from './IntegrationReadinessOutput';
 import { useCredits } from '@/hooks/useCredits';
 import { CreditsCounter } from './CreditsCounter';
 import { OutOfCreditsModal } from './OutOfCreditsModal';
+import { usePaywall } from '@/hooks/usePaywall';
+import { ProLicenseModal } from './ProLicenseModal';
 
 interface ExplanationData {
   mainIssues: string[];
