@@ -52,13 +52,13 @@ export const useCredits = () => {
     return () => subscription.unsubscribe();
   }, [fetchProfile]);
 
-  const saveCustomApiKey = useCallback(async (apiKey: string): Promise<boolean> => {
+  const saveCustomApiKey = useCallback(async (apiKey: string, provider: ApiProvider = 'openai'): Promise<boolean> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
 
     const { error } = await supabase
       .from('profiles')
-      .update({ custom_api_key: apiKey } as any)
+      .update({ custom_api_key: apiKey, api_provider: provider } as any)
       .eq('id', user.id);
 
     if (error) {
@@ -67,6 +67,7 @@ export const useCredits = () => {
     }
 
     setCustomApiKey(apiKey);
+    setApiProvider(provider);
     return true;
   }, []);
 
