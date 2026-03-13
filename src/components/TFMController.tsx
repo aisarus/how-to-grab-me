@@ -803,8 +803,8 @@ export const TFMController = () => {
               )}
             </div>
 
-            {/* Prompt Diagnostics */}
-            {prompt.trim().length >= 20 && !loading && !result && (
+            {/* Prompt Diagnostics - Pro only */}
+            {isProMode && prompt.trim().length >= 20 && !loading && !result && (
               <PromptDiagnostics
                 prompt={prompt}
                 smartQueueScores={smartQueueResult ? {
