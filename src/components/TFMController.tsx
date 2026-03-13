@@ -286,7 +286,8 @@ export const TFMController = () => {
             useEFMNB: config.useEFMNB,
             proposerCriticOnly: config.proposerCriticOnly,
             eriksonStage: complexityAnalysis?.eriksonStage,
-          }
+          },
+          ...(customApiKey ? { customApiKey } : {}),
         }
       });
 
