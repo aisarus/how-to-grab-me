@@ -56,13 +56,13 @@ export const useCredits = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
 
-    const { error } = await supabase
+    // Ensure profile exists, then update
+    const { error: upsertError } = await supabase
       .from('profiles')
-      .update({ custom_api_key: apiKey, api_provider: provider } as any)
-      .eq('id', user.id);
+      .upsert({ id: user.id, email: user.email ?? '', custom_api_key: apiKey, api_provider: provider } as any, { onConflict: 'id' });
 
-    if (error) {
-      console.error('Failed to save API key:', error);
+    if (upsertError) {
+      console.error('Failed to save API key:', upsertError);
       return false;
     }
 
