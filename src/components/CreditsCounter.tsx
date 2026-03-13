@@ -97,7 +97,7 @@ export const CreditsCounter = ({
               variant="ghost"
               size="sm"
               className="w-full justify-start gap-2"
-              onClick={() => window.open('https://your-lemonsqueezy-link.com', '_blank')}
+              onClick={() => window.open('https://arielwave403.gumroad.com/l/TRI-TFMstudio', '_blank')}
             >
               <ShoppingCart className="w-4 h-4" />
               Buy Lifetime Access — $15
