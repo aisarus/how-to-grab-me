@@ -418,10 +418,26 @@ serve(async (req) => {
     }
 
     // Determine which API key and URL to use
-    const useCustomKey = customApiKey && typeof customApiKey === 'string' && customApiKey.startsWith('sk-');
-    ACTIVE_API_KEY = useCustomKey ? customApiKey : LOVABLE_API_KEY;
-    ACTIVE_GATEWAY_URL = useCustomKey ? 'https://api.openai.com/v1/chat/completions' : AI_GATEWAY_URL;
-    ACTIVE_MODEL = useCustomKey ? 'gpt-4o' : 'google/gemini-2.5-flash';
+    const provider = apiProvider || 'openai';
+    const isCustomKey = customApiKey && typeof customApiKey === 'string' && customApiKey.length > 10;
+    
+    if (isCustomKey) {
+      ACTIVE_API_KEY = customApiKey;
+      if (provider === 'google') {
+        ACTIVE_GATEWAY_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+        ACTIVE_MODEL = 'gemini-2.5-flash';
+      } else if (provider === 'anthropic') {
+        ACTIVE_GATEWAY_URL = 'https://api.anthropic.com/v1/messages';
+        ACTIVE_MODEL = 'claude-sonnet-4-20250514';
+      } else {
+        ACTIVE_GATEWAY_URL = 'https://api.openai.com/v1/chat/completions';
+        ACTIVE_MODEL = 'gpt-4o';
+      }
+    } else {
+      ACTIVE_API_KEY = LOVABLE_API_KEY;
+      ACTIVE_GATEWAY_URL = AI_GATEWAY_URL;
+      ACTIVE_MODEL = 'google/gemini-2.5-flash';
+    }
 
     if (!ACTIVE_API_KEY) {
       console.error('No API key available');
@@ -431,7 +447,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Using ${useCustomKey ? 'custom OpenAI' : 'Lovable AI'} key`);
+    console.log(`Using ${isCustomKey ? provider.toUpperCase() + ' custom' : 'Lovable AI'} key, model: ${ACTIVE_MODEL}`);
 
     const tfmConfig: TFMConfig = {
       a: config?.a ?? 0.20,

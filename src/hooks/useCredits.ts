@@ -101,6 +101,7 @@ export const useCredits = () => {
     hasAccess,
     hasLifetimeAccess,
     customApiKey,
+    apiProvider,
     isMaker,
     saveCustomApiKey,
     removeCustomApiKey,
