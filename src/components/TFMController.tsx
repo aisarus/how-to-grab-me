@@ -591,6 +591,31 @@ export const TFMController = () => {
               <CreditsCounter hasLifetimeAccess={hasLifetimeAccess} customApiKey={customApiKey} apiProvider={apiProvider} isMaker={isMaker} onActivateMaker={activateMakerMode} onSaveApiKey={saveCustomApiKey} onRemoveApiKey={removeCustomApiKey} />
               <div className="w-px h-5 bg-border mx-0.5 sm:mx-1 hidden sm:block" />
               <LanguageSwitcher />
+              {/* UI Mode Toggle */}
+              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-muted/50 border border-border">
+                <button
+                  onClick={() => setUiMode('simple')}
+                  className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    uiMode === 'simple' 
+                      ? 'bg-background text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Monitor className="w-3 h-3" />
+                  <span className="hidden sm:inline">Simple</span>
+                </button>
+                <button
+                  onClick={() => setUiMode('pro')}
+                  className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    uiMode === 'pro' 
+                      ? 'bg-background text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Wrench className="w-3 h-3" />
+                  <span className="hidden sm:inline">Pro</span>
+                </button>
+              </div>
               <Button 
                 variant="ghost" 
                 size="icon" 
