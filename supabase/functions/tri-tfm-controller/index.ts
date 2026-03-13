@@ -392,7 +392,7 @@ serve(async (req) => {
 
   try {
     const MAX_PROMPT_LENGTH = 100000; // 100KB max
-    const { prompt, config } = await req.json();
+    const { prompt, config, customApiKey } = await req.json();
 
     // Input validation
     if (!prompt || typeof prompt !== 'string') {
@@ -413,8 +413,14 @@ serve(async (req) => {
       throw new Error('Prompt is required');
     }
 
-    if (!LOVABLE_API_KEY) {
-      console.error('LOVABLE_API_KEY not configured');
+    // Determine which API key and URL to use
+    const useCustomKey = customApiKey && typeof customApiKey === 'string' && customApiKey.startsWith('sk-');
+    const activeApiKey = useCustomKey ? customApiKey : LOVABLE_API_KEY;
+    const activeGatewayUrl = useCustomKey ? 'https://api.openai.com/v1/chat/completions' : AI_GATEWAY_URL;
+    const activeModel = useCustomKey ? 'gpt-4o' : 'google/gemini-2.5-flash';
+
+    if (!activeApiKey) {
+      console.error('No API key available');
       return new Response(
         JSON.stringify({ error: 'AI service not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
