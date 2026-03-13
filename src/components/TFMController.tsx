@@ -1290,7 +1290,7 @@ export const TFMController = () => {
                   <CardTitle className="text-sm font-medium text-muted-foreground">Compactness%</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-3xl font-bold ${(result.modeFreeMetrics?.compactnessPercent ?? 0) >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                  <div className={`text-xl sm:text-3xl font-bold ${(result.modeFreeMetrics?.compactnessPercent ?? 0) >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
                     {(result.modeFreeMetrics?.compactnessPercent ?? 0) > 0 ? '+' : ''}{result.modeFreeMetrics?.compactnessPercent?.toFixed(1) ?? 'N/A'}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
