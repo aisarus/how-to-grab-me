@@ -49,32 +49,32 @@ const MainPage = () => {
       onTouchEnd={onTouchEnd}
     >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <div className="border-b glass-effect sticky top-0 z-10">
-          <div className="container mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
-            <TabsList className="flex-1 max-w-md mx-auto grid grid-cols-2 bg-transparent border border-border">
+        <header className="border-b border-border glass-effect sticky top-0 z-10">
+          <div className="container mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
+            <TabsList className="flex-1 max-w-xs mx-auto grid grid-cols-2 bg-muted/50 border border-border rounded-lg h-9">
               <TabsTrigger 
                 value="tfm" 
-                className="text-sm sm:text-base gap-2 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:rounded-none"
+                className="text-xs sm:text-sm gap-1.5 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
               >
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-3.5 h-3.5" />
                 {t('common.main')}
               </TabsTrigger>
               <TabsTrigger 
                 value="assistant" 
-                className="text-sm sm:text-base gap-2 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:rounded-none"
+                className="text-xs sm:text-sm gap-1.5 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
               >
-                <Bot className="w-4 h-4" />
+                <Bot className="w-3.5 h-3.5" />
                 {t('common.assistant')}
               </TabsTrigger>
             </TabsList>
             <Link to="/data-room">
-              <Button className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20 gap-2">
-                <Database className="w-4 h-4" />
+              <Button size="sm" variant="outline" className="gap-1.5 text-xs">
+                <Database className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Data Room</span>
               </Button>
             </Link>
           </div>
-        </div>
+        </header>
         
         <TabsContent value="tfm" className="flex-1 m-0">
           <TFMController />

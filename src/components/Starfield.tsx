@@ -21,7 +21,7 @@ export const Starfield = () => {
 
     const initStars = () => {
       stars = [];
-      const numStars = Math.floor((canvas.width * canvas.height) / 6000);
+      const numStars = Math.floor((canvas.width * canvas.height) / 12000);
       for (let i = 0; i < numStars; i++) {
         stars.push({
           x: Math.random() * canvas.width,
