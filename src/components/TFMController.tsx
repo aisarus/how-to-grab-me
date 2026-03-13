@@ -854,6 +854,9 @@ export const TFMController = () => {
           </CardContent>
         </Card>
 
+        {/* Spider Loading Animation */}
+        {loading && <SpiderLoadingAnimation />}
+
         {/* Prompt Templates */}
         <PromptTemplates onSelectTemplate={(template) => setPrompt(template)} />
 
