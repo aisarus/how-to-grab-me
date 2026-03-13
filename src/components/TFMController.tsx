@@ -1240,7 +1240,7 @@ export const TFMController = () => {
                   <CardTitle className="text-sm font-medium text-muted-foreground">Iterations</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-bold">{result.iterations}</div>
+                  <div className="text-2xl sm:text-4xl font-bold">{result.iterations}</div>
                   <div className="flex items-center gap-1 mt-2">
                     {result.converged ? (
                       <>
