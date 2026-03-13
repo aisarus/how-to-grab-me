@@ -156,7 +156,7 @@ export const TFMController = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const abortControllerRef = useRef<AbortController | null>(null);
-  const { hasAccess, hasLifetimeAccess, customApiKey, isMaker, saveCustomApiKey, removeCustomApiKey, fetchCredits, activateMakerMode } = useCredits();
+  const { hasAccess, hasLifetimeAccess, customApiKey, apiProvider, isMaker, saveCustomApiKey, removeCustomApiKey, fetchCredits, activateMakerMode } = useCredits();
   const [showOutOfCredits, setShowOutOfCredits] = useState(false);
   const { isPro, canOptimize, consumeFreeUse, activatePro } = usePaywall();
   const [showProLicenseModal, setShowProLicenseModal] = useState(false);
@@ -291,7 +291,7 @@ export const TFMController = () => {
             proposerCriticOnly: config.proposerCriticOnly,
             eriksonStage: complexityAnalysis?.eriksonStage,
           },
-          ...(customApiKey ? { customApiKey } : {}),
+          ...(customApiKey ? { customApiKey, apiProvider } : {}),
         }
       });
 
@@ -573,7 +573,7 @@ export const TFMController = () => {
               </div>
             </div>
             <nav className="flex items-center gap-1 flex-shrink-0">
-              <CreditsCounter hasLifetimeAccess={hasLifetimeAccess} customApiKey={customApiKey} isMaker={isMaker} onActivateMaker={activateMakerMode} onSaveApiKey={saveCustomApiKey} onRemoveApiKey={removeCustomApiKey} />
+              <CreditsCounter hasLifetimeAccess={hasLifetimeAccess} customApiKey={customApiKey} apiProvider={apiProvider} isMaker={isMaker} onActivateMaker={activateMakerMode} onSaveApiKey={saveCustomApiKey} onRemoveApiKey={removeCustomApiKey} />
               <div className="w-px h-5 bg-border mx-1 hidden sm:block" />
               <LanguageSwitcher />
               <Button 

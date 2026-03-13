@@ -9,9 +9,87 @@ const corsHeaders = {
 let ACTIVE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 let ACTIVE_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 let ACTIVE_MODEL = 'google/gemini-2.5-flash';
+let ACTIVE_PROVIDER = 'lovable';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
+
+// Unified fetch that adapts request/response for Anthropic's different API format
+// All call sites use OpenAI-compatible format; this transparently converts for Anthropic
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries = 4,
+  baseDelay = 3000
+): Promise<Response> {
+  let actualUrl = url;
+  let actualOptions = options;
+
+  // If using Anthropic, convert OpenAI format to Anthropic format
+  if (ACTIVE_PROVIDER === 'anthropic' && options.body) {
+    const body = JSON.parse(options.body as string);
+    const systemMsg = body.messages?.find((m: any) => m.role === 'system');
+    const nonSystemMsgs = body.messages?.filter((m: any) => m.role !== 'system') || [];
+    
+    const anthropicBody: any = {
+      model: ACTIVE_MODEL,
+      max_tokens: 4096,
+      messages: nonSystemMsgs,
+    };
+    if (systemMsg) {
+      anthropicBody.system = systemMsg.content;
+    }
+
+    actualOptions = {
+      ...options,
+      headers: {
+        'x-api-key': ACTIVE_API_KEY!,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(anthropicBody),
+    };
+  }
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const response = await fetch(actualUrl, actualOptions);
+    
+    if ((response.status === 429 || response.status === 402) && attempt < maxRetries) {
+      const retryAfter = response.headers.get('Retry-After');
+      let delay: number;
+      if (retryAfter) {
+        const parsed = parseInt(retryAfter, 10);
+        delay = !isNaN(parsed) ? parsed * 1000 : baseDelay * Math.pow(2, attempt);
+      } else {
+        delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
+      }
+      console.warn(`Rate limited ${response.status} (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${Math.round(delay)}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      continue;
+    }
+    
+    // If Anthropic, convert response to OpenAI-compatible format
+    if (ACTIVE_PROVIDER === 'anthropic' && response.ok) {
+      const anthropicData = await response.json();
+      const openaiCompatible = {
+        choices: [{
+          message: {
+            content: anthropicData.content?.[0]?.text || '',
+            role: 'assistant',
+          }
+        }]
+      };
+      return new Response(JSON.stringify(openaiCompatible), {
+        status: response.status,
+        headers: response.headers,
+      });
+    }
+    
+    return response;
+  }
+  
+  return fetch(actualUrl, actualOptions);
+}
 
 // Retry wrapper with exponential backoff for rate limiting
 async function fetchWithRetry(
@@ -396,7 +474,7 @@ serve(async (req) => {
 
   try {
     const MAX_PROMPT_LENGTH = 100000; // 100KB max
-    const { prompt, config, customApiKey } = await req.json();
+    const { prompt, config, customApiKey, apiProvider } = await req.json();
 
     // Input validation
     if (!prompt || typeof prompt !== 'string') {
@@ -418,10 +496,28 @@ serve(async (req) => {
     }
 
     // Determine which API key and URL to use
-    const useCustomKey = customApiKey && typeof customApiKey === 'string' && customApiKey.startsWith('sk-');
-    ACTIVE_API_KEY = useCustomKey ? customApiKey : LOVABLE_API_KEY;
-    ACTIVE_GATEWAY_URL = useCustomKey ? 'https://api.openai.com/v1/chat/completions' : AI_GATEWAY_URL;
-    ACTIVE_MODEL = useCustomKey ? 'gpt-4o' : 'google/gemini-2.5-flash';
+    const provider = apiProvider || 'openai';
+    const isCustomKey = customApiKey && typeof customApiKey === 'string' && customApiKey.length > 10;
+    
+    if (isCustomKey) {
+      ACTIVE_API_KEY = customApiKey;
+      ACTIVE_PROVIDER = provider;
+      if (provider === 'google') {
+        ACTIVE_GATEWAY_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+        ACTIVE_MODEL = 'gemini-2.5-flash';
+      } else if (provider === 'anthropic') {
+        ACTIVE_GATEWAY_URL = 'https://api.anthropic.com/v1/messages';
+        ACTIVE_MODEL = 'claude-sonnet-4-20250514';
+      } else {
+        ACTIVE_GATEWAY_URL = 'https://api.openai.com/v1/chat/completions';
+        ACTIVE_MODEL = 'gpt-4o';
+      }
+    } else {
+      ACTIVE_API_KEY = LOVABLE_API_KEY;
+      ACTIVE_GATEWAY_URL = AI_GATEWAY_URL;
+      ACTIVE_MODEL = 'google/gemini-2.5-flash';
+      ACTIVE_PROVIDER = 'lovable';
+    }
 
     if (!ACTIVE_API_KEY) {
       console.error('No API key available');
@@ -431,7 +527,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Using ${useCustomKey ? 'custom OpenAI' : 'Lovable AI'} key`);
+    console.log(`Using ${isCustomKey ? provider.toUpperCase() + ' custom' : 'Lovable AI'} key, model: ${ACTIVE_MODEL}`);
 
     const tfmConfig: TFMConfig = {
       a: config?.a ?? 0.20,

@@ -9,21 +9,36 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Sparkles, Zap, Lock, Key } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import type { ApiProvider } from '@/hooks/useCredits';
 
 interface OutOfCreditsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onActivateMaker: (password: string) => boolean;
-  onSaveApiKey: (key: string) => Promise<boolean>;
+  onSaveApiKey: (key: string, provider: ApiProvider) => Promise<boolean>;
 }
+
+const PROVIDER_PLACEHOLDERS: Record<ApiProvider, string> = {
+  openai: 'sk-...',
+  google: 'AIza...',
+  anthropic: 'sk-ant-...',
+};
 
 export const OutOfCreditsModal = ({ open, onOpenChange, onActivateMaker, onSaveApiKey }: OutOfCreditsModalProps) => {
   const [showMakerInput, setShowMakerInput] = useState(false);
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [makerPassword, setMakerPassword] = useState('');
   const [apiKey, setApiKey] = useState('');
+  const [selectedProvider, setSelectedProvider] = useState<ApiProvider>('openai');
   const { toast } = useToast();
 
   const handleMakerActivate = () => {
@@ -39,7 +54,7 @@ export const OutOfCreditsModal = ({ open, onOpenChange, onActivateMaker, onSaveA
 
   const handleSaveApiKey = async () => {
     if (!apiKey.trim()) return;
-    const success = await onSaveApiKey(apiKey.trim());
+    const success = await onSaveApiKey(apiKey.trim(), selectedProvider);
     if (success) {
       toast({ title: '🔑 API Key saved', description: 'You can now use the optimizer with your own key.' });
       onOpenChange(false);
@@ -95,7 +110,7 @@ export const OutOfCreditsModal = ({ open, onOpenChange, onActivateMaker, onSaveA
               <span className="font-semibold">Bring Your Own Key</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Use your own OpenAI API key. You pay OpenAI directly for usage.
+              Use your own API key from OpenAI, Google AI, or Anthropic. You pay the provider directly.
             </p>
             {!showApiKeyInput ? (
               <Button
@@ -108,9 +123,19 @@ export const OutOfCreditsModal = ({ open, onOpenChange, onActivateMaker, onSaveA
               </Button>
             ) : (
               <div className="space-y-2">
+                <Select value={selectedProvider} onValueChange={(v) => setSelectedProvider(v as ApiProvider)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="openai">OpenAI (GPT-4o)</SelectItem>
+                    <SelectItem value="google">Google AI (Gemini 2.5 Flash)</SelectItem>
+                    <SelectItem value="anthropic">Anthropic (Claude Sonnet)</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Input
                   type="password"
-                  placeholder="sk-..."
+                  placeholder={PROVIDER_PLACEHOLDERS[selectedProvider]}
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSaveApiKey()}

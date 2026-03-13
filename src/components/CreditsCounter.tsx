@@ -8,25 +8,47 @@ import {
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import type { ApiProvider } from '@/hooks/useCredits';
 
 interface CreditsCounterProps {
   hasLifetimeAccess: boolean;
   customApiKey: string | null;
+  apiProvider: ApiProvider;
   isMaker: boolean;
   onActivateMaker?: (password: string) => boolean;
-  onSaveApiKey?: (key: string) => Promise<boolean>;
+  onSaveApiKey?: (key: string, provider: ApiProvider) => Promise<boolean>;
   onRemoveApiKey?: () => Promise<boolean>;
 }
 
+const PROVIDER_LABELS: Record<ApiProvider, string> = {
+  openai: 'OpenAI',
+  google: 'Google AI',
+  anthropic: 'Anthropic',
+};
+
+const PROVIDER_PLACEHOLDERS: Record<ApiProvider, string> = {
+  openai: 'sk-...',
+  google: 'AIza...',
+  anthropic: 'sk-ant-...',
+};
+
 export const CreditsCounter = ({ 
-  hasLifetimeAccess, customApiKey, isMaker, 
+  hasLifetimeAccess, customApiKey, apiProvider, isMaker, 
   onActivateMaker, onSaveApiKey, onRemoveApiKey 
 }: CreditsCounterProps) => {
   const [showMakerInput, setShowMakerInput] = useState(false);
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [makerPassword, setMakerPassword] = useState('');
   const [apiKey, setApiKey] = useState('');
+  const [selectedProvider, setSelectedProvider] = useState<ApiProvider>('openai');
   const { toast } = useToast();
 
   const hasAccess = isMaker || hasLifetimeAccess || !!customApiKey;
@@ -43,9 +65,9 @@ export const CreditsCounter = ({
 
   const handleSaveApiKey = async () => {
     if (!apiKey.trim()) return;
-    const success = await onSaveApiKey?.(apiKey.trim());
+    const success = await onSaveApiKey?.(apiKey.trim(), selectedProvider);
     if (success) {
-      toast({ title: '🔑 API Key saved', description: 'You can now use your own key.' });
+      toast({ title: '🔑 API Key saved', description: `${PROVIDER_LABELS[selectedProvider]} key activated.` });
       setShowApiKeyInput(false);
       setApiKey('');
     } else {
@@ -125,9 +147,19 @@ export const CreditsCounter = ({
               </Button>
             ) : (
               <div className="space-y-1.5 p-1">
+                <Select value={selectedProvider} onValueChange={(v) => setSelectedProvider(v as ApiProvider)}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="openai">OpenAI (GPT-4o)</SelectItem>
+                    <SelectItem value="google">Google AI (Gemini)</SelectItem>
+                    <SelectItem value="anthropic">Anthropic (Claude)</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Input
                   type="password"
-                  placeholder="OpenAI API Key (sk-...)"
+                  placeholder={PROVIDER_PLACEHOLDERS[selectedProvider]}
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSaveApiKey()}
@@ -147,7 +179,7 @@ export const CreditsCounter = ({
             <div className="flex items-center justify-between px-3 py-2">
               <div className="flex items-center gap-2 text-sm text-amber-400">
                 <Key className="w-4 h-4" />
-                <span className="text-xs">Key: •••{customApiKey.slice(-4)}</span>
+                <span className="text-xs">{PROVIDER_LABELS[apiProvider]}: •••{customApiKey.slice(-4)}</span>
               </div>
               <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive" onClick={handleRemoveApiKey}>
                 <X className="w-3 h-3" />
