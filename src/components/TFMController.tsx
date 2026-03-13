@@ -876,9 +876,6 @@ export const TFMController = () => {
         {/* Pipeline Spider Visualizer */}
         {loading && <PipelineSpiderVisualizer maxIterations={config.maxIterations} />}
 
-        {/* Prompt Templates */}
-        <PromptTemplates onSelectTemplate={(template) => setPrompt(template)} />
-
         {/* Favorite Configs */}
         <FavoriteConfigs currentConfig={config} onLoadConfig={handleLoadConfig} />
 

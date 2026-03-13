@@ -66,12 +66,6 @@ const MainPage = () => {
                 {t('common.assistant')}
               </TabsTrigger>
             </TabsList>
-            <Link to="/data-room">
-              <Button size="sm" variant="outline" className="gap-1.5 text-xs">
-                <Database className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Data Room</span>
-              </Button>
-            </Link>
           </div>
         </header>
         
