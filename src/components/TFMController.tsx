@@ -1279,14 +1279,16 @@ export const TFMController = () => {
               />
             </div>
 
-            {/* Iteration Log */}
-            <IterationLog
-              iterations={result.iterations}
-              converged={result.converged}
-              scoreDelta={result.modeFreeMetrics?.deltaQ}
-              explanations={result.explanations}
-              modeFreeMetrics={result.modeFreeMetrics}
-            />
+            {/* Iteration Log - Pro only */}
+            {isProMode && (
+              <IterationLog
+                iterations={result.iterations}
+                converged={result.converged}
+                scoreDelta={result.modeFreeMetrics?.deltaQ}
+                explanations={result.explanations}
+                modeFreeMetrics={result.modeFreeMetrics}
+              />
+            )}
             {/* PromptOps Module Outputs */}
             {result.smartQueue && (
               <div style={{ animationDelay: '0.9s' }}>
@@ -1294,7 +1296,8 @@ export const TFMController = () => {
               </div>
             )}
 
-            {result.explanations && result.explanations.length > 0 && (
+            {/* ExplanationViewer - Pro only */}
+            {isProMode && result.explanations && result.explanations.length > 0 && (
               <div style={{ animationDelay: '1.0s' }}>
                 <ExplanationViewer explanations={result.explanations} />
               </div>
