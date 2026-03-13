@@ -567,7 +567,7 @@ export const TFMController = () => {
               </div>
             </div>
             <nav className="flex items-center gap-1 flex-shrink-0">
-              <CreditsCounter credits={credits} isMaker={isMaker} onActivateMaker={activateMakerMode} />
+              <CreditsCounter hasLifetimeAccess={hasLifetimeAccess} customApiKey={customApiKey} isMaker={isMaker} onActivateMaker={activateMakerMode} onSaveApiKey={saveCustomApiKey} onRemoveApiKey={removeCustomApiKey} />
               <div className="w-px h-5 bg-border mx-1 hidden sm:block" />
               <LanguageSwitcher />
               <Button 
