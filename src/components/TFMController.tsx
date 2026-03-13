@@ -798,54 +798,57 @@ export const TFMController = () => {
               </Button>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button 
                 onClick={handleSubmit} 
                 disabled={loading || !prompt.trim()}
-                className="flex-1 h-12 text-base gradient-primary hover:opacity-90 transition-opacity shadow-glow"
+                className="flex-1 h-11 sm:h-12 text-sm sm:text-base gradient-primary hover:opacity-90 transition-opacity shadow-glow"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
                     Optimizing...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="mr-2 h-5 w-5" />
+                    <Sparkles className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                     Optimize Prompt
                   </>
                 )}
               </Button>
               
-              <Button 
-                onClick={runABTest} 
-                disabled={loading || !prompt.trim()}
-                variant="outline"
-                className="h-12 px-6 border-2 border-primary/30 hover:bg-primary/10"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Testing...
-                  </>
-                ) : (
-                  <>
-                    <Trophy className="mr-2 h-5 w-5" />
-                    A/B Test
-                  </>
-                )}
-              </Button>
-              
-              {loading && (
-                <Button
-                  onClick={handleStop}
-                  variant="destructive"
-                  className="h-12 px-6"
+              <div className="flex gap-2">
+                <Button 
+                  onClick={runABTest} 
+                  disabled={loading || !prompt.trim()}
+                  variant="outline"
+                  className="flex-1 sm:flex-none h-11 sm:h-12 px-4 sm:px-6 border-2 border-primary/30 hover:bg-primary/10 text-sm"
                 >
-                  <StopCircle className="mr-2 h-5 w-5" />
-                  Stop
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                      <span className="hidden sm:inline">Testing...</span>
+                      <span className="sm:hidden">Test</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trophy className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                      A/B Test
+                    </>
+                  )}
                 </Button>
-              )}
+                
+                {loading && (
+                  <Button
+                    onClick={handleStop}
+                    variant="destructive"
+                    className="h-11 sm:h-12 px-4 sm:px-6"
+                  >
+                    <StopCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    Stop
+                  </Button>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
