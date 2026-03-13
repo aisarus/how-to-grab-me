@@ -261,7 +261,7 @@ export const TFMController = () => {
       return;
     }
 
-    if (!canOptimize) {
+    if (!hasAccess && !canOptimize) {
       setShowProLicenseModal(true);
       return;
     }
