@@ -26,7 +26,7 @@ export const useCredits = () => {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('is_maker, has_lifetime_access, custom_api_key')
+      .select('is_maker, has_lifetime_access, custom_api_key, api_provider')
       .eq('id', user.id)
       .single();
 
