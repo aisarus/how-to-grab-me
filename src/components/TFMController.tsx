@@ -704,7 +704,7 @@ export const TFMController = () => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-3 text-xs">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                         <div className="space-y-1">
                           <div className="flex items-center justify-between">
                             <span className="text-muted-foreground">{t('smartQueue.clarity')}</span>
