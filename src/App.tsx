@@ -12,7 +12,6 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import PromptAssistantPage from "./pages/PromptAssistantPage";
 import { Starfield } from "./components/Starfield";
 import { ProductHuntBanner } from "./components/ProductHuntBanner";
-import { ProductHuntBanner } from "./components/ProductHuntBanner";
 
 const queryClient = new QueryClient();
 
