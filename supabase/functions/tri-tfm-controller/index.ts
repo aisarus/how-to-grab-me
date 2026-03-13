@@ -419,15 +419,19 @@ serve(async (req) => {
 
     // Determine which API key and URL to use
     const useCustomKey = customApiKey && typeof customApiKey === 'string' && customApiKey.startsWith('sk-');
-    const activeApiKey = useCustomKey ? customApiKey : LOVABLE_API_KEY;
-    const activeGatewayUrl = useCustomKey ? 'https://api.openai.com/v1/chat/completions' : AI_GATEWAY_URL;
-    const activeModel = useCustomKey ? 'gpt-4o' : 'google/gemini-2.5-flash';
+    ACTIVE_API_KEY = useCustomKey ? customApiKey : LOVABLE_API_KEY;
+    ACTIVE_GATEWAY_URL = useCustomKey ? 'https://api.openai.com/v1/chat/completions' : AI_GATEWAY_URL;
+    ACTIVE_MODEL = useCustomKey ? 'gpt-4o' : 'google/gemini-2.5-flash';
 
-    if (!activeApiKey) {
+    if (!ACTIVE_API_KEY) {
       console.error('No API key available');
       return new Response(
         JSON.stringify({ error: 'AI service not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Using ${useCustomKey ? 'custom OpenAI' : 'Lovable AI'} key`);
       );
     }
 
