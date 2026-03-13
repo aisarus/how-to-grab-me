@@ -26,6 +26,7 @@ import { CreditsCounter } from './CreditsCounter';
 import { OutOfCreditsModal } from './OutOfCreditsModal';
 import { usePaywall } from '@/hooks/usePaywall';
 import { ProLicenseModal } from './ProLicenseModal';
+import { SpiderLoadingAnimation } from './SpiderLoadingAnimation';
 
 interface ExplanationData {
   mainIssues: string[];
@@ -852,6 +853,9 @@ export const TFMController = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Spider Loading Animation */}
+        {loading && <SpiderLoadingAnimation />}
 
         {/* Prompt Templates */}
         <PromptTemplates onSelectTemplate={(template) => setPrompt(template)} />
