@@ -78,7 +78,7 @@ export const OutOfCreditsModal = ({ open, onOpenChange, onActivateMaker, onSaveA
               <li>✓ Priority processing</li>
               <li>✓ One-time payment, forever</li>
             </ul>
-            <div className="text-3xl font-bold text-primary">$29</div>
+            <div className="text-3xl font-bold text-primary">$15</div>
             <Button
               className="w-full h-11 text-base gradient-primary hover:opacity-90 shadow-glow"
               onClick={() => window.open('https://your-lemonsqueezy-link.com', '_blank')}
