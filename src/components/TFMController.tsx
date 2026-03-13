@@ -1262,7 +1262,7 @@ export const TFMController = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-4xl font-bold ${(result.modeFreeMetrics?.rgiPercent ?? 0) >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                  <div className={`text-2xl sm:text-4xl font-bold ${(result.modeFreeMetrics?.rgiPercent ?? 0) >= 0 ? 'text-primary' : 'text-destructive'}`}>
                     {(result.modeFreeMetrics?.rgiPercent ?? 0) > 0 ? '+' : ''}{result.modeFreeMetrics?.rgiPercent?.toFixed(1) ?? 'N/A'}%
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
