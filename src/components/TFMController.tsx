@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { Textarea as TextareaComponent } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
-import { PromptTemplates } from './PromptTemplates';
+
 import { FavoriteConfigs } from './FavoriteConfigs';
 import { ComparisonModal } from './ComparisonModal';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -875,9 +875,6 @@ export const TFMController = () => {
 
         {/* Pipeline Spider Visualizer */}
         {loading && <PipelineSpiderVisualizer maxIterations={config.maxIterations} />}
-
-        {/* Prompt Templates */}
-        <PromptTemplates onSelectTemplate={(template) => setPrompt(template)} />
 
         {/* Favorite Configs */}
         <FavoriteConfigs currentConfig={config} onLoadConfig={handleLoadConfig} />

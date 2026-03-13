@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { TFMController } from '@/components/TFMController';
 import PromptAssistantPage from './PromptAssistantPage';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Sparkles, Bot, Database } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Sparkles, Bot } from 'lucide-react';
 
 const MainPage = () => {
   const { t } = useLanguage();
@@ -67,12 +66,6 @@ const MainPage = () => {
                 {t('common.assistant')}
               </TabsTrigger>
             </TabsList>
-            <Link to="/data-room">
-              <Button size="sm" variant="outline" className="gap-1.5 text-xs">
-                <Database className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Data Room</span>
-              </Button>
-            </Link>
           </div>
         </header>
         
