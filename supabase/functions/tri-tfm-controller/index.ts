@@ -1097,14 +1097,14 @@ Return JSON:
     };
   }
 
-  const criticResponse = await fetchWithRetry(AI_GATEWAY_URL, {
+  const criticResponse = await fetchWithRetry(ACTIVE_GATEWAY_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Authorization': `Bearer ${ACTIVE_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: ACTIVE_MODEL,
       messages: [
         {
           role: 'system',
