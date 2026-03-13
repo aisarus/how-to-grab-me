@@ -768,8 +768,20 @@ export const TFMController = () => {
                 </div>
               )}
             </div>
-            
-            <div className="flex gap-2">
+
+            {/* Prompt Diagnostics */}
+            {prompt.trim().length >= 20 && !loading && !result && (
+              <PromptDiagnostics
+                prompt={prompt}
+                smartQueueScores={smartQueueResult ? {
+                  clarityScore: smartQueueResult.clarityScore,
+                  structureScore: smartQueueResult.structureScore,
+                  constraintsScore: smartQueueResult.constraintsScore,
+                } : undefined}
+                complexityScore={complexityAnalysis?.score}
+                taskType={complexityAnalysis?.taskType}
+              />
+            )}
               <Button 
                 onClick={() => {
                   const randomPrompts = [
