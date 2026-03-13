@@ -257,7 +257,7 @@ export const TFMController = () => {
       return;
     }
 
-    if (!hasCredits) {
+    if (!hasAccess) {
       setShowOutOfCredits(true);
       return;
     }
