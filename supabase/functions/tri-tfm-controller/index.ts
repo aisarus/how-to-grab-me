@@ -396,7 +396,7 @@ serve(async (req) => {
 
   try {
     const MAX_PROMPT_LENGTH = 100000; // 100KB max
-    const { prompt, config, customApiKey } = await req.json();
+    const { prompt, config, customApiKey, apiProvider } = await req.json();
 
     // Input validation
     if (!prompt || typeof prompt !== 'string') {
