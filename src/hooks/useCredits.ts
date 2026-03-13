@@ -5,28 +5,31 @@ const MAKER_PASSWORD = 'Oggnom228';
 const MAKER_KEY = 'tfm_maker_mode';
 
 export const useCredits = () => {
-  const [credits, setCredits] = useState<number | null>(null);
+  const [hasLifetimeAccess, setHasLifetimeAccess] = useState(false);
+  const [customApiKey, setCustomApiKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMaker, setIsMaker] = useState(() => {
     return localStorage.getItem(MAKER_KEY) === 'true';
   });
 
-  const fetchCredits = useCallback(async () => {
+  const fetchProfile = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      setCredits(null);
+      setHasLifetimeAccess(false);
+      setCustomApiKey(null);
       setLoading(false);
       return;
     }
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('credits, is_maker')
+      .select('is_maker, has_lifetime_access, custom_api_key')
       .eq('id', user.id)
       .single();
 
     if (!error && data) {
-      setCredits((data as any).credits ?? 3);
+      setHasLifetimeAccess((data as any).has_lifetime_access ?? false);
+      setCustomApiKey((data as any).custom_api_key ?? null);
       if ((data as any).is_maker) {
         setIsMaker(true);
         localStorage.setItem(MAKER_KEY, 'true');
@@ -36,43 +39,46 @@ export const useCredits = () => {
   }, []);
 
   useEffect(() => {
-    fetchCredits();
+    fetchProfile();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      fetchCredits();
+      fetchProfile();
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchCredits]);
+  }, [fetchProfile]);
 
-  const deductCredit = useCallback(async (): Promise<boolean> => {
-    if (isMaker) return true;
-
+  const saveCustomApiKey = useCallback(async (apiKey: string): Promise<boolean> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('profiles')
-      .select('credits')
-      .eq('id', user.id)
-      .single();
-
-    const currentCredits = (data as any)?.credits ?? 0;
-    if (currentCredits <= 0) return false;
-
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ credits: currentCredits - 1 } as any)
+      .update({ custom_api_key: apiKey } as any)
       .eq('id', user.id);
 
-    if (updateError) {
-      console.error('Failed to deduct credit:', updateError);
+    if (error) {
+      console.error('Failed to save API key:', error);
       return false;
     }
 
-    setCredits(currentCredits - 1);
+    setCustomApiKey(apiKey);
     return true;
-  }, [isMaker]);
+  }, []);
+
+  const removeCustomApiKey = useCallback(async (): Promise<boolean> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ custom_api_key: null } as any)
+      .eq('id', user.id);
+
+    if (error) return false;
+    setCustomApiKey(null);
+    return true;
+  }, []);
 
   const activateMakerMode = useCallback((password: string): boolean => {
     if (password === MAKER_PASSWORD) {
@@ -83,7 +89,17 @@ export const useCredits = () => {
     return false;
   }, []);
 
-  const hasCredits = isMaker || (credits !== null && credits > 0);
+  const hasAccess = isMaker || hasLifetimeAccess || !!customApiKey;
 
-  return { credits, loading, hasCredits, isMaker, deductCredit, fetchCredits, activateMakerMode };
+  return {
+    loading,
+    hasAccess,
+    hasLifetimeAccess,
+    customApiKey,
+    isMaker,
+    saveCustomApiKey,
+    removeCustomApiKey,
+    fetchCredits: fetchProfile,
+    activateMakerMode,
+  };
 };
