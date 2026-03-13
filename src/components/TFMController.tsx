@@ -156,7 +156,7 @@ export const TFMController = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const abortControllerRef = useRef<AbortController | null>(null);
-  const { hasAccess, hasLifetimeAccess, customApiKey, isMaker, saveCustomApiKey, removeCustomApiKey, fetchCredits, activateMakerMode } = useCredits();
+  const { hasAccess, hasLifetimeAccess, customApiKey, apiProvider, isMaker, saveCustomApiKey, removeCustomApiKey, fetchCredits, activateMakerMode } = useCredits();
   const [showOutOfCredits, setShowOutOfCredits] = useState(false);
   const { isPro, canOptimize, consumeFreeUse, activatePro } = usePaywall();
   const [showProLicenseModal, setShowProLicenseModal] = useState(false);
