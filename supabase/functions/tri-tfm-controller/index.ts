@@ -501,6 +501,7 @@ serve(async (req) => {
     
     if (isCustomKey) {
       ACTIVE_API_KEY = customApiKey;
+      ACTIVE_PROVIDER = provider;
       if (provider === 'google') {
         ACTIVE_GATEWAY_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
         ACTIVE_MODEL = 'gemini-2.5-flash';
@@ -515,6 +516,7 @@ serve(async (req) => {
       ACTIVE_API_KEY = LOVABLE_API_KEY;
       ACTIVE_GATEWAY_URL = AI_GATEWAY_URL;
       ACTIVE_MODEL = 'google/gemini-2.5-flash';
+      ACTIVE_PROVIDER = 'lovable';
     }
 
     if (!ACTIVE_API_KEY) {
