@@ -1527,6 +1527,7 @@ export const TFMController = () => {
         open={showOutOfCredits} 
         onOpenChange={setShowOutOfCredits} 
         onActivateMaker={activateMakerMode}
+        onSaveApiKey={saveCustomApiKey}
       />
     </div>
   );
