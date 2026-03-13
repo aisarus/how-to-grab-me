@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Key, Infinity, ShoppingCart, KeyRound, Check, X } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Key, Infinity, ShoppingCart, KeyRound, Check, X, Sparkles } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -40,9 +39,9 @@ const PROVIDER_PLACEHOLDERS: Record<ApiProvider, string> = {
   anthropic: 'sk-ant-...',
 };
 
-export const CreditsCounter = ({ 
-  hasLifetimeAccess, customApiKey, apiProvider, isMaker, 
-  onActivateMaker, onSaveApiKey, onRemoveApiKey 
+export const CreditsCounter = ({
+  hasLifetimeAccess, customApiKey, apiProvider, isMaker,
+  onActivateMaker, onSaveApiKey, onRemoveApiKey
 }: CreditsCounterProps) => {
   const [showMakerInput, setShowMakerInput] = useState(false);
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
@@ -50,8 +49,6 @@ export const CreditsCounter = ({
   const [apiKey, setApiKey] = useState('');
   const [selectedProvider, setSelectedProvider] = useState<ApiProvider>('openai');
   const { toast } = useToast();
-
-  const hasAccess = isMaker || hasLifetimeAccess || !!customApiKey;
 
   const handleMakerActivate = () => {
     if (onActivateMaker?.(makerPassword)) {
@@ -82,36 +79,42 @@ export const CreditsCounter = ({
     }
   };
 
-  const statusIcon = isMaker ? (
-    <Infinity className="w-4 h-4 text-primary" />
-  ) : hasLifetimeAccess ? (
-    <Check className="w-4 h-4 text-emerald-400" />
-  ) : customApiKey ? (
-    <Key className="w-4 h-4 text-amber-400" />
-  ) : null;
-
-  const statusLabel = isMaker ? '∞' : hasLifetimeAccess ? 'PRO' : customApiKey ? 'BYOK' : 'FREE';
+  // Determine icon accent
+  const hasAccess = isMaker || hasLifetimeAccess || !!customApiKey;
 
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button className="focus:outline-none">
-          <Badge
-            variant="outline"
-            className={`gap-1.5 px-3 py-1 cursor-pointer hover:opacity-80 transition-opacity ${
-              hasAccess
-                ? 'border-primary/30 bg-primary/5 text-primary'
-                : 'border-muted-foreground/30 bg-muted/5 text-muted-foreground'
-            }`}
-          >
-            {statusIcon}
-            <span className="text-xs font-semibold">{statusLabel}</span>
-          </Badge>
+        <button
+          className={`relative p-2 rounded-md transition-colors hover:bg-accent focus:outline-none ${
+            hasAccess ? 'text-primary' : 'text-muted-foreground'
+          }`}
+          aria-label="API & License settings"
+        >
+          <Key className="w-4 h-4" />
+          {hasAccess && (
+            <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-primary" />
+          )}
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-72 p-3" align="end">
         <div className="space-y-2">
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider px-1">Access</p>
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider px-1">API & License</p>
+
+          {/* Status indicators */}
+          {isMaker && (
+            <div className="flex items-center gap-2 px-3 py-2 text-sm text-primary rounded-md bg-primary/5">
+              <Infinity className="w-4 h-4" />
+              Maker Mode Active
+            </div>
+          )}
+
+          {hasLifetimeAccess && !isMaker && (
+            <div className="flex items-center gap-2 px-3 py-2 text-sm text-emerald-400 rounded-md bg-emerald-500/5">
+              <Check className="w-4 h-4" />
+              Lifetime Access Active
+            </div>
+          )}
 
           {/* Lifetime Purchase */}
           {!hasLifetimeAccess && !isMaker && (
@@ -121,16 +124,9 @@ export const CreditsCounter = ({
               className="w-full justify-start gap-2"
               onClick={() => window.open('https://arielwave403.gumroad.com/l/TRI-TFMstudio', '_blank')}
             >
-              <ShoppingCart className="w-4 h-4" />
+              <Sparkles className="w-4 h-4 text-amber-400" />
               Buy Lifetime Access — $15
             </Button>
-          )}
-
-          {hasLifetimeAccess && (
-            <div className="flex items-center gap-2 px-3 py-2 text-sm text-emerald-400">
-              <Check className="w-4 h-4" />
-              Lifetime Access Active
-            </div>
           )}
 
           {/* BYOK */}
@@ -215,13 +211,6 @@ export const CreditsCounter = ({
                   </Button>
                 </div>
               )}
-            </div>
-          )}
-
-          {isMaker && (
-            <div className="flex items-center gap-2 px-3 py-2 text-sm text-primary">
-              <Infinity className="w-4 h-4" />
-              Maker Mode Active
             </div>
           )}
         </div>
