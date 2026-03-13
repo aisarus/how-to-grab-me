@@ -432,8 +432,6 @@ serve(async (req) => {
     }
 
     console.log(`Using ${useCustomKey ? 'custom OpenAI' : 'Lovable AI'} key`);
-      );
-    }
 
     const tfmConfig: TFMConfig = {
       a: config?.a ?? 0.20,
