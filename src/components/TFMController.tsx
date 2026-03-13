@@ -349,8 +349,7 @@ export const TFMController = () => {
         setLastResultId(insertedData.id);
       }
 
-      // Deduct credit after successful optimization
-      await deductCredit();
+      // No credit deduction needed — lifetime access or BYOK model
 
       toast({
         title: t('tfmController.optimizationCompleted'),
