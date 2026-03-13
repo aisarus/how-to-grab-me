@@ -572,32 +572,32 @@ export const TFMController = () => {
                 </span>
               </div>
             </div>
-            <nav className="flex items-center gap-1 flex-shrink-0">
+            <nav className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
               <CreditsCounter hasLifetimeAccess={hasLifetimeAccess} customApiKey={customApiKey} apiProvider={apiProvider} isMaker={isMaker} onActivateMaker={activateMakerMode} onSaveApiKey={saveCustomApiKey} onRemoveApiKey={removeCustomApiKey} />
-              <div className="w-px h-5 bg-border mx-1 hidden sm:block" />
+              <div className="w-px h-5 bg-border mx-0.5 sm:mx-1 hidden sm:block" />
               <LanguageSwitcher />
               <Button 
                 variant="ghost" 
-                size="sm" 
-                className="gap-1.5 text-muted-foreground hover:text-foreground"
+                size="icon" 
+                className="h-8 w-8 sm:h-9 sm:w-auto sm:px-3 text-muted-foreground hover:text-foreground"
                 onClick={() => navigate('/assistant')}
               >
                 <MessageSquare className="w-4 h-4" />
-                <span className="hidden lg:inline text-xs">{t('common.assistant')}</span>
+                <span className="hidden lg:inline text-xs ml-1.5">{t('common.assistant')}</span>
               </Button>
               <Button 
                 variant="ghost" 
-                size="sm" 
-                className="gap-1.5 text-muted-foreground hover:text-foreground"
+                size="icon" 
+                className="h-8 w-8 sm:h-9 sm:w-auto sm:px-3 text-muted-foreground hover:text-foreground"
                 onClick={() => navigate('/analytics')}
               >
                 <BarChart3 className="w-4 h-4" />
-                <span className="hidden lg:inline text-xs">{t('common.analytics')}</span>
+                <span className="hidden lg:inline text-xs ml-1.5">{t('common.analytics')}</span>
               </Button>
               <Button 
                 variant="ghost" 
-                size="sm" 
-                className="gap-1.5 text-muted-foreground hover:text-foreground"
+                size="icon" 
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
                 onClick={async () => {
                   await supabase.auth.signOut();
                   navigate('/auth');
