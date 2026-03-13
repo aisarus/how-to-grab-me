@@ -606,15 +606,15 @@ export const TFMController = () => {
       </header>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
+        <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
         {/* Main Input Card */}
-        <Card className="floating-card border-2 shadow-lg" style={{ animationDelay: '0s' }}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-primary" />
+        <Card className="floating-card border shadow-md">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-base font-semibold">
+              <Zap className="w-4 h-4 text-primary" />
               {t('tfmController.inputLabel')}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs">
               {t('tfmController.inputDescription')}
             </CardDescription>
           </CardHeader>
