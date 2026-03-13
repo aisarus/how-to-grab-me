@@ -568,7 +568,7 @@ export const TFMController = () => {
               </div>
             </div>
             <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-              <CreditsCounter credits={credits} isMaker={isMaker} />
+              <CreditsCounter credits={credits} isMaker={isMaker} onActivateMaker={activateMakerMode} />
               <LanguageSwitcher />
               <Button 
                 variant="outline" 
