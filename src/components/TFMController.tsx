@@ -795,7 +795,7 @@ export const TFMController = () => {
             <div className="flex gap-2">
               <Button 
                 onClick={handleSubmit} 
-                disabled={loading || !prompt.trim() || (!hasCredits && !isMaker)}
+                disabled={loading || !prompt.trim() || !hasAccess}
                 className="flex-1 h-12 text-base gradient-primary hover:opacity-90 transition-opacity shadow-glow"
               >
                 {loading ? (
