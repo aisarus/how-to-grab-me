@@ -4,9 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 const MAKER_PASSWORD = 'Oggnom228';
 const MAKER_KEY = 'tfm_maker_mode';
 
+export type ApiProvider = 'openai' | 'google' | 'anthropic';
+
 export const useCredits = () => {
   const [hasLifetimeAccess, setHasLifetimeAccess] = useState(false);
   const [customApiKey, setCustomApiKey] = useState<string | null>(null);
+  const [apiProvider, setApiProvider] = useState<ApiProvider>('openai');
   const [loading, setLoading] = useState(true);
   const [isMaker, setIsMaker] = useState(() => {
     return localStorage.getItem(MAKER_KEY) === 'true';
