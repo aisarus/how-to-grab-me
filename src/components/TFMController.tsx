@@ -291,7 +291,7 @@ export const TFMController = () => {
             proposerCriticOnly: config.proposerCriticOnly,
             eriksonStage: complexityAnalysis?.eriksonStage,
           },
-          ...(customApiKey ? { customApiKey } : {}),
+          ...(customApiKey ? { customApiKey, apiProvider } : {}),
         }
       });
 
