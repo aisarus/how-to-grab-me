@@ -550,60 +550,60 @@ export const TFMController = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Hero Header */}
-      <div className="border-b glass-effect sticky top-0 z-10 flex-shrink-0">
-        <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+      {/* Enterprise Header */}
+      <header className="border-b border-border glass-effect sticky top-0 z-10 flex-shrink-0">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between h-14 sm:h-16 gap-2">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-4 h-4 text-primary-foreground" />
               </div>
-              <div className="flex-1 min-w-0">
-                <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate">
-                  {t('tfmController.title')}
+              <div className="flex items-center gap-2 min-w-0">
+                <h1 className="text-base sm:text-lg font-semibold font-display text-foreground truncate tracking-tight">
+                  TRI/TFM
                 </h1>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1 hidden sm:block">
-                  {t('tfmController.subtitle')}
-                </p>
+                <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
+                  Engine
+                </span>
               </div>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            <nav className="flex items-center gap-1 flex-shrink-0">
               <CreditsCounter credits={credits} isMaker={isMaker} onActivateMaker={activateMakerMode} />
+              <div className="w-px h-5 bg-border mx-1 hidden sm:block" />
               <LanguageSwitcher />
               <Button 
-                variant="outline" 
+                variant="ghost" 
                 size="sm" 
-                className="gap-1 sm:gap-2"
+                className="gap-1.5 text-muted-foreground hover:text-foreground"
                 onClick={() => navigate('/assistant')}
               >
                 <MessageSquare className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('common.assistant')}</span>
+                <span className="hidden lg:inline text-xs">{t('common.assistant')}</span>
               </Button>
               <Button 
-                variant="outline" 
+                variant="ghost" 
                 size="sm" 
-                className="gap-1 sm:gap-2"
+                className="gap-1.5 text-muted-foreground hover:text-foreground"
                 onClick={() => navigate('/analytics')}
               >
                 <BarChart3 className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('common.analytics')}</span>
+                <span className="hidden lg:inline text-xs">{t('common.analytics')}</span>
               </Button>
               <Button 
-                variant="outline" 
+                variant="ghost" 
                 size="sm" 
-                className="gap-1 sm:gap-2"
+                className="gap-1.5 text-muted-foreground hover:text-foreground"
                 onClick={async () => {
                   await supabase.auth.signOut();
                   navigate('/auth');
                 }}
               >
                 <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('common.logout')}</span>
               </Button>
-            </div>
+            </nav>
           </div>
         </div>
-      </div>
+      </header>
 
       <div className="flex-1 overflow-y-auto">
         <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
