@@ -47,10 +47,30 @@ export default function AuthPage() {
     navigate('/');
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) {
+      toast({ title: t('auth.validationError'), description: t('auth.invalidEmail'), variant: 'destructive' });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast({ title: t('auth.checkEmail'), description: t('auth.resetLinkSent') });
+      setIsForgotPassword(false);
+    } catch (error) {
+      toast({ title: t('common.error'), description: error instanceof Error ? error.message : t('auth.authenticationFailed'), variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate input
     const validation = authSchema.safeParse({ email, password });
     if (!validation.success) {
       toast({
@@ -85,7 +105,6 @@ export default function AuthPage() {
           description: t('auth.successfullyLoggedIn'),
         });
       } else {
-        // Sign up with email verification
         const { error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
