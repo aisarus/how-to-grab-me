@@ -629,8 +629,8 @@ export const TFMController = () => {
                 placeholder={t('tfmController.inputPlaceholder')}
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                rows={8}
-                className="resize-none font-mono text-sm"
+                rows={5}
+                className="resize-none font-mono text-xs sm:text-sm min-h-[120px] sm:min-h-[180px]"
               />
               
               {/* Combined Analysis Display */}
