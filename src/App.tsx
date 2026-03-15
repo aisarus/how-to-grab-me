@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import NotFound from "./pages/NotFound";
 import MainPage from "./pages/MainPage";
+import LandingPage from "./pages/LandingPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import AuthPage from "./pages/AuthPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
@@ -27,7 +28,8 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/" element={<MainPage />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/app" element={<MainPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/assistant" element={<PromptAssistantPage />} />
             
