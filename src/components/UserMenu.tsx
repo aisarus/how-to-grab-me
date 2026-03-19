@@ -11,17 +11,24 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { User, LogOut, Loader2 } from 'lucide-react';
+import { LogOut, Loader2, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from './ThemeToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCredits } from '@/hooks/useCredits';
+import { SettingsModal } from './SettingsModal';
 
 export const UserMenu = () => {
   const { t } = useLanguage();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const {
+    customApiKey, apiProvider, hasLifetimeAccess, isMaker,
+    saveCustomApiKey, removeCustomApiKey,
+  } = useCredits();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -115,12 +122,27 @@ export const UserMenu = () => {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setSettingsOpen(true)} className="cursor-pointer">
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Settings</span>
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
             <LogOut className="mr-2 h-4 w-4" />
             <span>{t('common.signOut')}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <SettingsModal
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        customApiKey={customApiKey}
+        apiProvider={apiProvider}
+        hasLifetimeAccess={hasLifetimeAccess}
+        isMaker={isMaker}
+        onSaveApiKey={saveCustomApiKey}
+        onRemoveApiKey={removeCustomApiKey}
+      />
     </div>
   );
 };
