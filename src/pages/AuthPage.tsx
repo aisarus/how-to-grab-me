@@ -28,17 +28,17 @@ export default function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) navigate('/');
+      if (session) navigate('/app');
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) navigate('/');
+      if (session) navigate('/app');
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleSkip = () => navigate('/');
+  const handleSkip = () => navigate('/app');
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
