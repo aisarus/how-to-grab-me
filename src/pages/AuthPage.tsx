@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,18 +25,29 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Preserve OAuth-consent (or any) return target across sign-in.
+  const rawNext = searchParams.get('next');
+  const next = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/app';
+
+  const goNext = () => {
+    if (next.startsWith('/')) window.location.href = next;
+    else navigate('/app');
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) navigate('/app');
+      if (session) goNext();
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) navigate('/app');
+      if (session) goNext();
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [next]);
 
   const handleSkip = () => navigate('/app');
 
@@ -66,7 +77,7 @@ export default function AuthPage() {
     
     const validation = authSchema.safeParse({ email, password });
     if (!validation.success) {
-      toast({ title: t('auth.validationError'), description: validation.error.errors[0].message, variant: 'destructive' });
+      toast({ title: t('auth.validationError'), description: validation.error.issues[0].message, variant: 'destructive' });
       return;
     }
 
