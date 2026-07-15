@@ -66,7 +66,7 @@ export default function AuthPage() {
     
     const validation = authSchema.safeParse({ email, password });
     if (!validation.success) {
-      toast({ title: t('auth.validationError'), description: validation.error.errors[0].message, variant: 'destructive' });
+      toast({ title: t('auth.validationError'), description: validation.error.issues[0].message, variant: 'destructive' });
       return;
     }
 
