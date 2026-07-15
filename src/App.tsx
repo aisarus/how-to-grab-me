@@ -9,6 +9,7 @@ import MainPage from "./pages/MainPage";
 import LandingPage from "./pages/LandingPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import AuthPage from "./pages/AuthPage";
+import OAuthConsent from "./pages/OAuthConsent";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import PromptAssistantPage from "./pages/PromptAssistantPage";
 import { Starfield } from "./components/Starfield";
@@ -27,6 +28,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/" element={<LandingPage />} />
             <Route path="/app" element={<MainPage />} />
