@@ -1,1 +1,0 @@
-ALTER TABLE public.profiles ADD COLUMN is_maker boolean NOT NULL DEFAULT false;
